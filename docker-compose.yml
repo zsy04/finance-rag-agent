@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: finance-rag-qdrant
+    ports:
+      - "6333:6333"   # REST API（后端连接用）
+      - "6334:6334"   # gRPC（高性能写入用）
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    restart: unless-stopped
