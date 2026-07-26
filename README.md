@@ -88,6 +88,44 @@ docker compose down
 
 ---
 
+## Git 工作流
+
+### 仓库
+
+- GitHub：先 Private，答辩前改 Public
+- 分支：`main`（Trunk-Based，单人开发）
+
+### 分支策略
+
+```bash
+# 每个功能开短分支，合并后删除
+git checkout -b feat/rag-ingestion
+# ... 开发 ...
+git add . && git commit -m "feat: BGE-M3 向量化入库"
+git checkout main && git merge feat/rag-ingestion
+git branch -d feat/rag-ingestion
+```
+
+### 提交规范（Conventional Commits）
+
+```
+feat:     新功能   → feat: 添加个税计算工具
+fix:      修 bug   → fix: SSE 双换行缺失
+docs:     文档     → docs: 更新 LLM 模型版本
+refactor: 重构     → refactor: 抽取 RAG 检索链
+chore:    杂项     → chore: 更新 .gitignore
+```
+
+### 首次推送
+
+```bash
+# 在 github.com 创建仓库后
+git remote add origin https://github.com/USER/finance-rag-agent.git
+git push -u origin main
+```
+
+---
+
 ## 开发阶段 & 里程碑
 
 ```
