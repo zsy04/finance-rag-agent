@@ -1,64 +1,23 @@
-# 前端开发 · AI 编码 Prompt
+# 前端开发规范 — AI 编码上下文
+
+你是一个 React + TypeScript 前端工程师。请严格遵循以下规范生成代码，不得偏离。
 
 ---
 
-## 📋 提供给 AI 的文档清单
+## 0. 项目概览
 
-开发前端时，按下面列表把文档内容粘贴给 AI。**① 是必须的，②③ 推荐加上**。
+**产品**：财税助手 — 面向零财务基础用户的 AI 财税问答 Web 应用。
+**三个视图**：智能对话（chat） / 税率计算器（calculator） / 申报材料生成（form），通过左侧导航切换。
+**仅桌面端**（≥768px），不做移动端。
 
-```
-┌─────────────────────────────────────────────┐
-│           AI 编码上下文文档树                  │
-├─────────────────────────────────────────────┤
-│                                             │
-│  ① 前端开发-AI编程Prompt.md   ← 🚀 主文档     │
-│          │                                   │
-│          ├── ② 财务RAG-UI设计方案.md           │
-│          │     · 三个视图 ASCII 布局图       │
-│          │     · 设计令牌 + 组件库完整说明     │
-│          │     · 品牌/无障碍/动效规范         │
-│          │                                   │
-│          └── ③ 财务RAG-前后端对照表.md         │
-│                · API 接口速查                │
-│                · SSE 事件对照                │
-│                · 数据类型映射                │
-│                · 联调检查清单                │
-│                                             │
-└─────────────────────────────────────────────┘
-```
-
-### 使用步骤
-
-| 顺序 | 文档 | 文件路径 | 粘贴后 AI 获得 |
-|:--:|------|----------|--------------|
-| **①** | AI 编程 Prompt | `docs/前端开发-AI编程Prompt.md` | CSS 令牌、TS 类型、组件树、SSE、hooks、API、样式速查 |
-| **②** | UI 设计方案 | `docs/财务RAG-UI设计方案.md` | 三个视图的布局图、完整的组件/设计系统说明 |
-| **③** | 前后端对照表 | `docs/财务RAG-前后端对照表.md` | API 接口、SSE 事件、数据类型、联调清单 |
-
-### 粘贴顺序 & 开场 Prompt
-
-```
-第 1 条消息：粘贴 docs/前端开发-AI编程Prompt.md 全文
-第 2 条消息：粘贴 docs/财务RAG-UI设计方案.md 全文  
-第 3 条消息：粘贴 docs/财务RAG-前后端对照表.md 全文
-第 4 条消息（你的指令）："请按以上三份文档的规范，逐文件生成前端代码"
-```
-
-> 💡 **最小用法**：只粘贴 ①，AI 能生成全部组件代码。
-> 💡 **推荐用法**：粘贴 ①②③，AI 生成的代码更符合设计稿和联调规格。
-
----
-
-## 1. 技术选型
+## 0.1 技术约束
 
 ```
 框架: React 18 + TypeScript
 构建: Vite
-UI库: shadcn/ui (最新)
-样式: Tailwind CSS v4
+UI: shadcn/ui (最新) + Tailwind CSS v4
 图标: lucide-react
-状态: React Context + useReducer (不用第三方库)
-桌面: 仅开发桌面端 ≥768px，不做移动端
+状态: React Context + useReducer，不引入第三方状态库
 ```
 
 初始化：
@@ -70,19 +29,29 @@ npx shadcn@latest add button input select card textarea
 npm install lucide-react
 ```
 
----
+## 0.2 CSS 令牌
 
-## 2. CSS 令牌 — 复制到 `globals.css`
+全局样式文件（`src/index.css`）必须包含以下变量。所有组件必须使用这些变量，不得硬编码颜色值。
 
 ```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   :root {
-    --color-primary: #1E3A8A;       --color-primary-light: #DBEAFE;
-    --color-primary-dark: #172554;  --color-text-primary: #0F172A;
-    --color-text-secondary: #475569;--color-text-tertiary: #94A3B8;
-    --color-bg-page: #F1F5F9;      --color-bg-surface: #FFFFFF;
-    --color-border: #CBD5E1;        --color-success: #15803D;
-    --color-warning: #B45309;       --color-error: #B91C1C;
+    --color-primary: #1E3A8A;
+    --color-primary-light: #DBEAFE;
+    --color-primary-dark: #172554;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94A3B8;
+    --color-bg-page: #F1F5F9;
+    --color-bg-surface: #FFFFFF;
+    --color-border: #CBD5E1;
+    --color-success: #15803D;
+    --color-warning: #B45309;
+    --color-error: #B91C1C;
     --color-info: #1E40AF;
     --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-mono: 'JetBrains Mono', 'Courier New', monospace;
@@ -94,15 +63,24 @@ npm install lucide-react
 }
 ```
 
----
-
-## 3. TypeScript 类型
+## 0.3 Vite 代理
 
 ```typescript
-// ====== 导航 ======
+// vite.config.ts
+export default defineConfig({
+  server: { proxy: { '/api': 'http://localhost:8000' } }
+})
+```
+
+---
+
+## 1. TypeScript 类型定义
+
+文件：`src/lib/types.ts`
+
+```typescript
 export type ActiveView = 'chat' | 'calculator' | 'form';
 
-// ====== 消息 ======
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -115,7 +93,6 @@ export interface Message {
   isError?: boolean;
 }
 
-// ====== 上下文 ======
 export interface UserContext {
   city: string;
   salary?: number;
@@ -126,66 +103,79 @@ export interface UserContext {
 
 ---
 
-## 4. 组件文件树
+## 2. 组件文件树
+
+所有文件必须严格按以下路径创建：
 
 ```
 frontend/src/
-├── App.tsx                    # 根：navigation + view switch
+├── App.tsx
 ├── main.tsx
-├── index.css                  # CSS tokens
+├── index.css
 ├── components/
 │   ├── layout/
-│   │   ├── Sidebar.tsx        # 左侧导航 64px → hover 200px
-│   │   └── TopBar.tsx         # 顶部栏：Logo + 城市标识
+│   │   ├── Sidebar.tsx         # 左导航 64px→hover 200px
+│   │   └── TopBar.tsx          # 顶栏 Logo+城市
 │   ├── chat/
-│   │   ├── ChatView.tsx       # 对话容器
-│   │   ├── ChatMessage.tsx    # 单条消息（气泡 + 卡片 + 步骤）
-│   │   ├── ChatInput.tsx      # 底部输入框
-│   │   ├── WelcomeScreen.tsx  # 空态欢迎页
-│   │   └── ResultCard.tsx     # 计算卡片组件
+│   │   ├── ChatView.tsx        # 对话容器
+│   │   ├── ChatMessage.tsx     # 单条消息
+│   │   ├── ChatInput.tsx       # 底部输入框
+│   │   ├── WelcomeScreen.tsx   # 空态欢迎
+│   │   └── ResultCard.tsx      # 计算卡片
 │   ├── calculator/
-│   │   └── TaxCalculator.tsx  # 税率计算器表单
+│   │   └── TaxCalculator.tsx   # 税率计算器
 │   ├── form/
-│   │   └── FilingForm.tsx     # 申报表单
+│   │   └── FilingForm.tsx      # 申报表单
 │   └── shared/
-│       ├── Skeleton.tsx       # 骨架屏
-│       └── ErrorBanner.tsx    # 错误横幅
+│       ├── Skeleton.tsx
+│       └── ErrorBanner.tsx
 ├── hooks/
-│   ├── useChat.ts             # 对话逻辑
-│   └── useUserContext.tsx     # 上下文 Provider
+│   ├── useChat.ts
+│   └── useUserContext.tsx
 ├── lib/
-│   ├── types.ts               # 类型定义
-│   └── sse.ts                 # SSE 工具
+│   ├── types.ts
+│   └── sse.ts
 └── context/
-    └── AppContext.tsx          # 全局状态
+    └── AppContext.tsx
 ```
 
 ---
 
-## 5. SSE 流式消费 (`lib/sse.ts`)
+## 3. SSE 流式消费
+
+文件：`src/lib/sse.ts`
 
 ```typescript
 export async function* streamChat(
-  message: string, context: Record<string, unknown> = {}
-): AsyncGenerator<{type: string; data: Record<string, unknown>}> {
+  message: string,
+  context: Record<string, unknown> = {}
+): AsyncGenerator<{ type: string; data: Record<string, unknown> }> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, context }),
   });
-  if (!res.ok) { yield { type: 'error', data: { message: `请求失败 ${res.status}` } }; return; }
+  if (!res.ok) {
+    yield { type: 'error', data: { message: `请求失败 ${res.status}` } };
+    return;
+  }
   const reader = res.body!.getReader();
   const decoder = new TextDecoder();
-  let buffer = '', currentEvent: string | null = null;
+  let buffer = '';
+  let currentEvent: string | null = null;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    for (const line of buffer.split('\n')) {
-      buffer = buffer.includes('\n') ? '' : line;
-      if (line.startsWith('event: ')) currentEvent = line.slice(7).trim();
-      else if (line.startsWith('data: ') && currentEvent) {
-        try { yield { type: currentEvent, data: JSON.parse(line.slice(6)) }; } catch {}
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (line.startsWith('event: ')) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith('data: ') && currentEvent) {
+        try {
+          yield { type: currentEvent, data: JSON.parse(line.slice(6)) };
+        } catch { /* skip unparseable */ }
         currentEvent = null;
       }
     }
@@ -193,20 +183,24 @@ export async function* streamChat(
 }
 ```
 
-## 6. SSE 事件 → 前端行为
+**SSE 事件处理表**：
 
-| 事件 | 后端何时发 | 前端行为 |
-|------|-----------|---------|
-| `thinking` | 开始处理 | 输入框 disabled + 旋转圈 + "正在为您计算……" |
-| `step` | 计算每步 / LLM token | 流式追加到 AI 气泡末尾 |
-| `confirm` | 需用户确认参数 | 暂停流式，显示 `[✅ 确认] [✏️ 自己填]` |
-| `result` | 计算完成 | 插入 ResultCard 组件 |
-| `source` | RAG 来源 | 折叠"查看信息来源" |
-| `disclaimer` | AI 免责 | 回复末尾灰字"本结果由 AI 辅助……" |
-| `error` | 失败 | 红色边框气泡 + `[🔄 重试]` |
-| `done` | 结束 | 恢复输入框 |
+| 事件类型 | 触发时机 | 前端行为 |
+|---------|---------|---------|
+| `thinking` | Agent 开始处理 | 输入框 disabled，发送按钮旋转圈，显示"正在为您计算……" |
+| `step` | 计算每步 / LLM 逐 token | 流式追加文本到 AI 气泡末尾 |
+| `confirm` | 需用户确认参数 | 暂停流式，气泡底部渲染 `[✅确认] [✏️自己填]` 按钮 |
+| `result` | 计算完成 | 在气泡内插入 `<ResultCard />` 组件 |
+| `source` | RAG 检索来源 | 气泡底部折叠区，显示来源标题+链接 |
+| `disclaimer` | AI 免责声明 | 气泡末尾追加灰色小字 |
+| `error` | 处理失败 | 气泡红色左边框 + 错误文案 + `[🔄重试]` 按钮 |
+| `done` | 回复完成 | 恢复输入框可用，停止闪烁光标 |
 
-## 7. 核心 Hook (`hooks/useChat.ts`)
+---
+
+## 4. 核心 Hook
+
+文件：`src/hooks/useChat.ts`
 
 ```typescript
 import { useState, useCallback } from 'react';
@@ -218,8 +212,12 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = useCallback(async (content: string, ctx: UserContext) => {
-    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content };
-    const aiMsg: Message = { id: crypto.randomUUID(), role: 'assistant', content: '', isStreaming: true };
+    const userMsg: Message = {
+      id: crypto.randomUUID(), role: 'user', content,
+    };
+    const aiMsg: Message = {
+      id: crypto.randomUUID(), role: 'assistant', content: '', isStreaming: true,
+    };
     setMessages(prev => [...prev, userMsg, aiMsg]);
     setIsLoading(true);
 
@@ -227,13 +225,13 @@ export function useChat() {
       setMessages(prev => prev.map(m => {
         if (m.id !== aiMsg.id) return m;
         switch (event.type) {
-          case 'step':   return { ...m, steps: [...(m.steps||[]), event.data.content as string] };
-          case 'result': return { ...m, resultCard: event.data as any };
-          case 'source': return { ...m, sources: [...(m.sources||[]), event.data as any] };
-          case 'confirm':return { ...m, confirmPrompt: event.data as any, isStreaming: false };
-          case 'error':  return { ...m, content: event.data.message as string, isError: true, isStreaming: false };
-          case 'done':   return { ...m, isStreaming: false };
-          default:       return m;
+          case 'step':    return { ...m, steps: [...(m.steps || []), event.data.content as string] };
+          case 'result':  return { ...m, resultCard: event.data as Message['resultCard'] };
+          case 'source':  return { ...m, sources: [...(m.sources || []), event.data as Message['sources'][number]] };
+          case 'confirm': return { ...m, confirmPrompt: event.data as Message['confirmPrompt'], isStreaming: false };
+          case 'error':   return { ...m, content: event.data.message as string, isError: true, isStreaming: false };
+          case 'done':    return { ...m, isStreaming: false };
+          default:        return m;
         }
       }));
     }
@@ -244,31 +242,67 @@ export function useChat() {
 }
 ```
 
-## 8. 全局上下文 (`context/AppContext.tsx`)
+---
+
+## 5. 全局上下文
+
+文件：`src/context/AppContext.tsx`
 
 ```typescript
-const AppContext = createContext<{activeView, setActiveView, userContext, updateUserContext} | null>(null);
-export function AppProvider({ children }) {
-  const [activeView, setActiveView] = useState<ActiveView>('chat');
-  const [userContext, setUserContext] = useState<UserContext>({ city: '郑州', deductions: {} });
-  return <AppContext.Provider value={{
-    activeView, setActiveView,
-    userContext,
-    updateUserContext: (p) => setUserContext(prev => ({ ...prev, ...p })),
-  }}>{children}</AppContext.Provider>;
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import type { ActiveView, UserContext } from '@/lib/types';
+
+interface AppState {
+  activeView: ActiveView;
+  setActiveView: (v: ActiveView) => void;
+  userContext: UserContext;
+  updateUserContext: (partial: Partial<UserContext>) => void;
 }
-export const useApp = () => useContext(AppContext)!;
+
+const AppContext = createContext<AppState | null>(null);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [activeView, setActiveView] = useState<ActiveView>('chat');
+  const [userContext, setUserContext] = useState<UserContext>({
+    city: '郑州', deductions: {},
+  });
+  const updateUserContext = (p: Partial<UserContext>) =>
+    setUserContext(prev => ({ ...prev, ...p }));
+
+  return (
+    <AppContext.Provider value={{ activeView, setActiveView, userContext, updateUserContext }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error('useApp must be inside AppProvider');
+  return ctx;
+}
 ```
 
-## 9. 根组件 (`App.tsx`)
+---
+
+## 6. 根组件
+
+文件：`src/App.tsx`
 
 ```tsx
+import { AppProvider, useApp } from '@/context/AppContext';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { TopBar } from '@/components/layout/TopBar';
+import { ChatView } from '@/components/chat/ChatView';
+import { TaxCalculator } from '@/components/calculator/TaxCalculator';
+import { FilingForm } from '@/components/form/FilingForm';
+
 function AppContent() {
   const { activeView } = useApp();
   return (
     <div className="flex h-screen bg-[var(--color-bg-page)]">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
         <main className="flex-1 overflow-y-auto">
           {activeView === 'chat' && <ChatView />}
@@ -279,104 +313,141 @@ function AppContent() {
     </div>
   );
 }
+
+export default function App() {
+  return <AppProvider><AppContent /></AppProvider>;
+}
 ```
 
-## 10. 组件规范
+---
 
-### Sidebar
-- 宽度 64px → hover 200px（`transition: 200ms ease; transition-delay: 50ms`）
-- 三个 nav-item：`MessageCircle` 💬 对话 / `Calculator` 📊 计算 / `FileText` 📄 申报
-- 选中态 `bg-[var(--color-primary-light)] text-[var(--color-primary)]`
-- icon + 文字，hover 展开时显示文字标签
+## 7. 组件详细规范
 
-### TopBar
-- 全宽，`sticky top-0 z-10`，高度 48px
-- 左：`🧾 财税助手` + 右：`📍 郑州 ▼`
+### 7.1 Sidebar — 左侧导航
 
-### ChatView
-- 消息列表 + 底部输入框（`sticky bottom-0`）
-- 空态：居中欢迎语 + 3 个示例问题卡片
-- 加载中：输入框 disabled，发送按钮 `Loader2 animate-spin`
+- 默认宽度 `64px`，hover 时扩至 `200px`（`transition: width var(--transition-base); transition-delay: 50ms`）
+- 三个导航项，使用 lucide-react 图标：
+  - `MessageCircle` → `activeView='chat'`
+  - `Calculator` → `activeView='calculator'`
+  - `FileText` → `activeView='form'`
+- 每个 `nav-item`：`display:flex; align-items:center; gap:12px; padding:0 16px; height:48px; border-radius:6px; cursor:pointer`
+- 选中态：`background: var(--color-primary-light); color: var(--color-primary)`
+- 未展开时只显示图标，展开后显示图标+文字标签
 
-### ChatMessage
-- `role=user`：深藏蓝底白字 右对齐 `max-w-[70%]` `rounded-[16px_16px_4px_16px]`
-- `role=assistant`：浅灰底近黑字 左对齐 `max-w-[85%]` `rounded-[16px_16px_16px_4px]`
-- 有 `steps` 时：气泡内先渲染步骤（`font-mono` `text-sm`）
-- 有 `resultCard`：气泡内渲染 `<ResultCard />`
-- 有 `confirmPrompt`：气泡底部按钮 `[确认] [自己填]`
-- 有 `sources`：底部可折叠来源区
-- `isStreaming` 时末尾闪烁光标
-- `isError` 时红色左边框 + 底部 `[🔄 重试]`
-- 金额数字必须 `font-mono`
+### 7.2 TopBar — 顶部栏
 
-### ResultCard
-- 白底 `border-l-4 border-l-[var(--color-primary)]` `rounded-[8px] p-4`
-- 标题：📊 + 文字
-- 数值：`font-mono` `text-3xl`
-- 可折叠"展开计算过程"（默认折叠）
-- 底部法规引用可点击链接
+- 全宽，`position: sticky; top: 0; z-index: 10; height: 48px`
+- 左侧：产品名 `🧾 财税助手`（`font-weight: 600; color: var(--color-primary)`）
+- 右侧：城市标识 `📍 郑州 ▼`（下拉框，MVP 仅展示不可切换）
 
-### WelcomeScreen
-- 居中 `🧾 欢迎使用财税助手`
-- 副标题描述三个功能
-- 3 个示例问题卡片：`"工资8000郑州交税"` `"租房能扣多少"` `"帮我生成申报表"`
-- 点击填入输入框并发送
+### 7.3 ChatView — 对话视图
 
-### TaxCalculator
-- 字段：收入类型下拉 / 月薪 / 城市 / 7 项扣除 checkbox + 金额
-- 每字段右侧 `❓` hover tooltip 解释
-- 底部 `[🧮 开始计算]` → 调用 `/api/calculate/tax`
-- 结果区：`<ResultCard />` + "💡 切换到对话模式"
-- 计算结果自动 `updateUserContext`
+- 聊天消息列表（`flex-1 overflow-y-auto`）+ 底部输入框（`sticky bottom-0`）
+- 空态渲染 `<WelcomeScreen />`
+- 加载中：输入框 `disabled`，发送按钮显示 `<Loader2 className="animate-spin" />`，聊天流底部轻提示"正在为您计算……"
 
-### FilingForm
-- 三区分组：基本信息 / 收入 / 扣除
-- `[💾 保存草稿]` → localStorage
-- `[📋 生成申报表]` → `/api/form/generate`
-- 结果：Markdown 预览 + `[📥 下载]` + `[📄 空白原表]`
-- 对话中已提供的信息自动预填
+### 7.4 ChatMessage — 消息气泡
 
-## 11. 样式速查
+- `role === 'user'`：深藏蓝底白字，右对齐，`max-width:70%`，`border-radius: 16px 16px 4px 16px`
+- `role === 'assistant'`：浅灰底近黑字，左对齐，`max-width:85%`，`border-radius: 16px 16px 16px 4px`
+- 内容渲染顺序（从上到下）：
+  1. 有 `steps` → 先渲染步骤列表（`font-mono text-sm`）
+  2. 有 `resultCard` → 渲染 `<ResultCard />`
+  3. 正文 `content`
+  4. 有 `confirmPrompt` → 渲染 `[✅确认] [✏️自己填]` 按钮
+  5. 有 `sources` → 底部折叠"📎 查看信息来源"
+  6. 有 `disclaimer` → 灰色小字
+  7. `isStreaming` → 末尾闪烁光标
+  8. `isError` → 红色左边框 + `[🔄 重试]` 按钮
+- 所有金额数字必须使用 `font-mono`（等宽字体）
 
-| 元素 | Tailwind class |
-|------|---------------|
-| 主按钮 | `bg-[var(--color-primary)] text-white h-10 px-4 rounded-[6px] font-medium hover:bg-[var(--color-primary-dark)] hover:-translate-y-px transition-all disabled:opacity-50` |
-| 次按钮 | `bg-white text-[var(--color-primary)] border border-[var(--color-primary)] h-10 px-4 rounded-[6px]` |
-| 输入框 | `h-10 border border-[var(--color-border)] rounded-[6px] px-3 text-base focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary-light)] outline-none` |
+### 7.5 ResultCard — 计算结果卡片
+
+- 白底 + 左侧 4px 深藏蓝装饰条：`border-l-4 border-l-[var(--color-primary)] rounded-[8px] p-4`
+- 标题行：`📊` 图标 + 文字（`text-lg font-semibold`）
+- 数值区：金额用 `font-mono text-3xl`
+- 可折叠"展开计算过程"（`<details>`，默认折叠）
+- 底部法规引用（`text-sm text-[var(--color-text-tertiary)]`），可点击跳转
+
+### 7.6 WelcomeScreen — 空态欢迎
+
+- 居中布局
+- 大标题：`🧾 欢迎使用财税助手`
+- 副标题：`👋 我是你的 AI 财税顾问，可以帮你：计算个税和社保 · 解答财税问题 · 生成申报材料`
+- 3 个示例问题按钮（`suggestion-chip`），点击填入输入框并自动发送：
+  - `"工资 8000 在郑州交多少税？"`
+  - `"租房能扣多少税？"`
+  - `"帮我生成个税申报表"`
+
+### 7.7 TaxCalculator — 税率计算器
+
+- 表单字段（从上到下）：
+  - 收入类型：`<Select>` 下拉（综合所得/经营所得/劳务报酬）
+  - 税前月薪：`<Input type="number">` + "元"
+  - 所在城市：`<Select>` 下拉（默认"郑州"）
+  - 分隔线 + "扣除项" 标题
+  - 7 项扣除：每题 `<Checkbox>` + `<Input type="number">` 元/月
+- 每个字段右侧 `❓` 图标，hover 弹出 `<Tooltip>` 解释字段含义
+- 底部 `[🧮 开始计算]` 主按钮，点击 → `POST /api/calculate/tax`
+- 按钮点击后变灰 + "计算中……"，结果区显示骨架屏
+- 计算结果渲染 `<ResultCard />`
+- 结果下方链接："💡 想了解更多？切换到对话模式"
+- 计算结果自动调用 `updateUserContext`
+
+### 7.8 FilingForm — 申报材料生成
+
+- 表单分三区，每区有标题分隔：
+  - **基本信息**：申报表类型下拉 / 姓名 / 身份证号
+  - **收入信息**：任职单位 / 年收入 / 已预缴税额
+  - **扣除信息**（与 TaxCalculator 扣除区样式复用）
+- 如果对话中已提供个人信息，表单自动预填（读取 `userContext`）
+- 底部两个按钮：
+  - `[💾 保存草稿]`（次按钮）→ 写入 `localStorage`
+  - `[📋 生成申报表]`（主按钮）→ `POST /api/form/generate`
+- 生成结果区：Markdown 表格预览 + `[📥 下载填好的表]` + `[📄 下载空白原表]`
+
+---
+
+## 8. 样式速查表
+
+| 元素 | Tailwind Class（直接使用） |
+|------|---------------------------|
+| 主按钮 | `bg-[var(--color-primary)] text-white h-10 px-4 rounded-[6px] font-medium hover:bg-[var(--color-primary-dark)] hover:-translate-y-px transition-all duration-[120ms] disabled:opacity-50` |
+| 次按钮 | `bg-white text-[var(--color-primary)] border border-[var(--color-primary)] h-10 px-4 rounded-[6px] font-medium hover:bg-[var(--color-primary-light)] transition-all` |
+| 输入框 | `h-10 border border-[var(--color-border)] rounded-[6px] px-3 text-base focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary-light)] outline-none transition-all` |
 | 用户气泡 | `bg-[var(--color-primary)] text-white rounded-[16px_16px_4px_16px] max-w-[70%] px-4 py-3 ml-auto` |
 | AI 气泡 | `bg-[var(--color-bg-page)] text-[var(--color-text-primary)] rounded-[16px_16px_16px_4px] max-w-[85%] px-4 py-3` |
 | 结果卡片 | `bg-white border border-[#E2E8F0] border-l-4 border-l-[var(--color-primary)] rounded-[8px] p-4` |
+| 示例问题 | `bg-[var(--color-bg-page)] border border-[#E2E8F0] rounded-[8px] p-3 text-sm cursor-pointer hover:bg-[var(--color-primary-light)] hover:border-[#93C5FD] transition-all` |
 | 骨架屏 | `animate-pulse bg-gray-200 rounded` |
-| 金额 | `font-mono` |
-| 加载 | `<Loader2 className="animate-spin" />` |
+| 金额数字 | `font-mono` |
+| 加载图标 | `<Loader2 className="animate-spin" />` |
+| 导航项 | `w-full h-12 flex items-center gap-3 px-4 rounded-[6px] text-sm cursor-pointer transition-all` |
+| 导航项-选中 | `bg-[var(--color-primary-light)] text-[var(--color-primary)]` |
 
-## 12. 后端 API
+---
 
-| 前端操作 | 方法 | 路由 | 请求体 |
-|---------|:--:|------|--------|
-| 发消息 | POST | `/api/chat` | `{message, context, thread_id}` → SSE |
-| 税率计算 | POST | `/api/calculate/tax` | `{income_type, annual_income, city, deductions}` → JSON |
-| 社保计算 | POST | `/api/calculate/social` | `{city, employment_type, salary}` → JSON |
-| 申报表 | POST | `/api/form/generate` | `{form_type, user_profile}` → JSON |
-| 下载原表 | GET | `/api/form/download/{type}` | → PDF |
-| 城市列表 | GET | `/api/cities` | → `["郑州"]` |
+## 9. 后端 API 接口
 
-## 13. Vite 代理配置
+| 前端操作 | 方法 | 路由 | 请求 | 响应类型 |
+|---------|:--:|------|------|:--:|
+| 发送消息 | POST | `/api/chat` | `{message, context, thread_id}` | SSE 流 |
+| 税率计算 | POST | `/api/calculate/tax` | `{income_type, annual_income, city, deductions}` | JSON |
+| 社保计算 | POST | `/api/calculate/social` | `{city, employment_type, salary}` | JSON |
+| 生成申报表 | POST | `/api/form/generate` | `{form_type, user_profile}` | JSON |
+| 下载空白原表 | GET | `/api/form/download/{type}` | — | PDF |
+| 城市列表 | GET | `/api/cities` | — | `["郑州"]` |
 
-```typescript
-// vite.config.ts
-export default defineConfig({
-  server: {
-    proxy: { '/api': 'http://localhost:8000' }
-  }
-})
-```
+---
 
-## 14. 无障碍
+## 10. 无障碍规范
 
-- 按钮用 `<button>`，输入框关联 `<label>`
-- 可点击元素 ≥ 44×44px
-- `:focus-visible` → `outline: 2px solid #1E3A8A`
-- 消息列表 `role="log" aria-live="polite"`
-- 错误 `role="alert"`
-- 动画包裹 `prefers-reduced-motion`
+生成每个组件时必须满足：
+
+- 交互元素使用语义标签（`<button>` 而非 `<div onclick>`）
+- 输入框有关联 `<label>` 或 `aria-label`
+- 所有可点击元素最小触摸区域 44×44px
+- `:focus-visible` 时显示 `outline: 2px solid var(--color-primary); outline-offset: 2px`
+- 消息列表容器：`role="log" aria-live="polite"`
+- 错误消息：`role="alert"`
+- 动画包裹在 `@media (prefers-reduced-motion: no-preference)` 内
