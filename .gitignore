@@ -28,3 +28,4 @@ Thumbs.db
 # 个人笔记/临时文件
 *.tmp
 workbuddy/
+.workbuddy/
