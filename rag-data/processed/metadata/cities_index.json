@@ -1,0 +1,27 @@
+{
+  "_description": "城市索引 — 记录每个城市的数据版本号和生效日期，供 Agent 查询路由使用",
+  "_updated": "2026-07-27",
+  "cities": {
+    "zhengzhou": {
+      "city_code": "410100",
+      "province": "河南",
+      "data_version": "2025H2",
+      "social_insurance": {
+        "effective_from": "2025-07-01",
+        "effective_to": "2026-06-30",
+        "file": "cities/zhengzhou/social_insurance.json"
+      },
+      "housing_fund": {
+        "effective_from": "2025-07-01",
+        "effective_to": "2026-06-30",
+        "file": "cities/zhengzhou/housing_fund.json"
+      },
+      "medical": {
+        "file": "cities/zhengzhou/medical.md"
+      },
+      "tax_operations": {
+        "file": "cities/zhengzhou/tax_operations.md"
+      }
+    }
+  }
+}

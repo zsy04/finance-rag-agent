@@ -30,7 +30,7 @@
 ## 检索链路
 
 ```
-用户提问 → BGE-M3 双向量编码 → Qdrant 混合检索 Top-20 → Reranker 精排 Top-5 → DeepSeek 流式输出
+用户提问 → 元数据预过滤 → BGE-M3 双向量编码 → Qdrant RRF 混合检索 Top-20 → Reranker 精排 Top-5 → DeepSeek 流式输出
 ```
 
 ## Agent 工具集（6 个）
@@ -171,7 +171,7 @@ Phase 5 — 答辩准备     → `docs/财务RAG-产品定义与答辩策略.md`
 
 本项目实现了一个完整的 **RAG + Agent 财税问答系统**：
 
-- **检索**：BGE-M3 双向量 + Qdrant 混合检索 + BGE-Reranker 双阶段精排，覆盖 70 份全国财税政策 + 郑州地方数据
+- **检索**：三层分层召回（元数据预过滤 + BGE-M3 双向量混合检索 + BGE-Reranker 精排），覆盖 70 份全国财税政策 + 郑州地方数据
 - **Agent**：LangChain `create_agent` + LangGraph，6 个工具 Function Calling 自动路由，LLM 不参与金额计算
 - **安全**：税率计算走 JSON + 代码，申报材料走字段映射，实时搜索限定 7 个政府域名白名单
 - **体验**：流式 SSE + 分步计算展示 + 关键节点确认 + 法规溯源 + AI 免责

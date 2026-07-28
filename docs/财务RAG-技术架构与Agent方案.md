@@ -13,7 +13,7 @@
 | **LLM** | DeepSeek V4 Flash | `deepseek-v4-flash`，LangChain `create_agent`，流式 SSE，$0.14/$0.28 /百万token |
 | **Embedding** | BGE-M3（FlagEmbedding） | GPU fp16 加速，稠密 1024维 + 稀疏词汇权重 双输出 |
 | **向量库** | Qdrant Docker | 原生混合检索，`docker compose up -d`，Web UI :6333，`docker-compose.yml` 在项目根目录 |
-| **重排器** | BGE-Reranker-v2-m3（BAAI） | 双阶段检索：Qdrant 初排 Top-20 → Reranker 精排 Top-5 |
+| **重排器** | BGE-Reranker-v2-m3（BAAI） | 三层分层召回：元数据过滤 → Qdrant RRF 粗排 Top-20 → Cross-encoder 精排 Top-5 |
 | **后端** | FastAPI | `StreamingResponse` SSE 流式输出，OpenAI 兼容 SDK |
 | **前端** | React + shadcn/ui | monorepo `frontend/`，纯 CSR |
 | **PDF 转换** | Microsoft MarkItDown v0.1.6 | 申报表模板 PDF→MD 转换 |
@@ -21,21 +21,72 @@
 
 ---
 
-## 二、检索链路
+## 二、检索链路（三层分层召回）
 
 ```
 用户提问
   ↓
-BGE-M3 双向量编码（dense 1024d + sparse 词汇权重）
+Layer 1: 元数据预过滤（payload filter）
+  根据意图分类 → 限定 category（tax_law / qa / operations / rates）
   ↓
-Qdrant 混合检索 → 召回 Top-20
+Layer 2: Qdrant 混合检索（粗排 Top-20）
+  BGE-M3 双向量编码（dense 1024d + sparse 词汇权重）
+  → Qdrant RRF 融合 → 召回 Top-20
   ↓
-BGE-Reranker-v2-m3 精排 → Top-5
+Layer 3: BGE-Reranker-v2-m3 精排（精筛 Top-5）
+  Cross-encoder 逐对打分 → 取 Top-5
+  ↓
+┌─ 关系索引增强（可选）───────────────────┐
+│ 命中 relations.json → 发现关联文档      │
+│ 例："个税法第6条" → "专项附加扣除"     │
+│     → 二次检索 "国发〔2018〕41号"      │
+│     → 补充关联文档到上下文             │
+└────────────────────────────────────────┘
   ↓
 拼接 System Prompt + RAG 上下文 + 用户提问
   ↓
 DeepSeek V4 Flash → StreamingResponse 流式输出
 ```
+
+### 2.1 关系索引增强检索（知识增强型 RAG）
+
+财税法规存在密集交叉引用：个税法第6条提及"专项附加扣除"→ 详细定义在国发〔2018〕41号；社保法第58条提到"缴费基数"→ 各地执行口径不同 → 郑州在地方人社局。纯向量检索可能只命中前几行，漏掉关联文档。
+
+**方案**：在标准 RAG 检索链外，加一层轻量 JSON 关系索引。
+
+**索引文件** `backend/data/relations.json`：
+
+```json
+{
+  "nodes": {
+    "专项附加扣除": {
+      "type": "concept",
+      "related_docs": ["国发〔2018〕41号", "国发〔2023〕13号"],
+      "related_laws": ["个人所得税法 第6条"]
+    },
+    "综合所得税率": {
+      "type": "rate_table",
+      "json_path": "national/rates/026_综合所得个人所得税税率表_年度.json",
+      "related_laws": ["个人所得税法 第3条"]
+    }
+  },
+  "relations": [
+    {"from": "住房租金扣除", "to": "专项附加扣除", "type": "subclass_of"},
+    {"from": "综合所得", "to": "综合所得税率", "type": "uses"}
+  ]
+}
+```
+
+**检索增强流程**：
+
+```
+1. 向量检索 → Top-5
+2. 检查是否命中 relations.json 中的概念节点
+3. 命中 → 二次检索关联文档 → 补充到上下文
+4. 合成最终上下文 → 送入 LLM
+```
+
+**适用条件**：无需 Neo4j 等图数据库，纯 JSON 驱动。资料全部收集完毕后约 1 天可完成。答辩时可作为"知识增强检索"亮点。
 
 ---
 
@@ -53,12 +104,13 @@ LLM（DeepSeek V4 Flash）根据用户意图自动选择工具。工具返回结
 | 4 | `fill_tax_form` | 申报表类型、用户个人信息 | 字段映射（代码执行） | 申报材料生成 |
 | 5 | `get_filing_guide` | 申报场景、城市 | MD 操作指引（文件读取） | 申报指引 |
 | 6 | `search_tax_website` | 搜索关键词 | Web Search（白名单域名） | 实时政策 |
+| 7 | `search_relations` | 文档ID / 概念名 | `relations.json`（JSON 关系索引） | 关联法条检索 |
 
 ### 3.1 `search_knowledge` — RAG 检索
 
 ```
 输入: query (用户问题原文)
-动作: BGE-M3 双向量编码 → Qdrant 混合检索 Top-20 → Reranker 精排 Top-5
+动作: 元数据预过滤 → BGE-M3 双向量编码 → Qdrant 混合检索 Top-20 → Reranker 精排 Top-5
 输出: [{content, source_url, doc_title, score}, ...]
 ```
 

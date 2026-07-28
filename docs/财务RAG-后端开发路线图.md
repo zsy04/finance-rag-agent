@@ -12,7 +12,8 @@ Step 1: 项目骨架     →  FastAPI 跑起来 + 依赖装好
 Step 2: 数据引擎     →  JSON 税率表 + 社保/个税计算函数（纯 Python，无 LLM）
 Step 3: 向量化入库   →  MD 切分 → BGE-M3 编码 → Qdrant 写入
 Step 4: RAG 检索链   →  BGE-M3 检索 + BGE-Reranker 重排
-Step 5: 工具集       →  6 个 @tool 函数（对接 Step2 数据 + Step4 检索）
+Step 4.5: 关系索引   →  relations.json 增强检索（资料收集后实施）🆕
+Step 5: 工具集       →  7 个 @tool 函数（对接 Step2 数据 + Step4 检索 + Step4.5 关联）
 Step 6: Agent 大脑    →  create_agent 调度 + MemorySaver + System Prompt
 Step 7: SSE 流式上线  →  StreamingResponse + astream_events → 前端可联调
 ```
@@ -236,7 +237,7 @@ curl http://localhost:6333/collections/finance_knowledge → 返回 collection �
 ## Step 4：RAG 检索链
 
 ### 目标
-`query → BGE-M3 → Qdrant 混合检索 Top-20 → BGE-Reranker 精排 Top-5` 可复用调用。
+`query → 元数据预过滤 → BGE-M3 → Qdrant 混合检索 Top-20 → BGE-Reranker 精排 Top-5` 可复用调用。
 
 ### 文件
 ```
@@ -299,10 +300,116 @@ assert reranked[0]["score"] > 0.5
 
 ---
 
-## Step 5：工具集（6 个 `@tool`）
+## Step 4.5：轻量关系索引（知识增强检索）
 
 ### 目标
-6 个 LangChain Tool 就绪，可被 Agent 调用，返回结构化结果。
+用 `relations.json` 记录法律条文间的交叉引用关系，Agent 检索时自动发现关联文档，实现多跳知识增强。
+
+### 前置
+- 资料全部收集完毕（`rag-data/processed/` 就绪）
+- Step 4 RAG 检索链已跑通
+
+### 设计思路
+财税法规存在密集交叉引用。例如用户问"郑州租房个税能扣多少"：
+- 向量检索命中 → 个税法第6条（写着"专项附加扣除"）
+- 纯 RAG 到此为止，用户得不到具体数字
+- 有 relations.json → 发现"专项附加扣除"关联"国发〔2018〕41号" → 二次检索 → 命中"住房租金 1500元/月"
+
+### 文件
+```
+backend/data/
+├── relations.json        # 关系索引（手动维护）
+└── ...
+backend/rag/
+└── relation_index.py     # 关系查询逻辑
+```
+
+### `data/relations.json`
+```json
+{
+  "nodes": {
+    "专项附加扣除": {
+      "type": "concept",
+      "related_docs": ["国发〔2018〕41号", "国发〔2023〕13号"],
+      "related_laws": ["个人所得税法 第6条"]
+    },
+    "综合所得税率": {
+      "type": "rate_table",
+      "json_path": "rates/026_综合所得个人所得税税率表_年度.json",
+      "related_laws": ["个人所得税法 第3条"]
+    }
+  },
+  "relations": [
+    {"from": "住房租金扣除", "to": "专项附加扣除", "type": "subclass_of"},
+    {"from": "综合所得", "to": "综合所得税率", "type": "uses"}
+  ]
+}
+```
+
+### `rag/relation_index.py`
+```python
+import json
+from pathlib import Path
+
+class RelationIndex:
+    """轻量关系索引：纯 JSON，无需图数据库"""
+
+    def __init__(self, data_dir: str = "data"):
+        with open(Path(data_dir) / "relations.json", "r", encoding="utf-8") as f:
+            self.data = json.load(f)
+
+    def find_related(self, concept: str) -> list[dict]:
+        """查找概念关联的文档和法条"""
+        if concept in self.data["nodes"]:
+            return self.data["nodes"][concept]
+        return {}
+
+    def expand_context(self, retrieved_docs: list[dict]) -> list[dict]:
+        """从检索结果中提取概念 → 查找关联文档 → 返回补充上下文"""
+        additional = []
+        for doc in retrieved_docs:
+            content = doc.get("content", "")
+            for concept, node in self.data["nodes"].items():
+                if concept in content:
+                    additional.append({
+                        "concept": concept,
+                        "related": node["related_docs"],
+                        "source": "relations.json (知识增强)"
+                    })
+        return additional
+```
+
+### 检索增强调用流程
+```python
+# 在现有 RAG 流程后追加
+results = hybrid_search(query)              # Step 4
+reranked = reranker.rerank(query, results)  # Step 4
+
+index = RelationIndex()                     # 🆕 新增
+expanded = index.expand_context(reranked)   # 🆕 关联文档
+# 将 expanded["related_docs"] 做二次检索，补充到上下文
+```
+
+### ✅ 通过标准
+```python
+index = RelationIndex()
+related = index.find_related("专项附加扣除")
+assert "国发〔2018〕41号" in related["related_docs"]
+assert "个人所得税法 第6条" in related["related_laws"]
+```
+
+### ⏰ 实施时机
+- [ ] 资料收集全部完成
+- [ ] 仔细阅读核心法规，提取交叉引用关系
+- [ ] 填写 `relations.json`（约 20-30 个节点 + 30-40 条边）
+- [ ] 集成到检索链路
+
+---
+
+## Step 5：工具集（7 个 `@tool`）
+
+### 目标
+7 个 LangChain Tool 就绪，可被 Agent 调用，返回结构化结果。
 
 ### 文件
 ```
@@ -313,7 +420,8 @@ backend/tools/
 ├── query_social.py     # 工具 3：社保查询
 ├── fill_form.py        # 工具 4：申报材料生成
 ├── filing_guide.py     # 工具 5：申报流程指引
-└── search_website.py   # 工具 6：白名单搜索
+├── search_website.py   # 工具 6：白名单搜索
+└── search_relations.py # 工具 7：关系索引查询 🆕
 ```
 
 ### 工具模板
@@ -376,8 +484,9 @@ SYSTEM_PROMPT = """你是"财税助手"，一个面向零财务基础大众的 A
 2. 税率计算和社保计算使用提供的工具，不要自己推算
 3. 每个计算结果附带逐步推导过程
 4. 涉及金额的回复末尾附上 AI 免责：「⚠️ 本结果由 AI 辅助计算，仅供参考。以税务机关最终核定为准。12366」
-5. 使用简洁易懂的语言，专业术语附带解释
-6. 回答附带法规引用（法规名 + 文号）"""
+5. 当用户问题涉及多个关联法条时，使用 search_relations 查询关联文档
+6. 使用简洁易懂的语言，专业术语附带解释
+7. 回答附带法规引用（法规名 + 文号）"""
 ```
 
 ### `agent/engine.py`
@@ -394,7 +503,7 @@ checkpointer = MemorySaver()
 
 agent = create_agent(
     model=llm,
-    tools=ALL_TOOLS,          # [search_knowledge, calculate_income_tax, ...]
+    tools=ALL_TOOLS,          # [search_knowledge, calculate_income_tax, ..., search_relations]
     system_prompt=SYSTEM_PROMPT,
     checkpointer=checkpointer,
 )
@@ -471,7 +580,8 @@ curl -N -X POST http://localhost:8000/api/chat \
 | 1 | "FastAPI + Async 架构，非阻塞 I/O，SSE 长连接" |
 | 2 | "税率计算不走 LLM，用 Pydantic 模型 + JSON 驱动，零幻觉" |
 | 3 | "BGE-M3 双向量（稠密 1024d + 稀疏 BM25），Qdrant 原生混合检索" |
-| 4 | "双阶段检索：Qdrant RRF 融合初排 20 + BGE-Reranker Cross-encoder 精排 5" |
+| 4 | "三层分层召回：元数据过滤 → Qdrant RRF 融合粗排 20 → BGE-Reranker Cross-encoder 精排 5" |
+| 4.5 | "轻量关系索引增强 RAG：JSON 驱动的多跳知识图谱，解决法条交叉引用检索不全问题" |
 | 5 | "LangChain @tool 装饰器 + Pydantic 自动生成 JSON Schema，LLM 理解入参" |
 | 6 | "create_agent + MemorySaver 实现有状态多轮对话，支持工具自动路由" |
 | 7 | "astream_events 实时事件流 → SSE → 前端逐字渲染，端到端延迟 < 500ms" |
