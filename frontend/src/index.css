@@ -2,30 +2,97 @@
 
 @layer base {
   :root {
+    /* 主色调 — 深藏蓝 */
     --color-primary: #1E3A8A;
     --color-primary-light: #DBEAFE;
     --color-primary-dark: #172554;
+
+    /* 中性色 */
     --color-text-primary: #0F172A;
     --color-text-secondary: #475569;
     --color-text-tertiary: #94A3B8;
     --color-bg-page: #F1F5F9;
     --color-bg-surface: #FFFFFF;
     --color-border: #CBD5E1;
+
+    /* 语义色 */
     --color-success: #15803D;
     --color-warning: #B45309;
     --color-error: #B91C1C;
     --color-info: #1E40AF;
+
+    /* 字体 */
     --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-full: 9999px;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.06); --shadow-md: 0 2px 4px rgba(0,0,0,0.08);
-    --transition-fast: 120ms ease; --transition-base: 200ms ease;
+
+    /* 圆角 */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.10);
+
+    /* 过渡 */
+    --transition-fast: 120ms ease;
+    --transition-base: 200ms ease;
+
+    /* 动效曲线 */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   }
-  * { font-family: var(--font-primary); }
+
+  * {
+    font-family: var(--font-primary);
+  }
 }
 
 body {
   margin: 0;
   background-color: var(--color-bg-page);
   color: var(--color-text-primary);
+}
+
+/* Layout 最小宽度约束（MVP 桌面端） */
+.app-container {
+  min-width: 768px;
+}
+
+/* Loading 旋转动画 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.icon-spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* 流式光标闪烁 */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* 消息淡入 */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fade-in-up 0.3s var(--ease-standard) both;
+}
+
+/* 无障碍：尊重减少动效 */
+@media (prefers-reduced-motion: reduce) {
+  .icon-spinning,
+  .cursor-blink,
+  .fade-in-up {
+    animation: none !important;
+  }
 }

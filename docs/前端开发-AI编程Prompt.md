@@ -88,11 +88,12 @@ export interface Message {
   resultCard?: { type: string; data: Record<string, unknown> } | null;
   steps?: string[];
   sources?: { title: string; url: string }[];
-  confirmPrompt?: { question: string; options: string[] } | null;
   isStreaming?: boolean;
   isError?: boolean;
 }
 
+// 注意：对话上下文由 Agent 内部管理（get_user_context / update_user_context @tool），
+// 前端不需要传递 context。以下 UserContext 仅用于快捷表单间数据预填。
 export interface UserContext {
   city: string;
   salary?: number;
@@ -148,12 +149,12 @@ frontend/src/
 ```typescript
 export async function* streamChat(
   message: string,
-  context: Record<string, unknown> = {}
+  threadId: string
 ): AsyncGenerator<{ type: string; data: Record<string, unknown> }> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, context }),
+    body: JSON.stringify({ message, thread_id: threadId }),
   });
   if (!res.ok) {
     yield { type: 'error', data: { message: `请求失败 ${res.status}` } };
@@ -187,14 +188,17 @@ export async function* streamChat(
 
 | 事件类型 | 触发时机 | 前端行为 |
 |---------|---------|---------|
-| `thinking` | Agent 开始处理 | 输入框 disabled，发送按钮旋转圈，显示"正在为您计算……" |
-| `step` | 计算每步 / LLM 逐 token | 流式追加文本到 AI 气泡末尾 |
-| `confirm` | 需用户确认参数 | 暂停流式，气泡底部渲染 `[✅确认] [✏️自己填]` 按钮 |
-| `result` | 计算完成 | 在气泡内插入 `<ResultCard />` 组件 |
+| `thinking` | Agent 开始处理 / 工具调用 / **工具错误（非致命）** | 输入框 disabled，发送按钮旋转圈，显示"正在为您计算……"。工具错误不中断流式 |
+| `step` | 计算每步 / LLM 逐 token | 流式追加文字到 AI 气泡 content（字符串累加） |
+| `result` | 计算/填表完成 | 在气泡内插入 `<ResultCard />` 组件 |
 | `source` | RAG 检索来源 | 气泡底部折叠区，显示来源标题+链接 |
 | `disclaimer` | AI 免责声明 | 气泡末尾追加灰色小字 |
-| `error` | 处理失败 | 气泡红色左边框 + 错误文案 + `[🔄重试]` 按钮 |
+| `error` | **致命**处理失败（Agent 无法继续） | 气泡红色左边框 + 错误文案 + `[🔄重试]` 按钮。**若 content 已有文本则不覆盖** |
 | `done` | 回复完成 | 恢复输入框可用，停止闪烁光标 |
+
+> **注意**：`confirm` 事件已移除。Agent 反问用户以自然语言通过 `step` 事件承载（如"请问你的收入类型是工资还是劳务报酬？"以普通流式文本呈现）。
+>
+> **关键变更（2026-07-31）**：`on_tool_error` 不再发送 `error` 事件，改为 `thinking` 事件（工具错误非致命，Agent 会自行处理并继续）。AI 回复内容用 `<MarkdownRenderer />` 渲染（react-markdown + remark-gfm）。
 
 ---
 
@@ -204,14 +208,14 @@ export async function* streamChat(
 
 ```typescript
 import { useState, useCallback } from 'react';
-import type { Message, UserContext } from '@/lib/types';
+import type { Message } from '@/lib/types';
 import { streamChat } from '@/lib/sse';
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = useCallback(async (content: string, ctx: UserContext) => {
+  const sendMessage = useCallback(async (content: string) => {
     const userMsg: Message = {
       id: crypto.randomUUID(), role: 'user', content,
     };
@@ -221,14 +225,13 @@ export function useChat() {
     setMessages(prev => [...prev, userMsg, aiMsg]);
     setIsLoading(true);
 
-    for await (const event of streamChat(content, ctx)) {
+    for await (const event of streamChat(content, threadId)) {
       setMessages(prev => prev.map(m => {
         if (m.id !== aiMsg.id) return m;
         switch (event.type) {
           case 'step':    return { ...m, steps: [...(m.steps || []), event.data.content as string] };
           case 'result':  return { ...m, resultCard: event.data as Message['resultCard'] };
           case 'source':  return { ...m, sources: [...(m.sources || []), event.data as Message['sources'][number]] };
-          case 'confirm': return { ...m, confirmPrompt: event.data as Message['confirmPrompt'], isStreaming: false };
           case 'error':   return { ...m, content: event.data.message as string, isError: true, isStreaming: false };
           case 'done':    return { ...m, isStreaming: false };
           default:        return m;
@@ -354,11 +357,10 @@ export default function App() {
   1. 有 `steps` → 先渲染步骤列表（`font-mono text-sm`）
   2. 有 `resultCard` → 渲染 `<ResultCard />`
   3. 正文 `content`
-  4. 有 `confirmPrompt` → 渲染 `[✅确认] [✏️自己填]` 按钮
-  5. 有 `sources` → 底部折叠"📎 查看信息来源"
-  6. 有 `disclaimer` → 灰色小字
-  7. `isStreaming` → 末尾闪烁光标
-  8. `isError` → 红色左边框 + `[🔄 重试]` 按钮
+  4. 有 `sources` → 底部折叠"📎 查看信息来源"
+  5. 有 `disclaimer` → 灰色小字
+  6. `isStreaming` → 末尾闪烁光标
+  7. `isError` → 红色左边框 + `[🔄 重试]` 按钮
 - 所有金额数字必须使用 `font-mono`（等宽字体）
 
 ### 7.5 ResultCard — 计算结果卡片
@@ -388,7 +390,7 @@ export default function App() {
   - 分隔线 + "扣除项" 标题
   - 7 项扣除：每题 `<Checkbox>` + `<Input type="number">` 元/月
 - 每个字段右侧 `❓` 图标，hover 弹出 `<Tooltip>` 解释字段含义
-- 底部 `[🧮 开始计算]` 主按钮，点击 → `POST /api/calculate/tax`
+- 底部 `[🧮 开始计算]` 主按钮，点击 → `POST /api/tax/calculate`
 - 按钮点击后变灰 + "计算中……"，结果区显示骨架屏
 - 计算结果渲染 `<ResultCard />`
 - 结果下方链接："💡 想了解更多？切换到对话模式"
@@ -403,7 +405,7 @@ export default function App() {
 - 如果对话中已提供个人信息，表单自动预填（读取 `userContext`）
 - 底部两个按钮：
   - `[💾 保存草稿]`（次按钮）→ 写入 `localStorage`
-  - `[📋 生成申报表]`（主按钮）→ `POST /api/form/generate`
+  - `[📋 生成申报表]`（主按钮）→ 通过 Agent 对话通路生成（`fill_tax_form` @tool），无需独立 REST 端点
 - 生成结果区：Markdown 表格预览 + `[📥 下载填好的表]` + `[📄 下载空白原表]`
 
 ---
@@ -431,12 +433,11 @@ export default function App() {
 
 | 前端操作 | 方法 | 路由 | 请求 | 响应类型 |
 |---------|:--:|------|------|:--:|
-| 发送消息 | POST | `/api/chat` | `{message, context, thread_id}` | SSE 流 |
-| 税率计算 | POST | `/api/calculate/tax` | `{income_type, annual_income, city, deductions}` | JSON |
-| 社保计算 | POST | `/api/calculate/social` | `{city, employment_type, salary}` | JSON |
-| 生成申报表 | POST | `/api/form/generate` | `{form_type, user_profile}` | JSON |
-| 下载空白原表 | GET | `/api/form/download/{type}` | — | PDF |
-| 城市列表 | GET | `/api/cities` | — | `["郑州"]` |
+| 发送消息 | POST | `/api/chat` | `{message, thread_id}` | SSE 流（7 种事件） |
+| 税率计算（快捷表单） | POST | `/api/tax/calculate` | `{annual_income, income_type, social_insurance?, housing_rent?, children_edu?, elderly_support?, bonus?}` | JSON |
+| 社保计算（快捷表单） | POST | `/api/social/calculate` | `{salary, employment_type, housing_fund_ratio?, flexible_base_level?}` | JSON |
+
+> **备注**：对话上下文由 Agent 内部管理，前端不需要传递 `context`。申报表生成已融入 Agent 通路（`fill_tax_form` @tool），无独立 REST 端点。
 
 ---
 

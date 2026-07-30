@@ -94,10 +94,10 @@ async def _agent_stream(message: str, thread_id: str):
                 except (json.JSONDecodeError, TypeError):
                     pass  # 非 JSON 返回，跳过解包
 
-            # 工具错误 → error
+            # 工具错误 → thinking（非致命，Agent 会自行处理并继续）
             elif kind == "on_tool_error":
                 err_msg = str(event.get("data", {}).get("error", "工具调用失败"))
-                yield _sse("error", {"content": err_msg})
+                yield _sse("thinking", {"tool_error": err_msg})
 
     except Exception as e:
         yield _sse("error", {"content": f"服务异常: {e}"})
