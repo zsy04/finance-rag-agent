@@ -1,8 +1,8 @@
 # 财务 RAG Agent · 资料收集预处理方案
 
-> **文档类型**：前期准备部署方案 | **决策日期**：2026-07-26 | **项目**：毕设
+> **文档类型**：前期准备部署方案 | **决策日期**：2026-07-26 | **最后更新**：2026-07-29 | **项目**：毕设
 > **关联文档链**：`财务RAG-资料收集蓝图.md`（概念层）→ `财务RAG-MVP资料收集执行表.md`（清单层）→ **本文档**（部署层）→ `财务RAG-技术架构与Agent方案.md`（编码层）
-> **本文定位**：资料收集阶段的唯一执行依据。不涉及编码、向量库部署、前端开发。系统架构与 Agent 设计见技术方案文档。
+> **本文定位**：资料收集阶段的唯一执行依据。**Phase 1 已完成，本文档同步更新为实际产出记录。**
 
 ---
 
@@ -42,36 +42,37 @@
 
 ## 三、目标产出物
 
-### 3.1 目录结构
-
-收集完成后，在项目根目录生成以下结构：
+### 3.1 目录结构（实际产出）
 
 ```
 F:\lest\rag-data\
+├── staging/                              # 119 个原始 MHTML/.doc 文件
+│   ├── metadata.json                     # 文件名→元数据映射
+│   └── 全行业财务指标基准表.xlsx
 │
-├── README.md                        # 目录说明 + 处理流程手册
-│
-├── manifest.json                    # 70项收集进度追踪文件
-│
-├── raw/                             # 原始下载文件（不改动）
-│   ├── pdf/                         # 所有 PDF 原文
-│   └── web/                         # 网页原文 HTML（转换前保留）
-│
-├── processed/                       # 转换清洗后的最终交付物
+├── processed/                            # 清洗后的最终交付物
+│   ├── national/
+│   │   ├── tax_law/                      # 53 个税法 Markdown
+│   │   │   ├── *.md                      #   标准化标题(##章/###条) + 智能换行
+│   │   │   └── YAML: source_url, effective_from, relevance_tier, relevance_weight
+│   │   ├── qa_corpus/                    # 62 个问答 Markdown
+│   │   │   └── *.md                      #   ## 问句格式，Q&A对切分
+│   │   ├── rates/                        # 结构化 JSON 数据
+│   │   │   ├── tax_rate_tables.json      #   个税(综合+经营+年终奖) + 车船税 + 印花税
+│   │   │   │                            #   含专项附加扣除、计算流程、Agent调用指引
+│   │   │   └── industry_benchmark.json   #   20 门类×97 行业×10 项财务指标
+│   │   │                                #   tool_usage 块含中文标签+单位+调用示例
+│   │   ├── operations/                   # 操作指引
+│   │   │   └── 个税操作指南.md            #   个税APP汇算清缴5步操作
+│   │   └── templates/                    # 申报材料模板
+│   │       ├── form_field_map.json       #   字段映射配置(A表/B表→单元格坐标)
+│   │       ├── 个人所得税基础信息表（A表）/  #   .xlsx + .docx 填表说明
+│   │       └── 个人所得税基础信息表（B表）/  #   .xlsx + .docx 填表说明
 │   │
-│   ├── national/                    # 全国统一政策（模块一~四）
-│   │   ├── tax_law/                 # #1-#7  税法原文 .md
-│   │   ├── qa_corpus/               # #8-#12 即问即答 .md
-│   │   ├── rates/                   # #26-#34 税率表 .json
-│   │   ├── operations/              # #35-#43 操作指引 .md
-│   │   └── templates/               # #44-#55 申报表模板（.md + 空白原表 .pdf）
-│   │
-│   └── cities/                      # 城市差异化覆盖（模块五）
+│   └── cities/
 │       └── zhengzhou/
-│           ├── social_insurance.json # #56 社保缴费标准
-│           ├── housing_fund.json     # #57 公积金政策
-│           ├── medical.md            # #58-#60 医保报销规则
-│           └── tax_operations.md     # #61-#65 地方电子税务局操作
+│           └── social_insurance.json     #   郑州社保+公积金（职工+灵活就业）
+│                                         #   含缴费基数/比例/计算示例
 ```
 
 ### 3.2 manifest.json 结构
@@ -100,8 +101,19 @@ F:\lest\rag-data\
 
 ```yaml
 ---
-source_url: https://www.gov.cn/zhengce/content/202308/content_6901206.htm
-doc_number: 国发〔2023〕13号
+source_url: https://fgk.chinatax.gov.cn/zcfgk/c100009/c5193028/content.html
+doc_number: 主席令第9号
+effective_from: 2018-08-31      # 清洗脚本自动从"成文日期"提取
+expiry_date:
+module: 一
+category: tax_law
+city: national
+doc_title: 个人所得税法
+relevance_tier: tax_law          # 🆕 相关性层级（tax_law/tax_regulation/qa_corpus/general_law）
+relevance_weight: 10             # 🆕 检索权重（10/8/6/3）
+cleaned_at: 2026-07-29
+---
+```
 effective_from: 2023-01-01
 expiry_date: null
 module: 一

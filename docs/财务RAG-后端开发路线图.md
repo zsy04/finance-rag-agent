@@ -12,7 +12,9 @@ Step 1: 项目骨架     →  FastAPI 跑起来 + 依赖装好
 Step 2: 数据引擎     →  JSON 税率表 + 社保/个税计算函数（纯 Python，无 LLM）
 Step 3: 向量化入库   →  MD 切分 → BGE-M3 编码 → Qdrant 写入
 Step 4: RAG 检索链   →  BGE-M3 检索 + BGE-Reranker 重排
+Step 4.2: 检索评测    →  40 条评测集 + eval.py（recall@5/MRR/NDCG）🆕
 Step 4.5: 关系索引   →  relations.json 增强检索（资料收集后实施）🆕
+Step 4.8: Query 改写  →  口语→术语标准化（query_rewriter.py）🆕
 Step 5: 工具集       →  7 个 @tool 函数（对接 Step2 数据 + Step4 检索 + Step4.5 关联）
 Step 6: Agent 大脑    →  create_agent 调度 + MemorySaver + System Prompt
 Step 7: SSE 流式上线  →  StreamingResponse + astream_events → 前端可联调
@@ -21,6 +23,8 @@ Step 7: SSE 流式上线  →  StreamingResponse + astream_events → 前端可�
 ---
 
 ## Step 1：项目骨架
+
+> **状态**：前端已有 `frontend/` 目录（React + shadcn/ui），后端待搭建。
 
 ### 目标
 FastAPI 启动成功 + 所有依赖导入无报错。
@@ -83,6 +87,8 @@ curl http://localhost:8000/health → {"status": "ok"}
 ---
 
 ## Step 2：数据引擎（纯 Python，无 LLM）
+
+> **状态**：✅ 结构化数据已全量就绪。含 `tax_rate_tables.json`（个税+车船税+印花税+专项附加扣除+计算流程）、`industry_benchmark.json`（97行业）、`social_insurance.json`（郑州社保+公积金）。计算公式可直接引用 JSON 中的 formula 字段，无需单独编写。
 
 ### 目标
 个税计算和社保计算函数就绪，输入数据 → 输出结构化结果。
@@ -168,6 +174,8 @@ assert result["tax_amount"] == 963.36
 
 ## Step 3：向量化入库
 
+> **状态**：✅ 已完成。`scripts/chunk_docs.py` + `scripts/embed_and_upsert.py`，BGE-M3 编码 2419 chunks → Qdrant collection `finance_knowledge`（dense 1024d + sparse 双向量）。
+
 ### 目标
 `rag-data/processed/` → BGE-M3 编码 → Qdrant collection 创建完毕。
 
@@ -235,6 +243,8 @@ curl http://localhost:6333/collections/finance_knowledge → 返回 collection �
 ---
 
 ## Step 4：RAG 检索链
+
+> **状态**：✅ 已完成。`backend/rag/retriever.py`：三层分层召回（元数据过滤 → dense+sparse RRF融合 → Reranker精排 → relevance_weight加权）。单例模式，Agent 直接 `from rag import search_knowledge` 调用。
 
 ### 目标
 `query → 元数据预过滤 → BGE-M3 → Qdrant 混合检索 Top-20 → BGE-Reranker 精排 Top-5` 可复用调用。
@@ -524,6 +534,8 @@ assert "税" in result["messages"][-1].content
 
 ## Step 7：SSE 流式上线
 
+> **状态**：✅ 已完成。`backend/services/generator.py` + `backend/routers/chat.py`。POST /chat → SSE 流式返回，POST /chat/with-search → 先返回检索来源再流式回答。验证通过。
+
 ### 目标
 前端可以通过 `/api/chat` 拿到 SSE 流式响应，8 种事件类型完整。
 
@@ -582,6 +594,8 @@ curl -N -X POST http://localhost:8000/api/chat \
 | 3 | "BGE-M3 双向量（稠密 1024d + 稀疏 BM25），Qdrant 原生混合检索" |
 | 4 | "三层分层召回：元数据过滤 → Qdrant RRF 融合粗排 20 → BGE-Reranker Cross-encoder 精排 5" |
 | 4.5 | "轻量关系索引增强 RAG：JSON 驱动的多跳知识图谱，解决法条交叉引用检索不全问题" |
+| 4.2 | "40 条评测数据集 + 自动化评测脚本，Recall@5 / MRR / NDCG 指标量化检索质量" |
+| 4.8 | "Query 改写层：50+ 条口语→术语映射表，弥合用户口语与法律文本的语义鸿沟" |
 | 5 | "LangChain @tool 装饰器 + Pydantic 自动生成 JSON Schema，LLM 理解入参" |
 | 6 | "create_agent + MemorySaver 实现有状态多轮对话，支持工具自动路由" |
 | 7 | "astream_events 实时事件流 → SSE → 前端逐字渲染，端到端延迟 < 500ms" |

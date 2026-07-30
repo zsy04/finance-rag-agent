@@ -1,0 +1,4182 @@
+{
+  "tool_usage": {
+    "description": "全行业财务指标基准库，含 20 个行业门类 × 97 个细分行业 × 10 项财务指标的平均范围。用于回答用户关于行业税负率、毛利率、周转率等指标是否正常的问题。",
+    "search_by": ["category（行业门类）", "sub_industry（细分行业）"],
+    "fields": {
+      "vat_burden":     {"label": "增值税税负率",     "unit": "比率", "note": "null=不适用"},
+      "cit_burden":     {"label": "企业所得税税负率", "unit": "比率", "note": "null=不适用"},
+      "gross_margin":   {"label": "毛利率",           "unit": "比率", "note": "金融业/政府机关为 null"},
+      "net_margin":     {"label": "净利率",           "unit": "比率", "note": "政府机关/国际组织为 null"},
+      "expense_ratio":  {"label": "费用率",           "unit": "比率"},
+      "ar_turnover":    {"label": "应收账款周转率",   "unit": "次/年", "note": "金融业/政府机关为 null"},
+      "inventory_turnover": {"label": "存货周转率",   "unit": "次/年", "note": "金融业/政府机关为 null"},
+      "debt_ratio":     {"label": "资产负债率",       "unit": "比率"},
+      "current_ratio":  {"label": "流动比率",         "unit": "倍"},
+      "quick_ratio":    {"label": "速动比率",         "unit": "倍"}
+    },
+    "value_format": {"low": "行业下限", "high": "行业上限"},
+    "usage_examples": [
+      "用户: 我是做餐饮的，增值税税负 5% 正常吗？→ 查 vat_burden，餐饮业 1%-4%，回答偏高",
+      "用户: 制造业毛利率一般多少？→ 查 gross_margin，给出门类/细分范围",
+      "用户: 银行应收账款周转率？→ 返回 null，提示该指标不适用于金融业"
+    ]
+  },
+  "meta": {
+    "source": "全行业财务指标基准表.xlsx",
+    "source_path": "rag-data/staging/全行业财务指标基准表.xlsx",
+    "generated_at": "2026-07-29 14:28:14",
+    "total_industries": 97,
+    "total_categories": 20,
+    "notes": "low/up 为行业平均范围。null 表示该指标不适用于此行业。"
+  },
+  "industries": [
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0,
+        "high": 0.05
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "农业",
+      "category": "农、林、牧、渔业",
+      "expense_ratio": {
+        "low": 0.08,
+        "high": 0.15
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "cit_burden": {
+        "low": 0,
+        "high": 0.05
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "林业",
+      "category": "农、林、牧、渔业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.18
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 1,
+        "high": 4
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.06,
+        "high": 0.14
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0,
+        "high": 0.05
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.38
+      },
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "畜牧业",
+      "category": "农、林、牧、渔业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 0.9
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0,
+        "high": 0.05
+      },
+      "gross_margin": {
+        "low": 0.22,
+        "high": 0.36
+      },
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "渔业",
+      "category": "农、林、牧、渔业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.16
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 7
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.11
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 2,
+        "high": 7
+      },
+      "cit_burden": {
+        "low": 0.05,
+        "high": 0.1
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.01,
+        "high": 0.03
+      },
+      "sub_industry": "农、林、牧、渔专业及辅助性活动",
+      "category": "农、林、牧、渔业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 1,
+        "high": 5
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2.2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.45
+      },
+      "vat_burden": {
+        "low": 0.06,
+        "high": 0.1
+      },
+      "sub_industry": "煤炭开采和洗选业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.08,
+        "high": 0.13
+      },
+      "sub_industry": "石油和天然气开采业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.2
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.05,
+        "high": 0.09
+      },
+      "sub_industry": "黑色金属矿采选业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.06,
+        "high": 0.16
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.05,
+        "high": 0.1
+      },
+      "sub_industry": "有色金属矿采选业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.17,
+        "high": 0.27
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.07,
+        "high": 0.17
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.28,
+        "high": 0.48
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "非金属矿采选业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.24
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.14
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.45
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.07
+      },
+      "sub_industry": "开采专业及辅助性活动",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.4
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.28,
+        "high": 0.48
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.09
+      },
+      "sub_industry": "其他采矿业",
+      "category": "采矿业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.13
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 8,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.1,
+        "high": 0.2
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "农副食品加工业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 18
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 7,
+        "high": 14
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "食品制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "酒、饮料和精制茶制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.2
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "vat_burden": {
+        "low": 0.1,
+        "high": 0.15
+      },
+      "sub_industry": "烟草制品业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.18
+      },
+      "quick_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 5
+      },
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": {
+        "low": 0.2,
+        "high": 0.3
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "纺织业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "纺织服装、服饰业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "皮革、毛皮、羽毛及其制品和制鞋业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "木材加工和木、竹、藤、棕、草制品",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "家具制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 13
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "造纸和纸制品业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.24
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "印刷和记录媒介复制业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.24
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "文教、工美、体育和娱乐用品制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 8,
+        "high": 18
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.05,
+        "high": 0.09
+      },
+      "sub_industry": "石油、煤炭及其他燃料加工业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 7,
+        "high": 16
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.07
+      },
+      "sub_industry": "化学原料和化学制品制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "医药制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "current_ratio": {
+        "low": 1.3,
+        "high": 2.3
+      },
+      "debt_ratio": {
+        "low": 0.35,
+        "high": 0.5
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 7,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "化学纤维制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "橡胶和塑料制品业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "非金属矿物制品业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.23
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 7,
+        "high": 16
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.08,
+        "high": 0.18
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "黑色金属冶炼和压延加工业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 0.9
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.4
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.01,
+        "high": 0.05
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 7,
+        "high": 16
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.1,
+        "high": 0.2
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "有色金属冶炼和压延加工业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 0.9
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.4
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 13
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "金属制品业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "通用设备制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.22,
+        "high": 0.32
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "专用设备制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "汽车制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.07
+      },
+      "sub_industry": "铁路、船舶、航空航天和其他运输设备制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.22,
+        "high": 0.32
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "电气机械和器材制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.1,
+        "high": 0.15
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "计算机、通信和其他电子设备制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "仪器仪表制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.1
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.06,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "其他制造业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "废弃资源综合利用业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "金属制品、机械和设备修理业",
+      "category": "制造业",
+      "expense_ratio": {
+        "low": 0.14,
+        "high": 0.22
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.05,
+        "high": 0.09
+      },
+      "sub_industry": "电力、热力生产和供应业",
+      "category": "电力、热力、燃气及水生产和供应业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 20
+      },
+      "current_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "debt_ratio": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "燃气生产和供应业",
+      "category": "电力、热力、燃气及水生产和供应业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 10,
+        "high": 25
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "水的生产和供应业",
+      "category": "电力、热力、燃气及水生产和供应业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 18
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.06,
+        "high": 0.14
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.1,
+        "high": 0.18
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "房屋建筑业",
+      "category": "建筑业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.18
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.65,
+        "high": 0.8
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.05
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "土木工程建筑业",
+      "category": "建筑业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.18
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.65,
+        "high": 0.8
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.22
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "建筑安装业",
+      "category": "建筑业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.05
+      },
+      "sub_industry": "建筑装饰、装修和其他建筑业",
+      "category": "建筑业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 8,
+        "high": 18
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.08,
+        "high": 0.18
+      },
+      "vat_burden": {
+        "low": 0.01,
+        "high": 0.03
+      },
+      "sub_industry": "批发业",
+      "category": "批发和零售业",
+      "expense_ratio": {
+        "low": 0.03,
+        "high": 0.08
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.01,
+        "high": 0.04
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 7,
+        "high": 16
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "零售业",
+      "category": "批发和零售业",
+      "expense_ratio": {
+        "low": 0.08,
+        "high": 0.15
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "铁路运输业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.18,
+        "high": 0.3
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "道路运输业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.28
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "水上运输业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.16,
+        "high": 0.26
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.03,
+        "high": 0.08
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.1,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "航空运输业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.22,
+        "high": 0.32
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "debt_ratio": {
+        "low": 0.65,
+        "high": 0.8
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.07
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "管道运输业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 20
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.12,
+        "high": 0.22
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "多式联运和运输代理业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "装卸搬运和仓储业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.12,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 14
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.09
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 14
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "邮政业",
+      "category": "交通运输、仓储和邮政业",
+      "expense_ratio": {
+        "low": 0.18,
+        "high": 0.28
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 25
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.55,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.02,
+        "high": 0.06
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.07
+      },
+      "sub_industry": "住宿业",
+      "category": "住宿和餐饮业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.7
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.07
+      },
+      "sub_industry": "餐饮业",
+      "category": "住宿和餐饮业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.1
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 20
+      },
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.1
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "电信、广播电视和卫星传输服务",
+      "category": "信息传输、软件和信息技术服务业",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 18
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 6,
+        "high": 15
+      },
+      "cit_burden": {
+        "low": 0.1,
+        "high": 0.15
+      },
+      "gross_margin": {
+        "low": 0.45,
+        "high": 0.65
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "互联网和相关服务",
+      "category": "信息传输、软件和信息技术服务业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 1,
+        "high": 2
+      },
+      "inventory_turnover": {
+        "low": 10,
+        "high": 30
+      },
+      "current_ratio": {
+        "low": 1.3,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.35,
+        "high": 0.5
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.2
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.1,
+        "high": 0.15
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "软件和信息技术服务业",
+      "category": "信息传输、软件和信息技术服务业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 1.1,
+        "high": 2.1
+      },
+      "inventory_turnover": {
+        "low": 8,
+        "high": 25
+      },
+      "current_ratio": {
+        "low": 1.4,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.35,
+        "high": 0.5
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "货币金融服务",
+      "category": "金融业",
+      "expense_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "quick_ratio": {
+        "low": 0.5,
+        "high": 1
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 0.8,
+        "high": 1.2
+      },
+      "debt_ratio": {
+        "low": 0.85,
+        "high": 0.95
+      },
+      "net_margin": {
+        "low": 0.15,
+        "high": 0.25
+      }
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0.04,
+        "high": 0.08
+      },
+      "sub_industry": "资本市场服务",
+      "category": "金融业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.6
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.75,
+        "high": 0.9
+      },
+      "net_margin": {
+        "low": 0.2,
+        "high": 0.35
+      }
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0.01,
+        "high": 0.04
+      },
+      "sub_industry": "保险业",
+      "category": "金融业",
+      "expense_ratio": {
+        "low": 0.35,
+        "high": 0.5
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.3
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 0.9,
+        "high": 1.5
+      },
+      "debt_ratio": {
+        "low": 0.8,
+        "high": 0.95
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.07
+      },
+      "sub_industry": "其他金融业",
+      "category": "金融业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.7,
+        "high": 0.85
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.2
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.05,
+        "high": 0.09
+      },
+      "sub_industry": "房地产业",
+      "category": "房地产业",
+      "expense_ratio": {
+        "low": 0.21,
+        "high": 0.38
+      },
+      "quick_ratio": {
+        "low": 0.4,
+        "high": 0.8
+      },
+      "inventory_turnover": {
+        "low": 0.5,
+        "high": 2
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.7,
+        "high": 0.85
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "租赁业",
+      "category": "租赁和商务服务业",
+      "expense_ratio": {
+        "low": 0.1,
+        "high": 0.2
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.2
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.7
+      },
+      "debt_ratio": {
+        "low": 0.6,
+        "high": 0.75
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.4,
+        "high": 0.6
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "商务服务业",
+      "category": "租赁和商务服务业",
+      "expense_ratio": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.7
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.1,
+        "high": 0.2
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "研究和试验发展",
+      "category": "科学研究和技术服务业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 1,
+        "high": 1.9
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.3,
+        "high": 2.4
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "专业技术服务业",
+      "category": "科学研究和技术服务业",
+      "expense_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.7
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.06,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "科技推广和应用服务业",
+      "category": "科学研究和技术服务业",
+      "expense_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "quick_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "current_ratio": {
+        "low": 1.3,
+        "high": 2.3
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "水利管理业",
+      "category": "水利、环境和公共设施管理业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.3
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.1
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.22,
+        "high": 0.38
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "生态保护和环境治理业",
+      "category": "水利、环境和公共设施管理业",
+      "expense_ratio": {
+        "low": 0.17,
+        "high": 0.27
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.4
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.11
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.22,
+        "high": 0.38
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "公共设施管理业",
+      "category": "水利、环境和公共设施管理业",
+      "expense_ratio": {
+        "low": 0.17,
+        "high": 0.27
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.4
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.11
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.22,
+        "high": 0.38
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "土地管理业",
+      "category": "水利、环境和公共设施管理业",
+      "expense_ratio": {
+        "low": 0.17,
+        "high": 0.27
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.4
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.11
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "居民服务业",
+      "category": "居民服务、修理和其他服务业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "机动车、电子产品和日用产品修理业",
+      "category": "居民服务、修理和其他服务业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 12
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "其他服务业",
+      "category": "居民服务、修理和其他服务业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.6,
+        "high": 1.3
+      },
+      "inventory_turnover": {
+        "low": 5,
+        "high": 15
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "教育",
+      "category": "教育",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.6
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "卫生",
+      "category": "卫生和社会工作",
+      "expense_ratio": {
+        "low": 0.22,
+        "high": 0.38
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 5,
+        "high": 11
+      },
+      "cit_burden": {
+        "low": 0.15,
+        "high": 0.2
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "社会工作",
+      "category": "卫生和社会工作",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 1.9
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "新闻和出版业",
+      "category": "文化、体育和娱乐业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.45
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.7
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.1
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.08,
+        "high": 0.18
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "广播、电视、电影和录音制作业",
+      "category": "文化、体育和娱乐业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.6
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 3,
+        "high": 8
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.3,
+        "high": 0.5
+      },
+      "vat_burden": {
+        "low": 0.02,
+        "high": 0.05
+      },
+      "sub_industry": "文化艺术业",
+      "category": "文化、体育和娱乐业",
+      "expense_ratio": {
+        "low": 0.25,
+        "high": 0.4
+      },
+      "quick_ratio": {
+        "low": 0.9,
+        "high": 1.7
+      },
+      "inventory_turnover": {
+        "low": 2,
+        "high": 6
+      },
+      "current_ratio": {
+        "low": 1.2,
+        "high": 2.2
+      },
+      "debt_ratio": {
+        "low": 0.4,
+        "high": 0.55
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.25,
+        "high": 0.45
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "体育",
+      "category": "文化、体育和娱乐业",
+      "expense_ratio": {
+        "low": 0.2,
+        "high": 0.35
+      },
+      "quick_ratio": {
+        "low": 0.8,
+        "high": 1.5
+      },
+      "inventory_turnover": {
+        "low": 3,
+        "high": 7
+      },
+      "current_ratio": {
+        "low": 1.1,
+        "high": 2
+      },
+      "debt_ratio": {
+        "low": 0.45,
+        "high": 0.6
+      },
+      "net_margin": {
+        "low": 0.04,
+        "high": 0.12
+      }
+    },
+    {
+      "ar_turnover": {
+        "low": 4,
+        "high": 10
+      },
+      "cit_burden": {
+        "low": 0.2,
+        "high": 0.25
+      },
+      "gross_margin": {
+        "low": 0.35,
+        "high": 0.55
+      },
+      "vat_burden": {
+        "low": 0.03,
+        "high": 0.06
+      },
+      "sub_industry": "娱乐业",
+      "category": "文化、体育和娱乐业",
+      "expense_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "quick_ratio": {
+        "low": 0.7,
+        "high": 1.4
+      },
+      "inventory_turnover": {
+        "low": 4,
+        "high": 9
+      },
+      "current_ratio": {
+        "low": 1,
+        "high": 1.8
+      },
+      "debt_ratio": {
+        "low": 0.5,
+        "high": 0.65
+      },
+      "net_margin": {
+        "low": 0.05,
+        "high": 0.15
+      }
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "中国共产党机关",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "国家机构",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "人民政协、民主党派",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "社会保障",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "群众团体、社会团体和其他成员组织",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "基层群众自治组织及其他组织",
+      "category": "公共管理、社会保障和社会组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    },
+    {
+      "ar_turnover": null,
+      "cit_burden": {
+        "low": 0,
+        "high": 0
+      },
+      "gross_margin": null,
+      "vat_burden": {
+        "low": 0,
+        "high": 0.02
+      },
+      "sub_industry": "国际组织",
+      "category": "国际组织",
+      "expense_ratio": {
+        "low": 0.15,
+        "high": 0.25
+      },
+      "quick_ratio": {
+        "low": 1.2,
+        "high": 2
+      },
+      "inventory_turnover": null,
+      "current_ratio": {
+        "low": 1.5,
+        "high": 2.5
+      },
+      "debt_ratio": {
+        "low": 0.3,
+        "high": 0.45
+      },
+      "net_margin": null
+    }
+  ]
+}

@@ -29,3 +29,10 @@ Thumbs.db
 *.tmp
 workbuddy/
 .workbuddy/
+
+# 可重新生成的文件
+rag-data/chunks.jsonl
+rag-data/staging/
+rag-data/raw/
+backend/eval/report.json
+outputs/

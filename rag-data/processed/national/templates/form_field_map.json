@@ -1,0 +1,65 @@
+{
+  "description": "个税申报表字段映射配置。Agent 对话收集用户信息后，按此映射填入表单模板。",
+  "forms": {
+    "A表": {
+      "file": "个人所得税基础信息表（A表）/个人所得税基础信息表（A表）纸质表单.xlsx",
+      "description": "扣缴义务人为员工填报基础信息",
+      "sheet": "Sheet2",
+      "data_start_row": 9,
+      "fields": {
+        "扣缴义务人名称":       {"cell": "A3",   "type": "text",   "required": true},
+        "扣缴义务人识别号":      {"cell": "A4",   "type": "text",   "required": true},
+        "纳税人姓名":            {"cell": "C9",   "type": "text",   "required": true,  "ask": "请问你的姓名是？"},
+        "身份证件类型":          {"cell": "D9",   "type": "select", "required": true,  "options": ["居民身份证","护照","港澳居民来往内地通行证","台湾居民来往大陆通行证"], "ask": "你的证件类型是？"},
+        "身份证件号码":          {"cell": "E9",   "type": "text",   "required": true,  "ask": "请提供你的证件号码"},
+        "出生日期":              {"cell": "F9",   "type": "date",   "required": true,  "ask": "你的出生日期是？（格式：YYYY-MM-DD）"},
+        "国籍/地区":             {"cell": "G9",   "type": "select", "required": true,  "options": ["中国"], "default": "中国"},
+        "任职受雇从业类型":       {"cell": "H9",  "type": "select", "required": false, "options": ["雇员","保险营销员","证券经纪人","实习学生","其他"]},
+        "职务":                  {"cell": "I9",   "type": "text",   "required": false},
+        "学历":                  {"cell": "J9",   "type": "select", "required": false, "options": ["研究生","大学本科","大学专科","高中","初中及以下"]},
+        "任职受雇从业日期":       {"cell": "K9",  "type": "date",   "required": false, "ask": "你在当前单位的入职日期是？"},
+        "手机号码":              {"cell": "M9",   "type": "text",   "required": false, "ask": "你的手机号是？"},
+        "户籍所在地":            {"cell": "N9",   "type": "text",   "required": false},
+        "联系地址":              {"cell": "P9",   "type": "text",   "required": false},
+        "电子邮箱":              {"cell": "Q9",   "type": "text",   "required": false},
+        "开户银行":              {"cell": "R9",   "type": "text",   "required": false, "ask": "退税到哪个银行？请提供开户行名称"},
+        "银行账号":              {"cell": "S9",   "type": "text",   "required": false, "ask": "银行卡号是？"},
+        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false, "ask": "是否为残疾、孤老或烈属人员？"}
+      }
+    },
+    "B表": {
+      "file": "个人所得税基础信息表（B表）/个人所得税基础信息表（B表）纸质表单.xlsx",
+      "description": "纳税人自行申报基础信息（个体户/自由职业者等无扣缴义务人情形）",
+      "sheet": "Sheet2",
+      "data_start_row": 9,
+      "fields": {
+        "纳税人姓名":            {"cell": "C9",   "type": "text",   "required": true},
+        "身份证件类型":          {"cell": "D9",   "type": "select", "required": true},
+        "身份证件号码":          {"cell": "E9",   "type": "text",   "required": true},
+        "出生日期":              {"cell": "F9",   "type": "date",   "required": true},
+        "国籍/地区":             {"cell": "G9",   "type": "text",   "required": true},
+        "手机号码":              {"cell": "M9",   "type": "text",   "required": false},
+        "户籍所在地":            {"cell": "N9",   "type": "text",   "required": false},
+        "联系地址":              {"cell": "P9",   "type": "text",   "required": false},
+        "开户银行":              {"cell": "R9",   "type": "text",   "required": false},
+        "银行账号":              {"cell": "S9",   "type": "text",   "required": false},
+        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false}
+      }
+    }
+  },
+  "collection_rules": {
+    "description": "Agent 引导提问的规则",
+    "principles": [
+      "一次只问 1-2 个问题，不要连续轰炸",
+      "必填字段优先收集",
+      "已有上下文的字段自动填充不重复问（如用户说了'我在郑州工作'→户籍所在地填郑州）",
+      "退税银行卡信息在用户说要退税时再问",
+      "问完所有必填字段后，展示汇总让用户确认再填表"
+    ],
+    "conversation_template": {
+      "greeting": "好的，我来帮你生成个税申报信息表。我先收集一些基本信息。",
+      "close": "信息已确认，正在为你生成申报表...",
+      "confirm": "请确认以下信息是否正确：\n{summary}\n确认无误我就开始填表。"
+    }
+  }
+}

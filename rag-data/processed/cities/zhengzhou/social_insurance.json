@@ -1,0 +1,118 @@
+{
+  "tool_usage": {
+    "description": "郑州社保 + 住房公积金 2025年度缴费标准。用于计算器精确扣除个人社保公积金。",
+    "effective_period": "2025年7月1日 — 2026年6月30日",
+    "source": {
+      "social_insurance": "河南省人社厅 2025年度社保缴费基数通知",
+      "housing_fund": "郑州住房公积金管理中心 郑公积金〔2025〕11号"
+    },
+    "note": "工伤保险按行业风险浮动(0.2%-1.9%)，个人不缴。医疗保险阶段性降低1%。"
+  },
+  "base": {
+    "social_insurance_avg": 6385,
+    "social_insurance_min": 3831,
+    "social_insurance_max": 19155,
+    "min_wage": 2100
+  },
+  "employee": {
+    "description": "单位职工社保 + 公积金（由单位代扣代缴）",
+    "social_insurance": {
+      "pension": {
+        "label": "养老保险",
+        "company_rate": 0.16,
+        "personal_rate": 0.08,
+        "total_rate": 0.24
+      },
+      "medical": {
+        "label": "医疗保险",
+        "company_rate": 0.08,
+        "personal_rate": 0.02,
+        "total_rate": 0.10,
+        "note": "阶段性降低1%，原单位为8%+个人2%=10%"
+      },
+      "unemployment": {
+        "label": "失业保险",
+        "company_rate": 0.007,
+        "personal_rate": 0.003,
+        "total_rate": 0.01
+      },
+      "work_injury": {
+        "label": "工伤保险",
+        "company_rate": null,
+        "personal_rate": 0,
+        "note": "单位缴纳0.2%-1.9%按行业风险浮动，个人不缴"
+      },
+      "maternity": {
+        "label": "生育保险",
+        "company_rate": 0.01,
+        "personal_rate": 0,
+        "total_rate": 0.01
+      }
+    },
+    "housing_fund": {
+      "label": "住房公积金",
+      "company_rate_range": {"low": 0.05, "high": 0.12},
+      "personal_rate_range": {"low": 0.05, "high": 0.12},
+      "base_min": 2100,
+      "base_max": 27520,
+      "monthly_min": 210,
+      "monthly_max": 6604,
+      "note": "单位与个人比例一致，可在5%-12%间自选。计算器默认取12%。"
+    },
+    "summary": {
+      "personal_total_min_rate": 0.153,
+      "personal_total_max_rate": 0.223,
+      "personal_breakdown": "养老8% + 医疗2% + 失业0.3% + 公积金5%-12%",
+      "note": "工伤保险个人不缴，生育保险个人不缴"
+    }
+  },
+  "flexible_employment": {
+    "description": "灵活就业人员（个体户、自由职业者）自行缴纳",
+    "social_insurance": {
+      "pension": {
+        "label": "养老保险",
+        "rate": 0.20,
+        "base_options": [
+          {"level": "60% (下限)", "amount": 3831},
+          {"level": "100%", "amount": 6385},
+          {"level": "200%", "amount": 12770},
+          {"level": "300% (上限)", "amount": 19155}
+        ]
+      },
+      "medical": {
+        "label": "医疗保险（含生育）",
+        "rate": 0.10,
+        "base": 5108,
+        "note": "按在岗职工月平均工资80%为基数(6385×80%=5108)，阶段性降低1%"
+      }
+    },
+    "housing_fund": {
+      "label": "住房公积金",
+      "rate": 0.20,
+      "monthly_min": 580,
+      "monthly_max": 2894,
+      "note": "缴存比例为20%，可在上下限范围内自主确定金额"
+    }
+  },
+  "calculation_examples": {
+    "description": "计算示例供 Agent 参考",
+    "example1": {
+      "title": "月薪8000元职工（按最低基数3831计算社保）",
+      "salary": 8000,
+      "pension_personal": "3831 × 8% = 306.48",
+      "medical_personal": "3831 × 2% = 76.62",
+      "unemployment_personal": "3831 × 0.3% = 11.49",
+      "housing_fund_personal": "3831 × 12% = 459.72（默认12%）",
+      "total_deduction": "306.48 + 76.62 + 11.49 + 459.72 = 854.31 元/月"
+    },
+    "example2": {
+      "title": "月薪20000元职工（按实际工资计算，超上限时按上限19155）",
+      "salary": 20000,
+      "pension_personal": "19155 × 8% = 1532.40",
+      "medical_personal": "19155 × 2% = 383.10",
+      "unemployment_personal": "19155 × 0.3% = 57.47",
+      "housing_fund_personal": "19155 × 12% = 2298.60",
+      "total_deduction": "1532.40 + 383.10 + 57.47 + 2298.60 = 4271.57 元/月"
+    }
+  }
+}

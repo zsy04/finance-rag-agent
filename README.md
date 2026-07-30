@@ -1,7 +1,7 @@
 # 财务 RAG Agent · 项目总览
 
 > **毕设项目** | **财税生活助手** — 面向零财务基础大众的 AI 财税问答 Web 应用
-> **决策日期**：2026-07-26 | **状态**：方案设计完成，待开发
+> **决策日期**：2026-07-26 | **状态**：Phase 2 后端核心完成（RAG检索+流式问答已跑通），待 Phase 3 前端联调
 
 ---
 
@@ -30,18 +30,44 @@
 ## 检索链路
 
 ```
-用户提问 → 元数据预过滤 → BGE-M3 双向量编码 → Qdrant RRF 混合检索 Top-20 → Reranker 精排 Top-5 → DeepSeek 流式输出
+用户提问 → 元数据预过滤（relevance_tier 分层）
+         → BGE-M3 双向量编码（稠密 1024d + 稀疏词汇）
+         → Qdrant 混合检索（RRF 融合 → Top-30）
+         → BGE-Reranker-v2-m3 精排 → Top-5
+         → 拼接上下文 + System Prompt
+         → DeepSeek V4 Flash 流式输出
 ```
 
-## Agent 工具集（6 个）
+## 切分策略（Grill-me 决议）
+
+| 参数 | 值 | 说明 |
+|------|:---:|------|
+| 语义边界 | 税法 `### 第X条` / QA `## 问句` | MarkdownHeaderTextSplitter |
+| chunk 上限 | 800 字 | BGE-M3 最佳窗口 |
+| chunk 下限 | 80 字 | 不跨条目合并 |
+| 重叠 | 120 字（15%） | 边界不切断关键句 |
+
+## 评测
+
+```bash
+cd backend
+python eval/eval.py          # 40 条 query，recall@5 / MRR / NDCG
+python eval/eval.py -v       # 逐条打印详情
+python eval/eval.py --category 个税  # 按分类评测
+```
+
+评测数据集 `backend/eval/eval_set.json`，共 40 条，覆盖个税、增值税、社保、契税等 10 个类别。每次修改检索链路后跑一次对比指标变化。
+
+## Agent 工具集（7 个）
 
 | 工具 | 数据源 | 功能 |
 |------|--------|------|
-| `search_knowledge` | Qdrant 向量库 | 智能问答 |
-| `calculate_income_tax` | JSON 税率表（代码） | 个税计算 |
-| `query_social_insurance` | JSON 城市数据（代码） | 社保计算 |
-| `fill_tax_form` | 字段映射（代码） | 申报材料生成 |
-| `get_filing_guide` | MD 操作指引 | 申报流程指引 |
+| `search_knowledge` | Qdrant 向量库 | 智能问答（三层分层召回） |
+| `calculate_income_tax` | `tax_rate_tables.json`（代码） | 个税计算（综合/经营/年终奖/累计预扣） |
+| `query_social_insurance` | `cities/zhengzhou/social_insurance.json`（代码） | 社保+公积金计算 |
+| `fill_tax_form` | 字段映射 + openpyxl（代码）| 申报表自动填写（A表/B表） |
+| `get_filing_guide` | `operations/` 操作指引 | 个税APP申报流程指引 |
+| `search_industry_benchmark` | `industry_benchmark.json`（代码）| 行业财务指标参照 |
 | `search_tax_website` | Web Search 白名单 | 实时政策查询 |
 
 ---
@@ -78,7 +104,7 @@ F:\lest\
 ├── README.md              ← 你在这里
 ├── docker-compose.yml     ← Qdrant 容器
 ├── .gitignore
-├── docs/                  ← 全部方案文档
+├── docs/                  ← 全部方案文档（14 个）
 │   ├── 财务RAG-资料收集蓝图.md
 │   ├── 财务RAG-MVP资料收集执行表.md
 │   ├── 财务RAG-资料收集预处理方案.md
@@ -88,10 +114,38 @@ F:\lest\
 │   ├── 财务RAG-AI提示词工程文档-v1.0.md
 │   ├── 财务RAG-开发注意事项.md
 │   ├── 财务RAG-后端开发路线图.md
-│   └── 财务RAG-前后端对照表.md
+│   ├── 财务RAG-前后端对照表.md
+│   └── 税率表缺失清单.md
+├── scripts/               ← 数据处理脚本（9 个）
+│   ├── clean_to_md.py         ← 原始 MHTML → Markdown
+│   ├── clean_noise.py         ← UI 噪声正则清洗
+│   ├── heading_linebreak.py   ← 标题标准化 + 智能换行
+│   ├── metadata_tier.py       ← 相关性分层（旧版）
+│   ├── final_preprocess.py    ← 全流程预处理（新版）
+│   ├── benchmark_to_json.py   ← Excel 行业基准 → JSON
+│   ├── md_tables_to_json.py   ← MD 税率表 → JSON
+│   └── fill_tax_form.py       ← 申报表自动填写工具
+├── backend/
+│   ├── eval/                  ← 检索评测
+│   │   ├── eval_set.json      ← 40 条评测数据集
+│   │   └── eval.py            ← 评测脚本（recall/MRR/NDCG）
+│   ├── rag/                   ← RAG 核心
+│   └── ...
+├── rag-data/              ← 数据（raw + processed）
+│   ├── staging/               ← 119 个原始 MHTML/.doc
+│   ├── processed/
+│   │   ├── national/
+│   │   │   ├── tax_law/       ← 53 个税法 Markdown
+│   │   │   ├── qa_corpus/     ← 62 个问答 Markdown
+│   │   │   ├── rates/         ← JSON 税率表 + 行业基准
+│   │   │   ├── operations/    ← 操作指引 Markdown
+│   │   │   └── templates/     ← 申报表 A表+B表 模板
+│   │   └── cities/
+│   │       └── zhengzhou/     ← 郑州社保+公积金 JSON
+│   └── 个税操作指南.md
 ├── qdrant_data/           ← Qdrant 数据（不提交）
-├── backend/               ← 后端代码（待开发）
-└── frontend/              ← 前端代码（待开发）
+├── backend/               ← 后端（FastAPI + RAG + SSE，已跑通）
+└── frontend/              ← 前端代码（已有基础）
 ```
 
 | # | 文档 | 读什么 | 何时读 |
@@ -151,14 +205,19 @@ git push -u origin main
 ## 开发阶段 & 里程碑
 
 ```
-Phase 0 — 方案设计 ✅ 已完成（本文档体系）
+Phase 0 — 方案设计    ✅ 已完成（文档体系）
     │
-Phase 1 — 资料收集     → `docs/财务RAG-资料收集预处理方案.md`
+Phase 1 — 资料收集    ✅ 已完成（115 个文件 + 3 个 JSON 数据源）
+    │   ├── 53 税法 + 62 QA → 标准化标题 + 智能换行 + 四层相关性
+    │   ├── tax_rate_tables.json（个税+车船税+印花税，含计算流程）
+    │   ├── industry_benchmark.json（20 门类×97 行业×10 指标）
+    │   └── cities/zhengzhou/social_insurance.json（社保+公积金）
     │
-Phase 2 — 后端开发     → `docs/财务RAG-后端开发路线图.md`（7 步）
-    │                     🎯 第一 checkpoint：RAG 问答可流式回答一个税务问题
+Phase 2 — 后端开发     ✅ RAG检索链 + DeepSeek流式问答已跑通
+    │                     → `backend/rag/retriever.py` + `backend/services/generator.py`
+    │                     🎯 第一 checkpoint 达成：POST /chat → SSE 流式回答税务问题
     │
-Phase 3 — 前端开发     → `docs/财务RAG-AI提示词工程文档-v1.0.md`
+Phase 3 — 前端联调      → `docs/财务RAG-前后端对照表.md`
     │
 Phase 4 — 联调 & 演示  → `docs/财务RAG-前后端对照表.md`
     │

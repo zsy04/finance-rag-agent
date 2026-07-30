@@ -1,0 +1,548 @@
+{
+  "tool_usage": {
+    "description": "中国财税税率表，含个人所得税、车船税、印花税的税率/税额数据。用于税率计算器的精确查询。",
+    "tables": {
+      "personal_income_tax": "个人所得税综合所得 + 经营所得税率表",
+      "vehicle_vessel_tax": "车船税税目税额表（按排量/吨位）",
+      "stamp_tax": "印花税税目税率表（合同/产权转移/账簿/证券）"
+    },
+    "usage_examples": [
+      "用户: 我月薪2万，个税多少？→ 查综合所得税率表，累进计算",
+      "用户: 我月薪2万，有一个孩子在上小学，个税多少？→ 查综合所得表 + 专项附加扣除→子女教育2000/月",
+      "用户: 刚买了辆2.0L的车，车船税多少？→ 查车船税→乘用车→1.6-2.0L档",
+      "用户: 签了个100万的购销合同，印花税多少？→ 查印花税→买卖合同→万分之三"
+    ]
+  },
+  "tables": {
+    "personal_income_tax": {
+      "description": "个人所得税税率表，含综合所得（7级）和经营所得（5级）两套税率",
+      "exemption": 5000,
+      "annual_deduction": 60000,
+      "special_deductions": {
+        "description": "专项附加扣除（2023年1月1日起执行的最新标准）",
+        "note": "住房贷款利息和住房租金不能同时享受",
+        "items": {
+          "children_education": {
+            "label": "子女教育",
+            "amount": 2000,
+            "unit": "元/月/每个子女",
+            "note": "全日制学历教育 + 学前教育（3岁至小学入学前）",
+            "split_rule": "父母一方100%或双方各50%"
+          },
+          "infant_care": {
+            "label": "3岁以下婴幼儿照护",
+            "amount": 2000,
+            "unit": "元/月/每个婴幼儿",
+            "split_rule": "父母一方100%或双方各50%"
+          },
+          "continuing_education_degree": {
+            "label": "继续教育（学历学位）",
+            "amount": 400,
+            "unit": "元/月",
+            "note": "最长扣除48个月",
+            "split_rule": "本人或父母扣除"
+          },
+          "continuing_education_certificate": {
+            "label": "继续教育（职业资格证书）",
+            "amount": 3600,
+            "unit": "元/年",
+            "note": "取得证书的当年一次性扣除"
+          },
+          "serious_illness": {
+            "label": "大病医疗",
+            "amount": null,
+            "unit": "元/年",
+            "note": "个人负担超15000元的部分，在80000元限额内据实扣除",
+            "threshold": 15000,
+            "limit": 80000,
+            "split_rule": "本人或配偶扣除，未成年子女可由父母扣除"
+          },
+          "housing_loan_interest": {
+            "label": "住房贷款利息",
+            "amount": 1000,
+            "unit": "元/月",
+            "note": "首套住房贷款，最长240个月。每人只能享受一次",
+            "split_rule": "夫妻一方100%扣除"
+          },
+          "housing_rent": {
+            "label": "住房租金",
+            "amount": null,
+            "unit": "元/月",
+            "note": "主要工作城市无自有住房",
+            "tiers": [
+              {"city_level": "直辖市/省会/计划单列市", "amount": 1500},
+              {"city_level": "市辖区户籍人口>100万的城市", "amount": 1100},
+              {"city_level": "市辖区户籍人口≤100万的城市", "amount": 800}
+            ]
+          },
+          "elderly_support": {
+            "label": "赡养老人",
+            "amount": 3000,
+            "unit": "元/月",
+            "note": "被赡养人年满60岁",
+            "split_rule": "独生子女3000/月；非独生子女分摊，每人不超过1500/月"
+          }
+        },
+        "social_insurance": {
+          "label": "专项扣除（三险一金）",
+          "description": "基本养老保险、基本医疗保险、失业保险、住房公积金，按实际缴纳金额扣除",
+          "note": "各省市缴费比例不同，需用户自行输入或查询本地标准"
+        }
+      },
+      "income_types": {
+        "description": "不同收入类型在汇算时的计入规则",
+        "salary": {
+          "label": "工资薪金",
+          "taxable_ratio": 1.0,
+          "note": "全额计入综合所得"
+        },
+        "labor_service": {
+          "label": "劳务报酬",
+          "taxable_ratio": 0.8,
+          "note": "收入减除20%费用后计入",
+          "formula": "收入额 = 劳务报酬收入 × (1 - 20%)"
+        },
+        "manuscript": {
+          "label": "稿酬",
+          "taxable_ratio": 0.56,
+          "note": "收入减除20%费用后再减按70%计算",
+          "formula": "收入额 = 稿酬收入 × (1 - 20%) × 70%"
+        },
+        "royalty": {
+          "label": "特许权使用费",
+          "taxable_ratio": 0.8,
+          "note": "收入减除20%费用后计入",
+          "formula": "收入额 = 特许权使用费收入 × (1 - 20%)"
+        }
+      },
+      "annual_bonus": {
+        "description": "全年一次性奖金（年终奖）计税方法",
+        "note": "居民个人可选择单独计税或并入综合所得计税。2027年12月31日前可选择。",
+        "method_separate": {
+          "label": "单独计税",
+          "step1": "将年终奖 ÷ 12，用商数查月度税率表确定税率和速算扣除数",
+          "step2": "应纳税额 = 年终奖 × 税率 - 速算扣除数",
+          "monthly_brackets": [
+            {"level": 1, "monthly_income_range": "不超过3000元", "monthly_income_high": 3000, "rate": 0.03, "quick_deduction": 0},
+            {"level": 2, "monthly_income_range": "3000-12000元", "monthly_income_low": 3000, "monthly_income_high": 12000, "rate": 0.10, "quick_deduction": 210},
+            {"level": 3, "monthly_income_range": "12000-25000元", "monthly_income_low": 12000, "monthly_income_high": 25000, "rate": 0.20, "quick_deduction": 1410},
+            {"level": 4, "monthly_income_range": "25000-35000元", "monthly_income_low": 25000, "monthly_income_high": 35000, "rate": 0.25, "quick_deduction": 2660},
+            {"level": 5, "monthly_income_range": "35000-55000元", "monthly_income_low": 35000, "monthly_income_high": 55000, "rate": 0.30, "quick_deduction": 4410},
+            {"level": 6, "monthly_income_range": "55000-80000元", "monthly_income_low": 55000, "monthly_income_high": 80000, "rate": 0.35, "quick_deduction": 7160},
+            {"level": 7, "monthly_income_range": "超过80000元", "monthly_income_low": 80000, "rate": 0.45, "quick_deduction": 15160}
+          ]
+        },
+        "method_merge": {
+          "label": "并入综合所得",
+          "note": "年终奖与全年工资合并，统一按综合所得税率表计算"
+        }
+      },
+      "calculation_workflow": {
+        "description": "个税计算完整流程（Agent 工具调用指引）",
+        "monthly_withholding": {
+          "label": "月度累计预扣",
+          "step1": "累计收入 = 当月工资 + 前几月累计工资",
+          "step2": "累计免税收入 = 当月5000 + 前几月累计5000",
+          "step3": "累计专项扣除 = 当月三险一金 + 前几月累计",
+          "step4": "累计专项附加扣除 = 当月各项 + 前几月累计",
+          "step5": "累计应纳税所得额 = 累计收入 - 累计免税 - 累计专项扣除 - 累计专项附加扣除",
+          "step6": "累计应纳税额 = 累计应纳税所得额 × 税率 - 速算扣除数",
+          "step7": "当月应纳税额 = 累计应纳税额 - 前几月已缴税额",
+          "formula": "当月个税 = MAX(0, 累计应纳税额 - 已缴税额)"
+        },
+        "annual_settlement": {
+          "label": "年度汇算清缴",
+          "step1": "年综合所得收入额 = 工资 + 劳务报酬×80% + 稿酬×56% + 特许权使用费×80%",
+          "step2": "年应纳税所得额 = 年综合所得收入额 - 60000 - 年专项扣除 - 年专项附加扣除 - 其他扣除",
+          "step3": "年应纳税额 = 年应纳税所得额 × 税率 - 速算扣除数",
+          "step4": "应退/补税额 = 年应纳税额 - 全年已预缴税额",
+          "note": "应退/补 > 0 则补税，< 0 则退税"
+        },
+        "annual_bonus_comparison": {
+          "label": "年终奖计税方式选择",
+          "note": "系统应同时计算两种方式并推荐税额较低的方案",
+          "method": "分别用单独计税和合并计税计算总个税，取较低者"
+        }
+      },
+      "comprehensive": {
+        "description": "综合所得适用（工资薪金、劳务报酬、稿酬、特许权使用费）",
+        "type": "超额累进",
+        "brackets": [
+          {
+            "level": 1,
+            "income_range": "不超过36000元",
+            "income_high": 36000,
+            "rate": 0.03,
+            "quick_deduction": 0
+          },
+          {
+            "level": 2,
+            "income_range": "36000-144000元",
+            "income_low": 36000,
+            "income_high": 144000,
+            "rate": 0.1,
+            "quick_deduction": 2520
+          },
+          {
+            "level": 3,
+            "income_range": "144000-300000元",
+            "income_low": 144000,
+            "income_high": 300000,
+            "rate": 0.2,
+            "quick_deduction": 16920
+          },
+          {
+            "level": 4,
+            "income_range": "300000-420000元",
+            "income_low": 300000,
+            "income_high": 420000,
+            "rate": 0.25,
+            "quick_deduction": 31920
+          },
+          {
+            "level": 5,
+            "income_range": "420000-660000元",
+            "income_low": 420000,
+            "income_high": 660000,
+            "rate": 0.3,
+            "quick_deduction": 52920
+          },
+          {
+            "level": 6,
+            "income_range": "660000-960000元",
+            "income_low": 660000,
+            "income_high": 960000,
+            "rate": 0.35,
+            "quick_deduction": 85920
+          },
+          {
+            "level": 7,
+            "income_range": "超过960000元",
+            "income_low": 960000,
+            "rate": 0.45,
+            "quick_deduction": 181920
+          }
+        ],
+        "formula": "应纳税额 = 应纳税所得额 × 税率 - 速算扣除数",
+        "taxable_income_formula": "应纳税所得额 = 月度收入 - 5000元(免征额) - 专项扣除(三险一金) - 专项附加扣除 - 其他扣除"
+      },
+      "business": {
+        "description": "经营所得适用（个体工商户、个人独资企业、合伙企业）",
+        "type": "超额累进",
+        "brackets": [
+          {
+            "level": 1,
+            "income_range": "不超过30000元",
+            "income_high": 30000,
+            "rate": 0.05,
+            "quick_deduction": 0
+          },
+          {
+            "level": 2,
+            "income_range": "30000-90000元",
+            "income_low": 30000,
+            "income_high": 90000,
+            "rate": 0.1,
+            "quick_deduction": 1500
+          },
+          {
+            "level": 3,
+            "income_range": "90000-300000元",
+            "income_low": 90000,
+            "income_high": 300000,
+            "rate": 0.2,
+            "quick_deduction": 10500
+          },
+          {
+            "level": 4,
+            "income_range": "300000-500000元",
+            "income_low": 300000,
+            "income_high": 500000,
+            "rate": 0.3,
+            "quick_deduction": 40500
+          },
+          {
+            "level": 5,
+            "income_range": "超过500000元",
+            "income_low": 500000,
+            "rate": 0.35,
+            "quick_deduction": 65500
+          }
+        ],
+        "formula": "应纳税额 = 应纳税所得额 × 税率 - 速算扣除数",
+        "taxable_income_formula": "应纳税所得额 = 年收入总额 - 成本 - 费用 - 损失"
+      }
+    },
+    "vehicle_vessel_tax": {
+      "description": "车船税税目税额表，各省在幅度内自定具体税额。计算器默认取中位数。",
+      "note": "税额范围为全国指导幅度，具体以各省公布为准",
+      "passenger_cars": [
+        {
+          "displacement": "1.0升（含）以下",
+          "displacement_low": 0,
+          "displacement_high": 1.0,
+          "tax_range": {
+            "low": 60,
+            "high": 360
+          },
+          "tax_mid": 210
+        },
+        {
+          "displacement": "1.0-1.6升（含）",
+          "displacement_low": 1.0,
+          "displacement_high": 1.6,
+          "tax_range": {
+            "low": 300,
+            "high": 540
+          },
+          "tax_mid": 420
+        },
+        {
+          "displacement": "1.6-2.0升（含）",
+          "displacement_low": 1.6,
+          "displacement_high": 2.0,
+          "tax_range": {
+            "low": 360,
+            "high": 660
+          },
+          "tax_mid": 510
+        },
+        {
+          "displacement": "2.0-2.5升（含）",
+          "displacement_low": 2.0,
+          "displacement_high": 2.5,
+          "tax_range": {
+            "low": 660,
+            "high": 1200
+          },
+          "tax_mid": 930
+        },
+        {
+          "displacement": "2.5-3.0升（含）",
+          "displacement_low": 2.5,
+          "displacement_high": 3.0,
+          "tax_range": {
+            "low": 1200,
+            "high": 2400
+          },
+          "tax_mid": 1800
+        },
+        {
+          "displacement": "3.0-4.0升（含）",
+          "displacement_low": 3.0,
+          "displacement_high": 4.0,
+          "tax_range": {
+            "low": 2400,
+            "high": 3600
+          },
+          "tax_mid": 3000
+        },
+        {
+          "displacement": "4.0升以上",
+          "displacement_low": 4.0,
+          "tax_range": {
+            "low": 3600,
+            "high": 5400
+          },
+          "tax_mid": 4500
+        }
+      ],
+      "commercial_vehicles": {
+        "bus": {
+          "description": "客车（核定载客≥9人，含电车）",
+          "unit": "每辆",
+          "tax_range": {
+            "low": 480,
+            "high": 1440
+          },
+          "tax_mid": 960
+        },
+        "truck": {
+          "description": "货车（含半挂牵引车、三轮汽车、低速载货车）",
+          "unit": "整备质量每吨",
+          "tax_range": {
+            "low": 16,
+            "high": 120
+          },
+          "tax_mid": 68
+        }
+      },
+      "trailer": {
+        "description": "挂车",
+        "unit": "整备质量每吨",
+        "rate": "货车税额的50%"
+      },
+      "other_vehicles": {
+        "special_work": {
+          "description": "专业作业车（不含拖拉机）",
+          "unit": "整备质量每吨",
+          "tax_range": {
+            "low": 16,
+            "high": 120
+          },
+          "tax_mid": 68
+        },
+        "wheeled_machinery": {
+          "description": "轮式专用机械车（不含拖拉机）",
+          "unit": "整备质量每吨",
+          "tax_range": {
+            "low": 16,
+            "high": 120
+          },
+          "tax_mid": 68
+        }
+      },
+      "motorcycle": {
+        "description": "摩托车",
+        "unit": "每辆",
+        "tax_range": {
+          "low": 36,
+          "high": 180
+        },
+        "tax_mid": 108
+      },
+      "vessels": {
+        "motor": {
+          "description": "机动船舶",
+          "unit": "净吨位每吨",
+          "tax_range": {
+            "low": 3,
+            "high": 6
+          },
+          "tax_mid": 4.5,
+          "note": "拖船、非机动驳船按50%计算"
+        },
+        "yacht": {
+          "description": "游艇",
+          "unit": "艇身长度每米",
+          "tax_range": {
+            "low": 600,
+            "high": 2000
+          },
+          "tax_mid": 1300
+        }
+      }
+    },
+    "stamp_tax": {
+      "description": "印花税税目税率表（2022年7月1日起施行）",
+      "contracts": [
+        {
+          "type": "借款合同",
+          "basis": "借款金额",
+          "rate": 5e-05,
+          "rate_text": "万分之零点五",
+          "note": "银行业金融机构与借款人（不含同业拆借）"
+        },
+        {
+          "type": "融资租赁合同",
+          "basis": "租金",
+          "rate": 0.0003,
+          "rate_text": "万分之三"
+        },
+        {
+          "type": "买卖合同",
+          "basis": "价款",
+          "rate": 0.0003,
+          "rate_text": "万分之三",
+          "note": "动产买卖（不含个人书立）"
+        },
+        {
+          "type": "承揽合同",
+          "basis": "报酬",
+          "rate": 0.0003,
+          "rate_text": "万分之三"
+        },
+        {
+          "type": "建设工程合同",
+          "basis": "价款",
+          "rate": 0.0003,
+          "rate_text": "万分之三"
+        },
+        {
+          "type": "运输合同",
+          "basis": "运输费用",
+          "rate": 0.0003,
+          "rate_text": "万分之三",
+          "note": "货运和多式联运（不含管道运输）"
+        },
+        {
+          "type": "技术合同",
+          "basis": "价款/报酬/使用费",
+          "rate": 0.0003,
+          "rate_text": "万分之三",
+          "note": "不含专利权、专有技术使用权转让"
+        },
+        {
+          "type": "租赁合同",
+          "basis": "租金",
+          "rate": 0.001,
+          "rate_text": "千分之一"
+        },
+        {
+          "type": "保管合同",
+          "basis": "保管费",
+          "rate": 0.001,
+          "rate_text": "千分之一"
+        },
+        {
+          "type": "仓储合同",
+          "basis": "仓储费",
+          "rate": 0.001,
+          "rate_text": "千分之一"
+        },
+        {
+          "type": "财产保险合同",
+          "basis": "保险费",
+          "rate": 0.001,
+          "rate_text": "千分之一",
+          "note": "不含再保险合同"
+        }
+      ],
+      "property_transfer": [
+        {
+          "type": "土地使用权出让书据",
+          "basis": "价款",
+          "rate": 0.0005,
+          "rate_text": "万分之五"
+        },
+        {
+          "type": "土地使用权/房屋所有权转让书据",
+          "basis": "价款",
+          "rate": 0.0005,
+          "rate_text": "万分之五",
+          "note": "不含土地承包经营权和土地经营权转移"
+        },
+        {
+          "type": "股权转让书据",
+          "basis": "价款",
+          "rate": 0.0005,
+          "rate_text": "万分之五",
+          "note": "不含证券交易印花税"
+        },
+        {
+          "type": "商标/著作权/专利/专有技术使用权转让书据",
+          "basis": "价款",
+          "rate": 0.0003,
+          "rate_text": "万分之三"
+        }
+      ],
+      "business_books": [
+        {
+          "type": "营业账簿",
+          "basis": "实收资本+资本公积合计金额",
+          "rate": 0.00025,
+          "rate_text": "万分之二点五"
+        }
+      ],
+      "securities": [
+        {
+          "type": "证券交易",
+          "basis": "成交金额",
+          "rate": 0.001,
+          "rate_text": "千分之一",
+          "note": "对出让方征收"
+        }
+      ]
+    }
+  }
+}

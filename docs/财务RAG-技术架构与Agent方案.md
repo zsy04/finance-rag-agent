@@ -98,52 +98,75 @@ LLM（DeepSeek V4 Flash）根据用户意图自动选择工具。工具返回结
 
 | # | 工具名 | 输入 | 数据源 | 对应功能 |
 |:--:|--------|------|------|:--:|
-| 1 | `search_knowledge` | 用户问题原文 | Qdrant 向量库（已入库知识） | 智能问答 |
-| 2 | `calculate_income_tax` | 收入类型、金额、扣除项、省份 | JSON 税率表（代码计算） | 税率计算 |
-| 3 | `query_social_insurance` | 城市、就业类型、工资 | JSON 城市数据（代码计算） | 税率计算 |
-| 4 | `fill_tax_form` | 申报表类型、用户个人信息 | 字段映射（代码执行） | 申报材料生成 |
-| 5 | `get_filing_guide` | 申报场景、城市 | MD 操作指引（文件读取） | 申报指引 |
-| 6 | `search_tax_website` | 搜索关键词 | Web Search（白名单域名） | 实时政策 |
-| 7 | `search_relations` | 文档ID / 概念名 | `relations.json`（JSON 关系索引） | 关联法条检索 |
+| 1 | `search_knowledge` | 用户问题原文 | Qdrant 向量库（115个文件，四层relevance_tier分层） | 智能问答 |
+| 2 | `calculate_income_tax` | 收入类型、金额、扣除项、城市 | `tax_rate_tables.json`（综合/经营/年终奖/累计预扣） | 税率计算 |
+| 3 | `query_social_insurance` | 城市、就业类型、工资 | `cities/zhengzhou/social_insurance.json` | 社保计算 |
+| 4 | `fill_tax_form` | 申报表类型、用户信息 | `form_field_map.json` + openpyxl 填表 | 申报材料生成 |
+| 5 | `get_filing_guide` | 申报场景 | `operations/个税操作指南.md` | 申报指引 |
+| 6 | `search_industry_benchmark` | 行业名称/门类 | `industry_benchmark.json`（97行业×10指标） | 行业参照 |
+| 7 | `search_tax_website` | 搜索关键词 | Web Search（白名单域名） | 实时政策 |
 
 ### 3.1 `search_knowledge` — RAG 检索
 
 ```
 输入: query (用户问题原文)
-动作: 元数据预过滤 → BGE-M3 双向量编码 → Qdrant 混合检索 Top-20 → Reranker 精排 Top-5
-输出: [{content, source_url, doc_title, score}, ...]
+检索链路:
+  Layer 1: 元数据预过滤（relevance_tier 分层，支持按 category/city 过滤）
+  Layer 2: BGE-M3 双向量编码 → Qdrant 混合检索 → RRF 融合 → Top-30
+  Layer 3: BGE-Reranker-v2-m3 Cross-encoder 精排 → Top-5
+         → relevance_weight 乘入最终分数（tax_law×1.0, regulation×0.8,
+            qa_corpus×0.6, general_law×0.3）
+输出: [{content, source_url, doc_title, relevance_tier, score}, ...]
+
+切分策略: MarkdownHeaderTextSplitter
+  - 税法: ### 第X条 边界, 800字上限/80字下限/120字重叠(15%)
+  - QA:   ## 问句 边界, 同上参数
 ```
 
 ### 3.2 `calculate_income_tax` — 个税计算
 
 ```
-输入: income_type, annual_income, special_deductions[], province, city
-动作: 读取 JSON 税率表 → 按公式计算（不经过 LLM）
-输出: {taxable_income, tax_amount, marginal_rate, detail_breakdown}
+输入: income_type, incomes[{type, amount}], special_deductions[], city, bonus
+数据源: tax_rate_tables.json（含综合所得税率表、经营所得税率表、年终奖月度税率表、
+        专项附加扣除标准、收入类型计入规则、累计预扣法流程、汇算清缴流程）
+动作: 读取 JSON → 按 formula 字段的步骤计算（不经过 LLM）
+输出: {taxable_income, tax_amount, marginal_rate, brackets_used, breakdown[]}
 ```
 
 ### 3.3 `query_social_insurance` — 社保公积金
 
 ```
-输入: city, employment_type, salary
-动作: 读取 cities/{city}/ JSON → 计算个人/单位应缴
+输入: city, employment_type (employee/flexible), salary
+数据源: cities/zhengzhou/social_insurance.json
+        含: 职工社保(养老/医疗/失业/工伤/生育) + 住房公积金(5%-12%)
+            灵活就业(养老20%/医疗10%) + 灵活就业公积金(20%)
+            缴费基数上下限 + 2个计算示例
+动作: 读取 JSON → 按 salary 匹配基数 → 计算个人/单位应缴
 输出: {breakdown: {养老:{单位,个人}, 医疗:{...}, ...}, total_personal, total_employer}
 ```
 
 ### 3.4 `fill_tax_form` — 申报材料生成
 
 ```
-输入: form_type, user_profile {name, id_card, incomes, deductions, ...}
-动作: 字段映射 → 填入模板 → 生成 Markdown 表格
-输出: {markdown_table, blank_pdf_url, warnings[]}
+输入: form_type (A表/B表), user_profile {name, id_card, incomes, deductions, ...}
+数据源: templates/form_field_map.json（字段→单元格坐标映射）
+        templates/个人所得税基础信息表（A表）/（B表）/*.xlsx
+工具:  scripts/fill_tax_form.py（openpyxl 填表）
+流程:
+  1. Agent 调 get_required_fields(form_type) → 获知必填/可选字段
+  2. Agent 对话收集用户信息（一次只问1-2个，已有上下文自动复用）
+  3. Agent 调 fill_form(form_type, user_data) → openpyxl 填表
+  4. 返回填好的 xlsx + 空白原表路径
+输出: {success, file_path, filled_fields, skipped_fields}
 ```
-> ⚠️ 不走 LLM，纯字段映射。保留空白 PDF 原表供用户自行下载。
+> ⚠️ 不走 LLM，纯字段映射 + openpyxl 代码。保留空白原件供下载。
 
 ### 3.5 `get_filing_guide` — 申报流程指引
 
 ```
-输入: scenario (个税年度汇算/个体户B表/小规模增值税), city
-动作: 读取 processed/operations/ + cities/{city}/ 操作指引
+输入: scenario (个税年度汇算/个体户B表/小规模增值税)
+数据源: operations/个税操作指南.md（个税APP 5步操作流程）
+动作: RAG 检索操作指引 → 分步骤输出 + 官方入口链接
 输出: {steps: [{step_number, description}], 官方入口_url, 咨询热线}
 ```
 
@@ -164,6 +187,17 @@ LLM（DeepSeek V4 Flash）根据用户意图自动选择工具。工具返回结
 输出: [{title, snippet, url, domain}, ...]
 ```
 > ⚠️ **严格限制**：不可搜索白名单以外的任何网站，保证信息来源权威可靠。
+
+### 3.7 `search_industry_benchmark` — 行业财务基准参照
+
+```
+输入: industry_name (行业名称), metric (指标名,可选)
+数据源: industry_benchmark.json（20门类×97行业×10项指标，含中文标签+单位）
+动作: 精确匹配行业 → 读取各项指标 {low, high} 范围
+      如指标为 null → 提示该指标不适用此行业
+输出: {industry, category, metrics:{vat_burden:{low,high,label}, ...}}
+```
+> ⚠️ 结构化数据走精确匹配，不走向量检索。
 
 ---
 
@@ -340,12 +374,69 @@ pip install sse-starlette                # SSE 流式
 
 ---
 
-## 九、不在此文档范围
+## 九、检索评测体系
+
+### 9.1 评测数据集
+
+位置：`backend/eval/eval_set.json`
+
+- **规模**：40 条 query，覆盖 10 个类别
+- **标注方式**：每条标注 1-2 个期望命中的文档标题（仅标注文档名，不标分数）
+- **类别分布**：
+
+| 类别 | 数量 | 说明 |
+|------|:--:|------|
+| 个税-基础 | 3 | 起征点、税率、综合所得 |
+| 个税-专项扣除 | 7 | 租房/房贷/子女/赡养/婴幼儿/大病/继续教育 |
+| 个税-特殊 | 3 | 年终奖、劳务报酬、股权激励 |
+| 个税-汇算 | 5 | 汇算清缴、退税补税、APP操作 |
+| 增值税 | 4 | 税率、小规模纳税人、发票犯罪 |
+| 社保 | 3 | 五险一金、缴费比例、维权 |
+| 契税/印花税/车船税 | 4 | 买房契税、合同印花税、车船税 |
+| 经营主体 | 2 | 个体工商户、企业所得税 |
+| 程序法 | 3 | 偷税处罚、欠税、电子发票 |
+| 其他税种 | 4 | 环保税、城建税、关税、资源税 |
+
+### 9.2 评测脚本
+
+位置：`backend/eval/eval.py`
+
+无外部依赖，直接调用 `retriever.retrieve()` 完成：
+
+```
+python eval/eval.py              # 完整评测
+python eval/eval.py -v           # 逐条打印详情
+python eval/eval.py -o report.json  # 导出 JSON 报告
+python eval/eval.py --category 个税  # 按分类评测
+```
+
+### 9.3 评测指标
+
+| 指标 | 说明 | 用途 |
+|------|------|------|
+| **Recall@1/3/5** | 期望文档出现在 top-k 中的比例 | 检索覆盖面 |
+| **Precision@5** | top-5 中命中期望文档的比例 | 检索精准度 |
+| **MRR** | 第一个命中文档排名的倒数均值 | 排序质量 |
+| **NDCG@5** | 考虑排序位置的归一化折损累积增益 | 综合排序质量 |
+
+### 9.4 使用场景
+
+- 每次修改检索链路后运行一次，对比指标变化
+- 答辩时提供客观数据支撑（如"Recall@5 达 85%，MRR 达 0.76"）
+- 失败 case 直接指出薄弱方向（如某类 query 召回率低）
+
+---
+
+## 十、不在此文档范围
 
 本方案定义系统架构和工具设计，以下内容归属编码执行阶段：
 
-- 具体代码实现
 - 前端页面 UI 设计
-- Qdrant 数据写入脚本
 - 申报表字段映射逻辑编码
 - 白名单搜索的具体实现
+
+### 已完成（从原始"不在此范围"移出）
+
+- ~~具体代码实现~~ → `backend/` 目录
+- ~~Qdrant 数据写入脚本~~ → `scripts/embed_and_upsert.py`
+- ~~评测体系~~ → `backend/eval/` 目录
