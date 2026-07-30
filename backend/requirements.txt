@@ -1,15 +1,19 @@
+# 财税助手后端依赖
+# LangChain v1 标准API
+langchain>=1.3.0,<2.0.0
+langchain-core>=1.4.0,<2.0.0
+langchain-openai
+langgraph>=1.2.0,<1.3.0
+langgraph-checkpoint
+# FastAPI
 fastapi
 uvicorn[standard]
-sse-starlette
-langchain
-langchain-core
-langchain-text-splitters
-langchain-openai
-langgraph
-langgraph-checkpoint
+# RAG 检索
 FlagEmbedding
 qdrant-client
+numpy
+# 数据校验
 pydantic
 python-dotenv
+# 申报表填写
 openpyxl
-numpy

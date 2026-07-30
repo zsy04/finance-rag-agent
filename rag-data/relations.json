@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1,
+    "source": "个人所得税法",
+    "relation": "implemented_by",
+    "target": "中华人民共和国个人所得税法实施条例",
+    "trigger_keywords": ["个税", "个人所得税", "起征点", "税率", "应纳税所得额"],
+    "description": "个税法第6-13条规定的计算规则，具体执行细节由实施条例明确"
+  },
+  {
+    "id": 2,
+    "source": "个人所得税法",
+    "relation": "detailed_by",
+    "target": "国务院关于印发个人所得税专项附加扣除暂行办法的通知",
+    "trigger_keywords": ["专项附加扣除", "租房扣除", "房贷扣除", "子女教育扣除", "赡养老人扣除"],
+    "description": "个税法第6条规定的专项附加扣除，具体项目和标准由国务院另行规定"
+  },
+  {
+    "id": 3,
+    "source": "个人所得税法",
+    "relation": "extended_by",
+    "target": "国务院关于提高个人所得税有关专项附加扣除标准的通知",
+    "trigger_keywords": ["扣除标准", "标准提高", "赡养老人标准", "子女教育标准"],
+    "description": "2023年国务院提高婴幼儿照护、子女教育、赡养老人三项扣除标准"
+  },
+  {
+    "id": 4,
+    "source": "个人所得税法",
+    "relation": "detailed_by",
+    "target": "国务院关于设立3岁以下婴幼儿照护个人所得税专项附加扣除的通知",
+    "trigger_keywords": ["婴幼儿", "3岁以下", "照护扣除", "婴幼儿照护"],
+    "description": "2022年新增的婴幼儿照护专项附加扣除"
+  },
+  {
+    "id": 5,
+    "source": "个人所得税法",
+    "relation": "administered_by",
+    "target": "个人所得税综合所得汇算清缴管理办法",
+    "trigger_keywords": ["汇算清缴", "年度汇算", "退税", "补税", "怎么申报"],
+    "description": "个税法第11条规定的汇算清缴制度，具体管理办法由国家税务总局制定"
+  },
+  {
+    "id": 6,
+    "source": "个人所得税法",
+    "relation": "operational_guide",
+    "target": "个人所得税APP操作指南（2025年度汇算清缴）",
+    "trigger_keywords": ["个税APP", "怎么退税", "怎么操作", "APP退税"],
+    "description": "个税汇算清缴的APP操作指引"
+  },
+  {
+    "id": 7,
+    "source": "个人所得税综合所得汇算清缴管理办法",
+    "relation": "guide_doc",
+    "target": "国家税务总局关于办理2023年度个人所得税综合所得汇算清缴事项的公告",
+    "trigger_keywords": ["汇算清缴", "什么时候", "截止", "2023年度汇算"],
+    "description": "税务总局每年发布年度汇算公告，明确办理时间和具体要求"
+  },
+  {
+    "id": 8,
+    "source": "个人所得税综合所得汇算清缴管理办法",
+    "relation": "supplemented_by",
+    "target": "2021年度个人所得税综合所得年度汇算常见问题—补退税款",
+    "trigger_keywords": ["退税", "补税", "怎么退税", "退税到账", "补税金额"],
+    "description": "退税补税的常见问题解答"
+  },
+  {
+    "id": 9,
+    "source": "个人所得税法",
+    "relation": "related_to",
+    "target": "2021年度个人所得税综合所得年度汇算政策百问百答—综合所得篇",
+    "trigger_keywords": ["综合所得", "工资", "劳务报酬", "稿酬", "特许权使用费", "收入类型"],
+    "description": "综合所得范围、计算方式的百问百答"
+  },
+  {
+    "id": 10,
+    "source": "税收征收管理法",
+    "relation": "detailed_by",
+    "target": "欠税公告办法",
+    "trigger_keywords": ["欠税", "不交税", "公司欠税", "滞纳金"],
+    "description": "税收征收管理法规定的欠税处理，具体公告程序由欠税公告办法明确"
+  },
+  {
+    "id": 11,
+    "source": "增值税法",
+    "relation": "qa_corpus",
+    "target": "小规模纳税人增值税政策第二批即问即答",
+    "trigger_keywords": ["小规模纳税人", "增值税优惠", "免税", "10万以下"],
+    "description": "小规模纳税人增值税政策的即问即答解读"
+  },
+  {
+    "id": 12,
+    "source": "社会保险法",
+    "relation": "detailed_by",
+    "target": "国务院办公厅关于印发降低社会保险费率综合方案的通知",
+    "trigger_keywords": ["社保费率", "缴费比例", "社保降费", "费率降低"],
+    "description": "社会保险法规定的费率，具体调整由国务院综合方案确定"
+  },
+  {
+    "id": 13,
+    "source": "社会保险法",
+    "relation": "related_law",
+    "target": "劳动合同法",
+    "trigger_keywords": ["交社保", "不交社保", "维权", "劳动纠纷"],
+    "description": "用人单位不为员工缴纳社保的，同时涉及劳动合同法中的劳动者权益保护"
+  },
+  {
+    "id": 14,
+    "source": "个人所得税法",
+    "relation": "special_case",
+    "target": "2021年度个人所得税综合所得年度汇算政策百问百答—专项附加扣除篇",
+    "trigger_keywords": ["继续教育", "大病医疗", "住房租金报销", "房东信息"],
+    "description": "专项附加扣除具体操作的百问百答"
+  },
+  {
+    "id": 15,
+    "source": "个人所得税法",
+    "relation": "extended_by",
+    "target": "国务院关于印发个人所得税专项附加扣除暂行办法的通知",
+    "trigger_keywords": ["房租", "住房租金", "房贷利息", "大病医疗"],
+    "description": "专项附加扣除的金额标准和适用条件详见暂行办法"
+  },
+  {
+    "id": 16,
+    "source": "企业所得税法",
+    "relation": "detailed_by",
+    "target": "个体工商户个人所得税计税办法",
+    "trigger_keywords": ["个体户", "个体工商户", "经营所得", "个体户交税"],
+    "description": "个体工商户不适用企业所得税法，其个人所得税计算见计税办法"
+  },
+  {
+    "id": 17,
+    "source": "税收征收管理法",
+    "relation": "penalty_detail",
+    "target": "全国人民代表大会常务委员会关于惩治虚开、伪造和非法出售增值税专用发票犯罪的决定",
+    "trigger_keywords": ["虚开发票", "假发票", "发票犯罪", "增值税发票犯罪"],
+    "description": "虚开增值税专用发票的刑事责任依据"
+  },
+  {
+    "id": 18,
+    "source": "车辆购置税法",
+    "relation": "companion_tax",
+    "target": "车船税法",
+    "trigger_keywords": ["买车", "车辆缴税", "车辆要交什么税"],
+    "description": "购买车辆涉及车辆购置税（一次性）和车船税（年度）两种税"
+  },
+  {
+    "id": 19,
+    "source": "个人所得税法",
+    "relation": "special_income",
+    "target": "个人在一个纳税年度内取得两次或者两项以上股权激励所得，如何计算个人所得税？",
+    "trigger_keywords": ["股权激励", "股票期权", "激励", "期权所得"],
+    "description": "股权激励所得的合并计算规则"
+  },
+  {
+    "id": 20,
+    "source": "个人所得税法",
+    "relation": "bonus_rule",
+    "target": "2021年度个人所得税综合所得年度汇算政策百问百答—综合所得篇",
+    "trigger_keywords": ["年终奖", "全年一次性奖金", "奖金计税", "单独计税"],
+    "description": "年终奖（全年一次性奖金）可以选择单独计税或并入综合所得"
+  }
+]

@@ -1,0 +1,237 @@
+{
+  "total": 20,
+  "correct": 17,
+  "accuracy": 85.0,
+  "results": [
+    {
+      "id": 1,
+      "query": "租房扣除标准是多少",
+      "expected": [
+        "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 2,
+      "query": "增值税税率是多少",
+      "expected": [
+        "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 3,
+      "query": "子女教育专项附加扣除怎么规定的",
+      "expected": [
+        "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 4,
+      "query": "赡养老人扣除标准",
+      "expected": [
+        "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 5,
+      "query": "小规模纳税人有什么优惠",
+      "expected": [
+        "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 6,
+      "query": "我年收入96000元工资类型社保年缴9888元租房月扣1500算个税",
+      "expected": [
+        "calculate_income_tax"
+      ],
+      "actual": [
+        "get_user_context",
+        "update_user_context",
+        "calculate_income_tax"
+      ],
+      "hit": true
+    },
+    {
+      "id": 7,
+      "query": "年薪12万交多少税",
+      "expected": [
+        "calculate_income_tax"
+      ],
+      "actual": [
+        "get_user_context",
+        "calculate_income_tax"
+      ],
+      "hit": true
+    },
+    {
+      "id": 8,
+      "query": "劳务报酬3万元个税怎么算",
+      "expected": [
+        "calculate_income_tax"
+      ],
+      "actual": [
+        "get_user_context",
+        "calculate_income_tax"
+      ],
+      "hit": true
+    },
+    {
+      "id": 9,
+      "query": "年终奖5万要交多少税",
+      "expected": [
+        "calculate_income_tax"
+      ],
+      "actual": [
+        "get_user_context",
+        "calculate_income_tax"
+      ],
+      "hit": true
+    },
+    {
+      "id": 10,
+      "query": "月薪8000工资扣除社保后个税多少",
+      "expected": [
+        "calculate_income_tax"
+      ],
+      "actual": [
+        "get_user_context",
+        "query_social_insurance",
+        "calculate_income_tax",
+        "update_user_context"
+      ],
+      "hit": true
+    },
+    {
+      "id": 11,
+      "query": "郑州工资8000社保扣多少",
+      "expected": [
+        "query_social_insurance"
+      ],
+      "actual": [
+        "query_social_insurance"
+      ],
+      "hit": true
+    },
+    {
+      "id": 12,
+      "query": "灵活就业社保一个月交多少钱",
+      "expected": [
+        "query_social_insurance"
+      ],
+      "actual": [
+        "get_user_context",
+        "query_social_insurance"
+      ],
+      "hit": true
+    },
+    {
+      "id": 13,
+      "query": "五险一金缴费比例是多少",
+      "expected": [
+        "query_social_insurance"
+      ],
+      "actual": [
+        "query_social_insurance"
+      ],
+      "hit": true
+    },
+    {
+      "id": 14,
+      "query": "郑州公积金缴存基数",
+      "expected": [
+        "query_social_insurance"
+      ],
+      "actual": [
+        "query_social_insurance"
+      ],
+      "hit": true
+    },
+    {
+      "id": 15,
+      "query": "帮我生成个税申报表A表",
+      "expected": [
+        "fill_tax_form"
+      ],
+      "actual": [
+        "get_user_context"
+      ],
+      "hit": false
+    },
+    {
+      "id": 16,
+      "query": "我要填写个人所得税基础信息表",
+      "expected": [
+        "fill_tax_form"
+      ],
+      "actual": [
+        "get_user_context"
+      ],
+      "hit": false
+    },
+    {
+      "id": 17,
+      "query": "生成申报材料",
+      "expected": [
+        "fill_tax_form"
+      ],
+      "actual": [],
+      "hit": false
+    },
+    {
+      "id": 18,
+      "query": "个税APP怎么退税",
+      "expected": [
+        "filing_guide"
+      ],
+      "actual": [
+        "get_user_context",
+        "filing_guide"
+      ],
+      "hit": true
+    },
+    {
+      "id": 19,
+      "query": "年度汇算清缴怎么操作",
+      "expected": [
+        "filing_guide"
+      ],
+      "actual": [
+        "filing_guide",
+        "search_knowledge"
+      ],
+      "hit": true
+    },
+    {
+      "id": 20,
+      "query": "个税申报流程是什么",
+      "expected": [
+        "filing_guide"
+      ],
+      "actual": [
+        "filing_guide",
+        "search_knowledge"
+      ],
+      "hit": true
+    }
+  ]
+}

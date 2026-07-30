@@ -14,9 +14,16 @@ Layer 3: BGE-Reranker-v2-m3 Cross-encoder 精排 → Top-5
 
 from __future__ import annotations
 
+import logging
+import os
 import sys
+import threading
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+# 必须在 import qdrant_client / FlagEmbedding 等任何间接依赖 HuggingFace 的模块之前设置，
+# 否则 HF_HUB_OFFLINE 会被忽略，启动时可能触发网络请求
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 import numpy as np
 from qdrant_client import QdrantClient
@@ -39,35 +46,38 @@ from config import (
 )
 from rag.query_rewriter import enrich_query
 
+# 关系索引路径
+RELATIONS_PATH = PROJECT_ROOT.parent / "rag-data" / "relations.json"
+
+logger = logging.getLogger(__name__)
+
+
+def _detect_device() -> str:
+    """自动检测可用设备：优先 CUDA，否则回退 CPU"""
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
+
 
 class Retriever:
-    """RAG 检索器（单例模式，避免重复加载模型）"""
-
-    _instance: Optional["Retriever"] = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
+    """RAG 检索器（懒加载单例，通过 get_retriever() 获取）"""
 
     def __init__(self):
-        if self._initialized:
-            return
-        self._initialized = True
-
-        print("🔗 连接 Qdrant...")
+        logger.info("🔗 连接 Qdrant...")
         self.client = QdrantClient(url=QDRANT_URL)
 
-        print("⏳ 加载 BGE-M3 编码器...")
+        device = _detect_device()
+        logger.info("⏳ 加载 BGE-M3 编码器 (device=%s)...", device)
         from FlagEmbedding import BGEM3FlagModel
         self.encoder = BGEM3FlagModel(
             BGE_MODEL_PATH,
             use_fp16=True,
-            device="cuda",
+            device=device,
         )
 
-        print("⏳ 加载 Reranker...")
+        logger.info("⏳ 加载 Reranker...")
         from FlagEmbedding import FlagReranker
         self.reranker = FlagReranker(
             RERANKER_MODEL_PATH,
@@ -75,7 +85,21 @@ class Retriever:
         )
         self._reranker_available = True
 
-        print("✅ Retriever 就绪")
+        logger.info("✅ Retriever 就绪")
+
+        # 加载关系索引
+        self.relations = self._load_relations()
+
+    def _load_relations(self) -> list[dict]:
+        """加载轻量关系索引（JSON 格式）"""
+        import json
+        if not RELATIONS_PATH.exists():
+            logger.warning("关系索引文件不存在: %s", RELATIONS_PATH)
+            return []
+        with open(RELATIONS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        logger.info("🔗 加载关系索引: %d 条关联规则", len(data))
+        return data
 
     # ── Layer 1: 元数据预过滤 ───────────────────────────
 
@@ -158,7 +182,7 @@ class Retriever:
         # 手动 RRF 融合
         rrf_k = 60  # RRF 常数
         scores: dict[int, float] = {}
-        id_to_point: dict[int, any] = {}
+        id_to_point: dict[int, Any] = {}
         for rank, p in enumerate(dense_results):
             scores[p.id] = scores.get(p.id, 0) + 1.0 / (rrf_k + rank + 1)
             id_to_point[p.id] = p
@@ -205,11 +229,13 @@ class Retriever:
                 rerank_scores_raw = [rerank_scores_raw]
             rerank_scores = rerank_scores_raw
             rerank_ok = True
-        except Exception:
-            import logging
-            logging.warning(
+        except (RuntimeError, OSError, ValueError) as e:
+            # 仅捕获运行时/IO/数值异常（如 CUDA OOM、模型文件损坏），
+            # 让 AttributeError/TypeError/KeyError 等编程错误正常抛出便于定位
+            logger.warning(
                 "Reranker 调用失败，降级为 relevance_weight 纯排序。"
-                "请检查 BGE-Reranker 模型是否正确加载。"
+                "请检查 BGE-Reranker 模型是否正确加载。原因: %s", e,
+                exc_info=True,
             )
 
         # ── 结果整理 ──
@@ -257,6 +283,129 @@ class Retriever:
 
     # ── 公共接口 ────────────────────────────────────────
 
+    def _expand_relations(
+        self,
+        query: str,
+        primary_results: list[dict],
+        max_additional: int = 3,
+    ) -> list[dict]:
+        """
+        轻量知识图谱扩展 — 支持双向遍历 + 两跳推理
+
+        1. 正向: 主结果中的文档作为 source → 拉 target
+        2. 逆向: 主结果中的文档作为 target → 反推 source
+        3. 二跳: 第一跳找到的 target 再作为 source 拉下一层（最多 2 跳）
+
+        Args:
+            query: 用户原始 query（用于关键词匹配）
+            primary_results: 主检索结果
+            max_additional: 最多补充条数
+
+        Returns:
+            补充的关联文档列表（含 relation_source + relation_hop 标记）
+        """
+        if not self.relations:
+            return []
+
+        hit_titles = {r.get("doc_title", "") for r in primary_results}
+        all_found = set(hit_titles)  # 避免重复拉取
+
+        def _matches_query_keywords(rel: dict) -> bool:
+            """检查 query 是否含触发关键词（无触发词则默认激活）"""
+            keywords = rel.get("trigger_keywords", [])
+            if not keywords:
+                return True  # 无触发词 = 始终激活
+            return any(kw in query for kw in keywords)
+
+        # ── 第一跳：正向 + 逆向 ──
+        triggered = []
+
+        for rel in self.relations:
+            # 正向：主结果中的文档 == source
+            if any(rel["source"] in title for title in hit_titles):
+                if _matches_query_keywords(rel):
+                    triggered.append((rel, 1))
+                    continue
+
+            # 逆向：主结果中的文档 == target → 反向激活 source
+            if any(rel["target"] in title for title in hit_titles):
+                # 创建反向关系
+                reverse_rel = {
+                    "source": rel["target"],
+                    "target": rel["source"],
+                    "relation": f"reverse_{rel['relation']}",
+                    "trigger_keywords": rel.get("trigger_keywords", []),
+                    "description": f"被 {rel['target']} 引用（逆向关联）",
+                }
+                if _matches_query_keywords(reverse_rel):
+                    triggered.append((reverse_rel, 1))
+
+        # ── 去重第一跳目标 ──
+        hop1_targets = set()
+        hop1_map = {}  # target → list of (rel, hop)
+        for rel, hop in triggered:
+            t = rel["target"]
+            if t not in all_found:
+                hop1_targets.add(t)
+                if t not in hop1_map:
+                    hop1_map[t] = []
+                hop1_map[t].append((rel, hop))
+
+        # ── 第二跳：一阶 target 作为新的 source ──
+        for rel in self.relations:
+            for t in hop1_targets:
+                if rel["source"] in t and rel["target"] not in all_found:
+                    if _matches_query_keywords(rel):
+                        hop2_target = rel["target"]
+                        if hop2_target not in hop1_targets:
+                            if hop2_target not in hop1_map:
+                                hop1_map[hop2_target] = []
+                            hop1_map[hop2_target].append((rel, 2))
+
+        # ── 拉取文档 ──
+        all_targets = list(hop1_map.keys())[:max_additional + 2]  # 留余量
+        additional = []
+        fetched = 0
+
+        for target in all_targets:
+            if fetched >= max_additional:
+                break
+            points, _ = self.client.scroll(
+                collection_name=QDRANT_COLLECTION,
+                scroll_filter=Filter(
+                    must=[FieldCondition(
+                        key="doc_title",
+                        match=MatchValue(value=target),
+                    )]
+                ),
+                limit=2,
+                with_payload=True,
+                with_vectors=False,
+            )
+            if not points:
+                continue
+
+            rels_for_target = hop1_map.get(target, [])
+            source_desc = rels_for_target[0][0].get("description", "")
+            hop = rels_for_target[0][1] if rels_for_target else 1
+
+            for p in points:
+                additional.append({
+                    "content": p.payload.get("content", ""),
+                    "doc_title": p.payload.get("doc_title", ""),
+                    "source_file": p.payload.get("source_file", ""),
+                    "relevance_tier": p.payload.get("relevance_tier", ""),
+                    "category": p.payload.get("category", ""),
+                    "rerank_score": 0.0,
+                    "relevance_weight": p.payload.get("relevance_weight", 6),
+                    "final_score": 0.0,
+                    "relation_source": f"知识图谱（{hop}跳）",
+                    "relation_desc": source_desc,
+                })
+            fetched += 1
+
+        return additional
+
     def retrieve(
         self,
         query: str,
@@ -266,7 +415,7 @@ class Retriever:
         city_filter: Optional[str] = None,
     ) -> list[dict]:
         """
-        完整检索链路: 过滤 → 混合检索 → 精排加权
+        完整检索链路: 过滤 → 混合检索 → 精排加权 → 关系扩展
 
         Args:
             query: 用户问题
@@ -291,19 +440,29 @@ class Retriever:
         # Layer 3
         results = self._rerank_and_weight(query, points, top_k=top_k)
 
+        # Layer 4: 关系索引扩展（关联法规）
+        if self.relations:
+            additional = self._expand_relations(query, results)
+            if additional:
+                results = results + additional
+
         return results
 
 
 # ── 便捷函数（供 Agent @tool 直接调用） ─────────────────
 
 _retriever: Optional[Retriever] = None
+_retriever_lock = threading.Lock()
 
 
 def get_retriever() -> Retriever:
-    """获取 Retriever 单例"""
+    """获取 Retriever 单例（线程安全，唯一入口）"""
     global _retriever
     if _retriever is None:
-        _retriever = Retriever()
+        with _retriever_lock:
+            # 双重检查，避免多线程下重复加载模型
+            if _retriever is None:
+                _retriever = Retriever()
     return _retriever
 
 

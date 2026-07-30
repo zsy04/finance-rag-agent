@@ -1,17 +1,37 @@
 """个税计算引擎 — 纯 Python，不走 LLM，零幻觉"""
 
 import json
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 DATA_FILE = Path(__file__).parent.parent.parent / "rag-data" / "processed" / "national" / "rates" / "tax_rate_tables.json"
 
-with open(DATA_FILE, encoding="utf-8") as f:
-    _TAX = json.load(f)["tables"]["personal_income_tax"]
+try:
+    with open(DATA_FILE, encoding="utf-8") as f:
+        _TAX = json.load(f)["tables"]["personal_income_tax"]
+except FileNotFoundError:
+    raise RuntimeError(f"税率表文件不存在: {DATA_FILE}，请先运行 rag-data 预处理脚本")
+except json.JSONDecodeError as e:
+    raise RuntimeError(f"税率表 JSON 解析失败: {DATA_FILE} — {e}")
+except KeyError:
+    raise RuntimeError(f"税率表结构异常，缺少 tables.personal_income_tax 字段: {DATA_FILE}")
 
 ANNUAL_DEDUCTION = _TAX["annual_deduction"]  # 60000
-COMPREHENSIVE_BRACKETS = _TAX["comprehensive"]["brackets"]
-BUSINESS_BRACKETS = _TAX["business"]["brackets"]
-BONUS_MONTHLY_BRACKETS = _TAX["annual_bonus"]["method_separate"]["monthly_brackets"]
+
+
+def _sort_brackets(brackets: list[dict]) -> list[dict]:
+    """按 income_high 升序排序，确保 _find_bracket 正确定位级距"""
+    def _high(b: dict) -> float:
+        h = b.get("income_high") or b.get("monthly_income_high")
+        return float("inf") if h is None else h
+    return sorted(brackets, key=_high)
+
+
+COMPREHENSIVE_BRACKETS = _sort_brackets(_TAX["comprehensive"]["brackets"])
+BUSINESS_BRACKETS = _sort_brackets(_TAX["business"]["brackets"])
+BONUS_MONTHLY_BRACKETS = _sort_brackets(_TAX["annual_bonus"]["method_separate"]["monthly_brackets"])
 
 
 def _find_bracket(taxable: float, brackets: list[dict]) -> dict:

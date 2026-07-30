@@ -1,6 +1,9 @@
+from typing import Literal
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from services.tax_engine import (
+    ANNUAL_DEDUCTION,
     calculate_bonus_tax_separate,
     calculate_comprehensive_tax,
     compare_bonus_methods,
@@ -8,9 +11,20 @@ from services.tax_engine import (
 
 router = APIRouter(prefix="/api/tax", tags=["个税计算"])
 
+# 收入类型 → 计入综合所得的比例（劳务/稿酬/特许权使用费按税法规定打折）
+INCOME_RATIO: dict[str, float] = {
+    "salary": 1.0,
+    "labor_service": 0.8,
+    "manuscript": 0.56,
+    "royalty": 0.8,
+}
+
+
 class TaxRequest(BaseModel):
     annual_income: float = Field(...,description="年收入总额（元）",gt=0)
-    income_type:str = Field(default="salary",description="salary|labor_service|manuscript")
+    income_type: Literal["salary", "labor_service", "manuscript", "royalty"] = Field(
+        default="salary", description="salary|labor_service|manuscript|royalty"
+    )
     social_insurance: float = Field(default=0, ge=0, description="年三险一金（元）")
     housing_rent: float = Field(default=0, ge=0, description="租房月扣除额")
     children_edu: float = Field(default=0, ge=0, description="子女教育月扣除额")
@@ -21,8 +35,10 @@ class TaxRequest(BaseModel):
 @router.post("/calculate")
 async def calculate(request: TaxRequest):
     # 收入类型换算
-    ratio_map = {"salary": 1.0, "labor_service": 0.8, "manuscript": 0.56, "royalty": 0.8}
-    taxable_basis = request.annual_income * ratio_map.get(request.income_type, 1.0)
+    ratio = INCOME_RATIO[request.income_type]
+    taxable_basis = request.annual_income * ratio
+    # 年终奖同样按收入类型比例换算（与综合所得计税口径保持一致）
+    bonus_taxable = request.bonus * ratio
 
     special_deductions = (request.housing_rent + request.children_edu + request.elderly_support) * 12
 
@@ -38,7 +54,7 @@ async def calculate(request: TaxRequest):
         "bracket_level": result["level"],
         "formula": result["formula"],
         "breakdown": {
-            "annual_deduction": 60000,
+            "annual_deduction": ANNUAL_DEDUCTION,
             "social_insurance": request.social_insurance,
             "special_deductions": special_deductions,
         },
@@ -47,8 +63,12 @@ async def calculate(request: TaxRequest):
     }
 
     if request.bonus > 0:
+        # 单独计税：年终奖按全额（不打折）查月度税率表
         bonus_result = calculate_bonus_tax_separate(request.bonus)
-        comparison = compare_bonus_methods(taxable_basis, request.bonus, request.social_insurance, special_deductions)
+        # 对比计税：salary 部分用 taxable_basis，bonus 部分用同口径换算后的金额
+        comparison = compare_bonus_methods(
+            taxable_basis, bonus_taxable, request.social_insurance, special_deductions
+        )
         response["bonus"] = {
             "amount": request.bonus,
             "separate_tax": bonus_result["tax_amount"],

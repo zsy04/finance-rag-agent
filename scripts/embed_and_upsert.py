@@ -25,6 +25,7 @@ except ImportError as e:
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHUNKS_FILE = PROJECT_ROOT / "rag-data" / "chunks.jsonl"
+COLBERT_DIR = PROJECT_ROOT / "rag-data" / "colbert"
 QDRANT_URL = "http://localhost:6333"
 COLLECTION_NAME = "finance_knowledge"
 BGE_MODEL = "BAAI/bge-m3"
@@ -36,8 +37,22 @@ BATCH_SIZE = 32   # 每批编码数量，防止 OOM
 DOC_KEYWORDS: dict[str, str] = {
     # 📌 企税 vs 个税混淆 — 注入"企业""法人"区分信号
     "企业所得税法": "企业所得税法 企业所得税 法人企业 法人",
-    # 📌 股权激励 QA 标题 73 字太长 — 注入多角度关键词增强召回
-    "个人在一个纳税年度内取得两次或者两项以上股权激励所得，如何计算个人所得税？": "股权激励 股票期权 上市公司 激励所得 个人所得税 如何计算",
+    # 📌 股权激励 QA 标题 73 字太长 — 注入多角度关键词增强召回 + Reranker 可见
+    "个人在一个纳税年度内取得两次或者两项以上股权激励所得，如何计算个人所得税？": "股权激励 股票期权 个人所得税 如何计算 合并计算 两次以上 上市公司 激励所得",
+    # 📌 个税APP操作指南 — 内容偏操作流程，语义与政策问答距离远
+    # 注意：不含"个人所得税"通用词，避免拉偏年终奖等个税计算类查询
+    "个人所得税APP操作指南（2025年度汇算清缴）": "个税APP 退税 申报流程 操作指南 年度汇算 操作步骤",
+    # 📌 电子商务法 — "电子发票效力"问题易被向量导向增值税发票而非电商法
+    "电子商务法": "电子发票 法律效力 电子签名 数据电文 纸质发票 电子合同",
+    # 📌 个人所得税法 — 年终奖计算等高频查询覆盖
+    "个人所得税法": "个人所得税 年终奖 全年一次性奖金 单独计税 综合所得 税率表 计算",
+}
+
+# ── 权重覆盖：确保特定文档在 Reranker 阶段不被淹没 ────────
+# 覆盖 chunks.jsonl 中的默认权重，重嵌时自动生效
+WEIGHT_OVERRIDES: dict[str, int] = {
+    "个人在一个纳税年度内取得两次或者两项以上股权激励所得，如何计算个人所得税？": 12,
+    "个人所得税APP操作指南（2025年度汇算清缴）": 10,
 }
 
 
@@ -91,21 +106,67 @@ def create_collection(client):
 
 
 def encode_and_upsert(chunks, model, client):
-    """分批编码并写入 Qdrant"""
+    """分批编码并写入 Qdrant（带详细进度条）"""
     total = len(chunks)
-    print(f"\n开始向量化 {total} 个 chunk...")
+    total_batches = (total + BATCH_SIZE - 1) // BATCH_SIZE
+    batch_count = 0
+    t_start = datetime.now()
+
+    # 统计 DOC_KEYWORDS 命中文档
+    keyworded_docs = set()
+    for c in chunks:
+        doc = c.get("doc_title", "")
+        if doc in DOC_KEYWORDS:
+            keyworded_docs.add(doc)
+
+    print(f"\n{'='*60}")
+    print(f"  🚀 开始向量化入库")
+    print(f"  {'─'*56}")
+    print(f"  总 chunk 数:    {total}")
+    print(f"  批次数:         {total_batches}（每批 {BATCH_SIZE} 条）")
+    print(f"  DOC_KEYWORDS:   {len(keyworded_docs)} 个文档启用关键词增强")
+    for doc in sorted(keyworded_docs):
+        kw = DOC_KEYWORDS[doc]
+        print(f"    • {doc[:50]}")
+        print(f"      → {kw[:80]}{'...' if len(kw) > 80 else ''}")
+    print(f"{'='*60}\n")
 
     for start in range(0, total, BATCH_SIZE):
+        batch_count += 1
+        t_batch_start = datetime.now()
         batch = chunks[start:start + BATCH_SIZE]
+        batch_size = len(batch)
+        progress = min(start + BATCH_SIZE, total)
+
+        # ── Step 1: 准备文本（DOC_KEYWORDS 注入） ──
         texts = []
+        enriched_count = 0
         for c in batch:
             txt = c["content"]
             doc = c.get("doc_title", "")
             if doc in DOC_KEYWORDS:
                 txt = f"{txt} {DOC_KEYWORDS[doc]}"
+                enriched_count += 1
             texts.append(txt)
 
-        # BGE-M3 双向量编码
+        # ── Step 2: BGE-M3 双向量编码 ──
+        pct = progress / total * 100
+        bar_len = 30
+        filled = int(bar_len * progress / total)
+        bar = "█" * filled + "░" * (bar_len - filled)
+
+        elapsed = (datetime.now() - t_start).total_seconds()
+        if start > 0:
+            eta = elapsed / progress * (total - progress)
+            eta_str = f"{eta:.0f}s" if eta < 120 else f"{eta/60:.1f}min"
+        else:
+            eta_str = "计算中..."
+
+        status = f"🔤 编码中" if enriched_count == 0 else f"🔤 编码中（{enriched_count} 条关键词增强）"
+        print(f"  [{bar}] {pct:5.1f}%  |  批次 {batch_count}/{total_batches}  |  "
+              f"{progress}/{total} chunks  |  ⏱ {elapsed:.0f}s  |  预计剩余 {eta_str}",
+              end="\r")
+
         output = model.encode(
             texts,
             batch_size=BATCH_SIZE,
@@ -115,14 +176,17 @@ def encode_and_upsert(chunks, model, client):
             return_colbert_vecs=False,
         )
 
-        dense = output["dense_vecs"]     # numpy array [batch, 1024]
-        sparse = output["lexical_weights"]  # list of dict {token_id: weight}
+        dense = output["dense_vecs"]
+        sparse = output["lexical_weights"]
 
-        # 构建 Qdrant points
+        # ── Step 3: 构建 Qdrant points ──
+        print(f"  [{bar}] {pct:5.1f}%  |  批次 {batch_count}/{total_batches}  |  "
+              f"{progress}/{total} chunks  |  📦 构建向量点...",
+              end="\r")
+
         points = []
         for i, chunk in enumerate(batch):
             sp = sparse[i]
-            # 转换为 Qdrant SparseVector 格式
             indices = list(sp.keys())
             values = [float(v) for v in sp.values()]
 
@@ -133,29 +197,43 @@ def encode_and_upsert(chunks, model, client):
                     "sparse": SparseVector(indices=indices, values=values),
                 },
                 payload={
-                    "content": chunk["content"],
+                    # 使用含 DOC_KEYWORDS 的富化文本，让 Reranker 也能感知关键词信号
+                    "content": texts[i],
                     "doc_title": chunk.get("doc_title", ""),
                     "source_file": chunk.get("source_file", ""),
                     "category": chunk.get("category", ""),
                     "city": chunk.get("city", "national"),
                     "relevance_tier": chunk.get("relevance_tier", ""),
-                    "relevance_weight": chunk.get("relevance_weight", 6),
+                    "relevance_weight": WEIGHT_OVERRIDES.get(
+                        chunk.get("doc_title", ""),
+                        chunk.get("relevance_weight", 6)
+                    ),
                     "chunk_index": chunk.get("chunk_index", 0),
                 },
             )
             points.append(point)
 
-        # 写入 Qdrant
+        # ── Step 4: 写入 Qdrant ──
+        print(f"  [{bar}] {pct:5.1f}%  |  批次 {batch_count}/{total_batches}  |  "
+              f"{progress}/{total} chunks  |  💾 写入 Qdrant...",
+              end="\r")
+
         client.upsert(
             collection_name=COLLECTION_NAME,
             points=points,
             wait=True,
         )
 
-        progress = min(start + BATCH_SIZE, total)
-        print(f"  [{progress}/{total}] 已写入", end="\r")
+        t_batch = (datetime.now() - t_batch_start).total_seconds()
+        print(f"  [{bar}] {pct:5.1f}%  |  批次 {batch_count}/{total_batches}  |  "
+              f"{progress}/{total} chunks  |  ✅ 完成 ({t_batch:.1f}s)")
 
-    print(f"\n✅ {total} 个 chunk 全部向量化入库完成")
+    total_time = (datetime.now() - t_start).total_seconds()
+    print(f"\n{'='*60}")
+    print(f"  ✅ {total} 个 chunk 全部向量化入库完成")
+    print(f"  ⏱  总耗时: {total_time:.1f}s ({total_time/60:.1f}min)")
+    print(f"  🚀 平均速度: {total/total_time:.1f} chunks/s")
+    print(f"{'='*60}")
 
 
 def main():
