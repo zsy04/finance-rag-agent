@@ -30,6 +30,16 @@ COLLECTION_NAME = "finance_knowledge"
 BGE_MODEL = "BAAI/bge-m3"
 BATCH_SIZE = 32   # 每批编码数量，防止 OOM
 
+# ── 选择性富化：仅对易混淆文档注入区分性关键词 ─────────
+# 这些文档与其他文档在 Embedding 空间中距离过近（共享词根太多），
+# 追加关键词后 BGE-M3 的稀疏词汇通道可获得区分信号。
+DOC_KEYWORDS: dict[str, str] = {
+    # 📌 企税 vs 个税混淆 — 注入"企业""法人"区分信号
+    "企业所得税法": "企业所得税法 企业所得税 法人企业 法人",
+    # 📌 股权激励 QA 标题 73 字太长 — 注入多角度关键词增强召回
+    "个人在一个纳税年度内取得两次或者两项以上股权激励所得，如何计算个人所得税？": "股权激励 股票期权 上市公司 激励所得 个人所得税 如何计算",
+}
+
 
 def load_chunks():
     """加载切分好的 chunks"""
@@ -87,7 +97,13 @@ def encode_and_upsert(chunks, model, client):
 
     for start in range(0, total, BATCH_SIZE):
         batch = chunks[start:start + BATCH_SIZE]
-        texts = [c["content"] for c in batch]
+        texts = []
+        for c in batch:
+            txt = c["content"]
+            doc = c.get("doc_title", "")
+            if doc in DOC_KEYWORDS:
+                txt = f"{txt} {DOC_KEYWORDS[doc]}"
+            texts.append(txt)
 
         # BGE-M3 双向量编码
         output = model.encode(

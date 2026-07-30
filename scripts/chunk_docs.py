@@ -101,7 +101,6 @@ def chunk_tax_law(text, meta):
     for i, chunk_text in enumerate(chunks):
         chunk_text = chunk_text.strip()
         if not chunk_text or len(chunk_text) < CHUNK_LOWER:
-            # 极短 chunk 跳过（如空标题行）
             continue
         payload = {
             "content": chunk_text,
