@@ -54,3 +54,11 @@ start.bat
 **/nginx.conf
 docker-compose.yml
 **/.dockerignore
+
+# ── 训练数据（不上传 GitHub，公开法规原文+问答语料） ──
+rag-data/processed/national/tax_law/
+rag-data/processed/national/qa_corpus/
+rag-data/processed/national/operations/
+rag-data/raw/
+rag-data/staging/
+rag-data/chunks.jsonl
