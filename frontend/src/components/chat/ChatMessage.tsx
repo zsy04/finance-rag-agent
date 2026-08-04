@@ -30,16 +30,7 @@ export function ChatMessage({ message, onRetry }: ChatMessageProps) {
           message.isError && 'border-l-4 border-l-[var(--color-error)] rounded-[16px_16px_16px_4px]',
         )}
       >
-        {/* 1. 步骤列表 */}
-        {message.steps && message.steps.length > 0 && (
-          <ol className="mb-2 space-y-1 font-mono text-sm text-[var(--color-text-secondary)]">
-            {message.steps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        )}
-
-        {/* 2. 结果卡片 */}
+        {/* 1. 结果卡片 */}
         {message.resultCard && <ResultCard resultCard={message.resultCard} />}
 
         {/* 3. 正文 */}

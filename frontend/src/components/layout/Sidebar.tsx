@@ -14,7 +14,7 @@ export function Sidebar() {
 
   return (
     <nav
-      className="group flex h-full flex-col items-center gap-2 border-r border-[var(--color-border)] bg-[var(--color-bg-surface)] py-4 transition-all duration-[var(--transition-base)] delay-50 w-16 hover:w-[200px]"
+      className="group flex h-full flex-col items-center gap-2 border-r border-[var(--color-border)] bg-[var(--color-bg-surface)] py-4 transition-all duration-[var(--transition-base)] delay-50 w-16 hover:w-[200px] focus-within:w-[200px]"
       aria-label="主导航"
     >
       {NAV_ITEMS.map(({ view, label, Icon }) => {

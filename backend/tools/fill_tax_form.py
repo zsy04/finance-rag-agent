@@ -4,18 +4,19 @@
 纯 openpyxl 字段映射填表，不走 LLM。
 """
 
+import importlib.util
 import json
-import sys
 from pathlib import Path
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
-# 添加 scripts 目录到路径
-_scripts_dir = str(Path(__file__).resolve().parent.parent.parent / "scripts")
-if _scripts_dir not in sys.path:
-    sys.path.insert(0, _scripts_dir)
-
-from fill_tax_form import fill_form, get_required_fields
+# 按需加载 scripts/fill_tax_form.py，避免污染全局 sys.path
+_scripts_path = Path(__file__).resolve().parent.parent.parent / "scripts" / "fill_tax_form.py"
+_spec = importlib.util.spec_from_file_location("_scripts_fill_tax_form", _scripts_path)
+_scripts_module = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_scripts_module)
+fill_form = _scripts_module.fill_form
+_get_required_fields_raw = _scripts_module.get_required_fields
 
 
 class FillFormInput(BaseModel):
@@ -34,16 +35,15 @@ def fill_tax_form(form_type: str, user_data: dict) -> str:
 
     参数:
         form_type: 表单类型: "A表"（单位职工，扣缴义务人填报）或 "B表"（自行申报，个体户/自由职业者）
-        user_data: 用户信息字典。常见字段:
-            - 纳税人姓名: 如 "张三"
-            - 身份证件类型: "居民身份证"/"护照"/"港澳居民来往内地通行证"/"台湾居民来往大陆通行证"
-            - 身份证件号码: 如 "410105199001011234"
-            - 出生日期: "YYYY-MM-DD" 格式
-            - 国籍/地区: 如 "中国"
-            - 手机号码: 如 "13800138000"
-            - 联系地址: 如 "郑州市金水区XX路XX号"
-            - 开户银行: 如 "中国工商银行"
-            - 银行账号: 如 "6222021234567890"
+        user_data: 用户信息字典。
+            A表常见字段（雇员）:
+                - 纳税人姓名, 身份证件类型, 身份证件号码, 出生日期, 国籍/地区
+                - 扣缴义务人名称, 扣缴义务人识别号, 任职受雇从业类型, 职务, 手机号码
+            B表常见字段（个体户）:
+                - 纳税人姓名, 身份证件类型, 身份证件号码, 出生日期, 国籍/地区
+                - 被投资单位名称（个体工商户名称）, 被投资单位信用代码（统一社会信用代码）
+                - 经营收入, 成本费用, 自己交的社保, 以前年度亏损, 申报周期
+                - 注意: B表不填任职单位信息（个体户没有雇主）
     """
     # 调用现有 fill_form 函数
     result_json = fill_form(form_type, user_data)
@@ -92,5 +92,6 @@ def get_required_fields(form_type: str) -> str:
     参数:
         form_type: 表单类型: "A表" 或 "B表"
     """
-    result_json = get_required_fields(form_type)
+    # 调用原始函数（注意：不能用同名变量，否则递归调用自身）
+    result_json = _get_required_fields_raw(form_type)
     return result_json  # 直接返回原始 JSON，LLM 可读取字段列表

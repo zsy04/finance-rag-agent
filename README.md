@@ -72,28 +72,56 @@ python eval/eval.py --category 个税  # 按分类评测
 
 ---
 
-## 快速启动（Docker）
+## 快速启动
 
-本项目仅 Qdrant 使用 Docker，后端和前端在宿主机直接运行（GPU 直通 BGE-M3）。
+### 方式一：Docker 全家桶（推荐分发给他人的方式）
+
+一键启动全部服务（Qdrant + 后端 + 前端），只需装 Docker Desktop。
 
 ```bash
 # 1. 安装 Docker Desktop（仅一次）
 #    https://docs.docker.com/desktop/setup/install/windows-install/
 
-# 2. 拉取镜像（仅一次）
-docker pull qdrant/qdrant
+# 2. 复制环境配置（改为自己的 DeepSeek API Key）
+cp .env.example .env
+# 编辑 .env，填入 DEEPSEEK_API_KEY=sk-xxxx
 
-# 3. 启动 Qdrant
-cd F:\lest
-docker compose up -d
+# 3. 启动全部服务
+docker compose up -d --build
 
-# 4. 验证
-#    浏览器打开 http://localhost:6333 → 看到 Qdrant 欢迎页即成功
-#    Dashboard: http://localhost:6333/dashboard
+# 4. 访问
+#    前端: http://localhost:3000
+#    后端: http://localhost:8000
+#    API 文档: http://localhost:8000/docs
+#    Qdrant: http://localhost:6333/dashboard
 
-# 5. 开发完后停止（数据保留在 ./qdrant_data/）
+# 5. 停止（数据不丢失）
 docker compose down
 ```
+
+> **无 GPU 用户**：在 `.env` 中设置 `EMBEDDING_DEVICE=cpu`，首次启动会自动下载 BGE-M3 模型（~10min），后续启动秒开。
+> **国内用户**：在 `.env` 中设置 `HF_ENDPOINT=https://hf-mirror.com` 加速模型下载。
+
+### 方式二：本地开发（GPU 直通，性能最佳）
+
+仅 Qdrant 使用 Docker，后端和前端在宿主机直接运行。
+
+```bash
+# 1. 启动 Qdrant
+docker compose up -d qdrant
+
+# 2. 启动后端（需先配置 backend/.env）
+cd backend
+venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8000
+
+# 3. 启动前端
+cd frontend
+npm run dev
+
+# 访问 http://localhost:5173
+```
+
+或者用 `start.bat` 一键启动本地开发环境。
 
 ---
 

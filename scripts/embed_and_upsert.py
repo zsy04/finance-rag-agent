@@ -3,9 +3,15 @@
 BGE-M3 向量化 + Qdrant 入库
 ============================
 读取 chunks.jsonl → BGE-M3 双向量编码（稠密+稀疏）→ Qdrant upsert
+
+设备选择：设置环境变量 EMBEDDING_DEVICE 来控制
+  - 不设置 (auto): 自动检测 GPU，不可用时回退 CPU
+  - EMBEDDING_DEVICE=cpu: 强制 CPU 模式（无 GPU 用户）
+  - EMBEDDING_DEVICE=cuda: 强制 GPU 模式
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -254,11 +260,28 @@ def main():
     create_collection(client)
 
     # 加载模型（首次会下载 ~2.2GB，后续走缓存）
-    print(f"\n⏳ 加载 BGE-M3 模型（首次需下载约 2.2GB）...")
+    # 设备选择：EMBEDDING_DEVICE 环境变量控制
+    device = os.getenv("EMBEDDING_DEVICE", "auto")
+    if device == "cpu":
+        use_device = "cpu"
+        use_fp16 = False
+    elif device == "cuda":
+        use_device = "cuda"
+        use_fp16 = True
+    else:  # auto
+        try:
+            import torch
+            use_device = "cuda" if torch.cuda.is_available() else "cpu"
+            use_fp16 = (use_device == "cuda")
+        except ImportError:
+            use_device = "cpu"
+            use_fp16 = False
+
+    print(f"\n⏳ 加载 BGE-M3 模型 (device={use_device}, fp16={use_fp16}, 首次需下载约 2.2GB)...")
     model = BGEM3FlagModel(
         BGE_MODEL,
-        use_fp16=True,          # GPU 半精度，8GB 显存够用
-        device="cuda",          # RTX 4060
+        use_fp16=use_fp16,
+        device=use_device,
     )
     print(f"✅ BGE-M3 加载完成")
 

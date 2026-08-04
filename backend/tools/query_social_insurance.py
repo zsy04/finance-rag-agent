@@ -58,10 +58,19 @@ def query_social_insurance(
         )
 
     if employment_type == "flexible":
+        # @tool 路径下 LLM 生成参数不经过 Pydantic 校验，需兜底
+        if not isinstance(flexible_base_level, int) or not 0 <= flexible_base_level <= 3:
+            return json.dumps(
+                {
+                    "answer": f"缴费档次错误: {flexible_base_level}，可选 0(60%下限) / 1(100%) / 2(200%) / 3(300%上限)"
+                },
+                ensure_ascii=False,
+            )
         flex = calculate_flexible_social(base_level=flexible_base_level)
+        _level_labels = ["60%下限", "100%", "200%", "300%上限"]
         answer_parts = [
             f"灵活就业社保（郑州）",
-            f"缴费档次: {['60%下限', '100%', '200%', '300%上限'][flexible_base_level]}",
+            f"缴费档次: {_level_labels[flexible_base_level]}",
         ]
         for name, info in flex["breakdown"].items():
             answer_parts.append(

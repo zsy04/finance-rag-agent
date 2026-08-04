@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { Message, SSEEvent, Source, ResultCardData } from '@/lib/types';
+import type { Message, Source, ResultCardData } from '@/lib/types';
 import { streamChat } from '@/lib/sse';
 
 export function useChat() {
@@ -25,7 +25,7 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      for await (const event of streamChat(content, threadIdRef.current) as AsyncGenerator<SSEEvent>) {
+      for await (const event of streamChat(content, threadIdRef.current)) {
         setMessages((prev) =>
           prev.map((m) => {
             if (m.id !== aiMsg.id) return m;
@@ -84,10 +84,5 @@ export function useChat() {
     }
   }, [isLoading]);
 
-  const clearMessages = useCallback(() => {
-    threadIdRef.current = crypto.randomUUID();
-    setMessages([]);
-  }, []);
-
-  return { messages, isLoading, sendMessage, clearMessages };
+  return { messages, isLoading, sendMessage };
 }

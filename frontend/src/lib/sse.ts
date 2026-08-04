@@ -1,4 +1,4 @@
-import type { SSEEvent } from '@/lib/types';
+import type { SSEEvent, TaxResult, SocialResult } from '@/lib/types';
 
 /**
  * 使用 fetch + ReadableStream 消费 SSE 流
@@ -19,10 +19,16 @@ export async function* streamChat(
     return;
   }
 
-  const reader = response.body!.getReader();
+  if (!response.body) {
+    yield { type: 'error', data: { message: '响应体为空' } };
+    return;
+  }
+
+  const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
   let currentEvent: string | null = null;
+  let dataLines: string[] = [];
 
   while (true) {
     const { done, value } = await reader.read();
@@ -35,15 +41,32 @@ export async function* streamChat(
     for (const line of lines) {
       if (line.startsWith('event: ')) {
         currentEvent = line.slice(7).trim();
-      } else if (line.startsWith('data: ') && currentEvent) {
-        try {
-          const data = JSON.parse(line.slice(6));
-          yield { type: currentEvent as SSEEvent['type'], data };
-        } catch {
-          // 跳过无法解析的行
+      } else if (line.startsWith('data: ')) {
+        // 支持多行 data（SSE 规范：连续 data 行以 \n 拼接）
+        dataLines.push(line.slice(6));
+      } else if (line === '') {
+        // 空行 = 事件结束，触发 yield
+        if (currentEvent && dataLines.length > 0) {
+          try {
+            const data = JSON.parse(dataLines.join('\n'));
+            yield { type: currentEvent as SSEEvent['type'], data };
+          } catch {
+            // 跳过无法解析的事件
+          }
         }
         currentEvent = null;
+        dataLines = [];
       }
+    }
+  }
+
+  // 流结束时刷新可能残留的末尾事件
+  if (currentEvent && dataLines.length > 0) {
+    try {
+      const data = JSON.parse(dataLines.join('\n'));
+      yield { type: currentEvent as SSEEvent['type'], data };
+    } catch {
+      // 跳过无法解析的事件
     }
   }
 }
@@ -58,8 +81,12 @@ export async function calculateTax(payload: {
   housing_rent?: number;
   children_edu?: number;
   elderly_support?: number;
+  continuing_education?: number;
+  major_medical?: number;
+  housing_loan?: number;
+  childcare?: number;
   bonus?: number;
-}): Promise<Record<string, unknown>> {
+}): Promise<TaxResult> {
   const res = await fetch('/api/tax/calculate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -77,7 +104,7 @@ export async function calculateSocial(payload: {
   employment_type: string;
   housing_fund_ratio?: number;
   flexible_base_level?: string;
-}): Promise<Record<string, unknown>> {
+}): Promise<SocialResult> {
   const res = await fetch('/api/social/calculate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

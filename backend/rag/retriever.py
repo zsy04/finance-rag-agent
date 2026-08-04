@@ -43,6 +43,7 @@ from config import (
     QDRANT_COLLECTION,
     BGE_MODEL_PATH,
     RERANKER_MODEL_PATH,
+    EMBEDDING_DEVICE,
 )
 from rag.query_rewriter import enrich_query
 
@@ -53,7 +54,12 @@ logger = logging.getLogger(__name__)
 
 
 def _detect_device() -> str:
-    """自动检测可用设备：优先 CUDA，否则回退 CPU"""
+    """根据配置检测设备：EMBEDDING_DEVICE 可选 auto/cpu/cuda"""
+    if EMBEDDING_DEVICE == "cpu":
+        return "cpu"
+    if EMBEDDING_DEVICE == "cuda":
+        return "cuda"
+    # auto: 自动检测
     try:
         import torch
         return "cuda" if torch.cuda.is_available() else "cpu"
@@ -69,19 +75,20 @@ class Retriever:
         self.client = QdrantClient(url=QDRANT_URL)
 
         device = _detect_device()
-        logger.info("⏳ 加载 BGE-M3 编码器 (device=%s)...", device)
+        use_fp = (device == "cuda")  # fp16 仅 GPU 可用，CPU 用 fp32
+        logger.info("⏳ 加载 BGE-M3 编码器 (device=%s, fp16=%s)...", device, use_fp)
         from FlagEmbedding import BGEM3FlagModel
         self.encoder = BGEM3FlagModel(
             BGE_MODEL_PATH,
-            use_fp16=True,
+            use_fp16=use_fp,
             device=device,
         )
 
-        logger.info("⏳ 加载 Reranker...")
+        logger.info("⏳ 加载 Reranker (device=%s)...", device)
         from FlagEmbedding import FlagReranker
         self.reranker = FlagReranker(
             RERANKER_MODEL_PATH,
-            use_fp16=True,
+            use_fp16=use_fp,
         )
         self._reranker_available = True
 
@@ -481,13 +488,15 @@ def search_knowledge(
 # ── 自检 ───────────────────────────────────────────────
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     r = get_retriever()
 
-    print("=== 测试 1: 租房扣除 ===")
+    logger.info("=== 测试 1: 租房扣除 ===")
     for item in r.retrieve("租房可以税前扣除多少"):
-        print(f"  [{item['relevance_tier']}] {item['doc_title']}")
-        print(f"    rerank={item['rerank_score']:.4f} weight={item['relevance_weight']} final={item['final_score']:.4f}")
+        logger.info("  [%s] %s", item['relevance_tier'], item['doc_title'])
+        logger.info("    rerank=%.4f weight=%s final=%.4f",
+                    item['rerank_score'], item['relevance_weight'], item['final_score'])
 
-    print("\n=== 测试 2: 增值税税率（仅 tax_law）===")
+    logger.info("=== 测试 2: 增值税税率（仅 tax_law）===")
     for item in r.retrieve("增值税税率是多少", tier_filter="tax_law"):
-        print(f"  [{item['relevance_tier']}] {item['doc_title']} final={item['final_score']:.4f}")
+        logger.info("  [%s] %s final=%.4f", item['relevance_tier'], item['doc_title'], item['final_score'])

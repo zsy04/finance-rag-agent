@@ -1,13 +1,17 @@
 """
-RAG 问答生成器
+RAG 问答生成器（Legacy 直连通路）
 ==============
-构建 System Prompt（含检索到的法规上下文），调用 DeepSeek V4 Flash 流式输出。
+构建 System Prompt（含检索到的法规上下文），调用 DeepSeek（config.DEEPSEEK_MODEL）流式输出。
+Agent 通路见 agent/engine.py；本模块仅由 Legacy /chat 和 /chat/with-search 使用。
 """
 
 import json
+import logging
 from typing import AsyncGenerator
 from openai import AsyncOpenAI
 from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
+
+logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(
     api_key=DEEPSEEK_API_KEY,
@@ -131,4 +135,6 @@ async def stream_answer(query: str, search_results: list[dict]) -> AsyncGenerato
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     except Exception as e:
-        yield f"data: {json.dumps({'type': 'error', 'content': str(e)}, ensure_ascii=False)}\n\n"
+        # 内部记完整 traceback 便于排查，对外不泄露原始异常信息
+        logger.exception("stream_answer 异常 (query=%s)", query[:100])
+        yield f"data: {json.dumps({'type': 'error', 'content': '生成服务暂时不可用，请稍后重试'}, ensure_ascii=False)}\n\n"

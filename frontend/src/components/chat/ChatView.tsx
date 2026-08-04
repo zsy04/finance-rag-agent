@@ -8,12 +8,10 @@ interface ChatViewProps {
   messages: Message[];
   isLoading: boolean;
   onSend: (message: string) => void;
-  lastUserMessage: string | null;
 }
 
-export function ChatView({ messages, isLoading, onSend, lastUserMessage }: ChatViewProps) {
+export function ChatView({ messages, isLoading, onSend }: ChatViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const initialRef = useRef<string | undefined>(undefined);
 
   // 新消息自动滚动到底部
   useEffect(() => {
@@ -22,14 +20,6 @@ export function ChatView({ messages, isLoading, onSend, lastUserMessage }: ChatV
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
-
-  // 如果有外部传入的初始消息（示例问题点击），触发发送
-  useEffect(() => {
-    if (lastUserMessage && lastUserMessage !== initialRef.current) {
-      initialRef.current = lastUserMessage;
-      onSend(lastUserMessage);
-    }
-  }, [lastUserMessage, onSend]);
 
   const isEmpty = messages.length === 0;
 

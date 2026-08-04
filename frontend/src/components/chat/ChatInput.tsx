@@ -5,21 +5,11 @@ import { cn } from '@/lib/utils';
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
-  initialValue?: string;
 }
 
-export function ChatInput({ onSend, isLoading, initialValue }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // 外部填入（如示例问题点击）
-  useEffect(() => {
-    if (initialValue !== undefined) {
-      setValue(initialValue);
-      // 自动聚焦
-      textareaRef.current?.focus();
-    }
-  }, [initialValue]);
 
   // 自动撑高
   useEffect(() => {

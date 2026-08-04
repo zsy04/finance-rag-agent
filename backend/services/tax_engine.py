@@ -20,6 +20,15 @@ except KeyError:
 
 ANNUAL_DEDUCTION = _TAX["annual_deduction"]  # 60000
 
+# 收入类型 → 计入综合所得的比例（劳务/稿酬/特许权使用费按税法规定打折）
+# 统一定义，routers/tax.py 和 tools/calculate_income_tax.py 共享，避免不一致
+INCOME_RATIO: dict[str, float] = {
+    "salary": 1.0,
+    "labor_service": 0.8,
+    "manuscript": 0.56,
+    "royalty": 0.8,
+}
+
 
 def _sort_brackets(brackets: list[dict]) -> list[dict]:
     """按 income_high 升序排序，确保 _find_bracket 正确定位级距"""

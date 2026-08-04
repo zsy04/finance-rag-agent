@@ -120,12 +120,15 @@ def fill_form(form_type: str, user_data: dict, output_path: str = None) -> str:
 
     # 填写表单
     try:
+        from openpyxl.comments import Comment
+
         wb = openpyxl.load_workbook(output_path)
         ws = wb[form_config.get("sheet", wb.sheetnames[0])]
 
         filled_count = 0
         skipped = []
         errors = []
+        notes_items = []  # 收集所有备注字段
 
         for field_name, value in user_data.items():
             if field_name not in form_config["fields"]:
@@ -134,14 +137,34 @@ def fill_form(form_type: str, user_data: dict, output_path: str = None) -> str:
 
             field_config = form_config["fields"][field_name]
             cell_ref = field_config["cell"]
-            row, col = _parse_cell(cell_ref)
+
+            # 备注字段：不填格子，收集起来统一写到备注区域
+            if cell_ref == "_备注_":
+                if value and value != "0":
+                    note_text = field_config.get("note", field_name)
+                    notes_items.append(f"{note_text}: {value}")
+                    filled_count += 1
+                continue
 
             try:
+                row, col = _parse_cell(cell_ref)
                 cell = ws.cell(row=row, column=col)
                 cell.value = value
                 filled_count += 1
             except Exception as e:
                 errors.append(f"{field_name} → {cell_ref}: {e}")
+
+        # 将经营数据作为备注写入表格末尾（第 36 行附近）
+        if notes_items:
+            try:
+                note_row = 36
+                ws.cell(row=note_row, column=1, value="【经营所得申报数据】")
+                ws.cell(row=note_row, column=1).font = openpyxl.styles.Font(bold=True)
+                for i, item in enumerate(notes_items):
+                    ws.cell(row=note_row + 1 + i, column=1, value=item)
+                filled_count += 1  # 备注区标题也算一次填写
+            except Exception as e:
+                errors.append(f"备注写入: {e}")
 
         wb.save(output_path)
 

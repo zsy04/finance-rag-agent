@@ -20,7 +20,7 @@ async def search_knowledge(query: str) -> str:
     """
     retriever = get_retriever()
     # 同步 CPU 密集型操作移到线程池，避免阻塞 Agent 事件循环
-    results = await asyncio.to_thread(retriever.retrieve, query, 5)
+    results = await asyncio.to_thread(retriever.retrieve, query, top_k=5)
 
     if not results:
         return json.dumps(

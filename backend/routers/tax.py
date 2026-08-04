@@ -4,20 +4,13 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from services.tax_engine import (
     ANNUAL_DEDUCTION,
+    INCOME_RATIO,
     calculate_bonus_tax_separate,
     calculate_comprehensive_tax,
     compare_bonus_methods,
 )
 
 router = APIRouter(prefix="/api/tax", tags=["个税计算"])
-
-# 收入类型 → 计入综合所得的比例（劳务/稿酬/特许权使用费按税法规定打折）
-INCOME_RATIO: dict[str, float] = {
-    "salary": 1.0,
-    "labor_service": 0.8,
-    "manuscript": 0.56,
-    "royalty": 0.8,
-}
 
 
 class TaxRequest(BaseModel):

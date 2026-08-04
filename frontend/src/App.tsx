@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -10,15 +9,6 @@ import { useChat } from '@/hooks/useChat';
 function AppContent() {
   const { activeView } = useApp();
   const { messages, isLoading, sendMessage } = useChat();
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-
-  const handleSend = useCallback(
-    (msg: string) => {
-      sendMessage(msg);
-      setPendingMessage(null);
-    },
-    [sendMessage],
-  );
 
   return (
     <div className="app-container flex h-screen bg-[var(--color-bg-page)]">
@@ -30,8 +20,7 @@ function AppContent() {
             <ChatView
               messages={messages}
               isLoading={isLoading}
-              onSend={handleSend}
-              lastUserMessage={pendingMessage}
+              onSend={sendMessage}
             />
           )}
           {activeView === 'calculator' && <TaxCalculator />}

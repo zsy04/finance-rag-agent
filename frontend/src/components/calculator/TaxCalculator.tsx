@@ -7,7 +7,7 @@ import { ResultCard } from '@/components/chat/ResultCard';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { CalculatorSvg, HelpSvg } from '@/components/icons';
-import { calculateTax } from '@/lib/sse';
+import { calculateTax, calculateSocial } from '@/lib/sse';
 import { useApp } from '@/context/AppContext';
 import type { ResultCardData } from '@/lib/types';
 
@@ -56,6 +56,15 @@ export function TaxCalculator() {
 
   const annualIncome = Number(monthlySalary) * 12 || 0;
 
+  const handleReset = () => {
+    setMonthlySalary('');
+    setIncomeType('salary');
+    setDeductions({});
+    setBonus('');
+    setResult(null);
+    setError(null);
+  };
+
   const handleCalculate = async () => {
     if (!monthlySalary) {
       setError('请输入税前月薪');
@@ -66,19 +75,31 @@ export function TaxCalculator() {
     setResult(null);
 
     try {
+      // 社保：优先查询精确个人缴纳额，失败则回退 10.5% 估算
+      let socialInsurance = Math.round(Number(monthlySalary) * 0.105 * 12);
+      try {
+        const social = await calculateSocial({
+          salary: Number(monthlySalary),
+          employment_type: 'employee',
+        });
+        if (typeof social.total_personal === 'number') {
+          socialInsurance = Math.round(social.total_personal * 12);
+        }
+      } catch {
+        // 社保查询失败，沿用估算值
+      }
+
       const payload: Record<string, unknown> = {
         annual_income: annualIncome,
         income_type: incomeType,
+        social_insurance: socialInsurance,
       };
 
-      // 社保估算（简化：默认工资 10.5% 个人缴纳）
-      payload.social_insurance = Math.round(Number(monthlySalary) * 0.105 * 12);
-
-      // 扣除项
+      // 扣除项（发送月额，后端会 ×12 转年额）
       for (const item of DEDUCTION_ITEMS) {
         const val = Number(deductions[item.key]);
         if (val > 0) {
-          payload[item.key] = val * 12; // 月额 → 年额
+          payload[item.key] = val;
         }
       }
 
@@ -87,7 +108,7 @@ export function TaxCalculator() {
       }
 
       const data = await calculateTax(payload as Parameters<typeof calculateTax>[0]);
-      setResult({ type: 'tax_result', data: data as unknown as ResultCardData['data'] });
+      setResult({ type: 'tax_result', data });
 
       // 同步到用户上下文
       updateUserContext({
@@ -191,7 +212,7 @@ export function TaxCalculator() {
         </div>
 
         {/* 计算按钮 */}
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-3">
           <Button
             onClick={handleCalculate}
             disabled={loading}
@@ -200,6 +221,14 @@ export function TaxCalculator() {
           >
             <CalculatorSvg className="h-4 w-4" />
             {loading ? '计算中……' : '开始计算'}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleReset}
+            size="lg"
+            disabled={loading}
+          >
+            清空
           </Button>
         </div>
 

@@ -12,12 +12,12 @@ export function Skeleton({ className, lineCount = 1 }: SkeletonProps) {
         {Array.from({ length: lineCount }).map((_, i) => (
           <div
             key={i}
-            className="h-4 animate-pulse rounded bg-gray-200"
+            className="h-4 animate-pulse rounded bg-[var(--color-border)]"
             style={{ width: i === lineCount - 1 ? '60%' : '100%' }}
           />
         ))}
       </div>
     );
   }
-  return <div className={cn('h-4 w-3/4 animate-pulse rounded bg-gray-200', className)} />;
+  return <div className={cn('h-4 w-3/4 animate-pulse rounded bg-[var(--color-border)]', className)} />;
 }

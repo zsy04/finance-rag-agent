@@ -24,26 +24,43 @@
         "电子邮箱":              {"cell": "Q9",   "type": "text",   "required": false},
         "开户银行":              {"cell": "R9",   "type": "text",   "required": false, "ask": "退税到哪个银行？请提供开户行名称"},
         "银行账号":              {"cell": "S9",   "type": "text",   "required": false, "ask": "银行卡号是？"},
-        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false, "ask": "是否为残疾、孤老或烈属人员？"}
+        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false, "ask": "是否为残疾、孤老或烈属人员？"},
+        "出生地":                {"cell": "X9",   "type": "text",   "required": false, "note": "华侨/港澳台/外籍必填"},
+        "性别":                  {"cell": "Y9",   "type": "select", "required": false, "options": ["男","女"], "note": "华侨/港澳台/外籍必填"},
+        "首次入境时间":            {"cell": "Z9",   "type": "date",   "required": false, "note": "华侨/港澳台/外籍填写"},
+        "预计离境时间":            {"cell": "AA9",  "type": "date",   "required": false, "note": "华侨/港澳台/外籍填写"},
+        "涉税事由":              {"cell": "AB9",  "type": "select", "required": false, "options": ["任职受雇","提供临时劳务","转让财产","从事投资和经营活动","其他"], "note": "华侨/港澳台/外籍必填"}
       }
     },
     "B表": {
       "file": "个人所得税基础信息表（B表）/个人所得税基础信息表（B表）纸质表单.xlsx",
-      "description": "纳税人自行申报基础信息（个体户/自由职业者等无扣缴义务人情形）",
+      "description": "纳税人自行申报基础信息（个体户/自由职业者等无扣缴义务人情形）。被投资单位栏填个体工商户自身信息，经营数据填入备注。",
       "sheet": "Sheet2",
       "data_start_row": 9,
       "fields": {
-        "纳税人姓名":            {"cell": "C9",   "type": "text",   "required": true},
-        "身份证件类型":          {"cell": "D9",   "type": "select", "required": true},
-        "身份证件号码":          {"cell": "E9",   "type": "text",   "required": true},
-        "出生日期":              {"cell": "F9",   "type": "date",   "required": true},
-        "国籍/地区":             {"cell": "G9",   "type": "text",   "required": true},
-        "手机号码":              {"cell": "M9",   "type": "text",   "required": false},
+        "纳税人姓名":            {"cell": "C9",   "type": "text",   "required": true,  "ask": "请问你的姓名是？"},
+        "身份证件类型":          {"cell": "D9",   "type": "select", "required": true,  "options": ["居民身份证"], "default": "居民身份证", "note": "B表固定为居民身份证"},
+        "身份证件号码":          {"cell": "E9",   "type": "text",   "required": true,  "ask": "请提供你的 18 位居民身份证号"},
+        "出生日期":              {"cell": "F9",   "type": "date",   "required": true,  "ask": "你的出生日期是？（格式：YYYY-MM-DD）"},
+        "国籍/地区":             {"cell": "G9",   "type": "select", "required": true,  "options": ["中国","华侨","港澳居民","台湾居民","外籍"], "default": "中国"},
+        "手机号码":              {"cell": "M9",   "type": "text",   "required": true,  "ask": "你的手机号是？"},
         "户籍所在地":            {"cell": "N9",   "type": "text",   "required": false},
         "联系地址":              {"cell": "P9",   "type": "text",   "required": false},
         "开户银行":              {"cell": "R9",   "type": "text",   "required": false},
         "银行账号":              {"cell": "S9",   "type": "text",   "required": false},
-        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false}
+        "是否残疾/孤老/烈属":     {"cell": "V9",   "type": "bool",   "required": false},
+        "被投资单位名称":          {"cell": "B24",  "type": "text",   "required": false, "ask": "你的个体工商户名称是？"},
+        "被投资单位信用代码":      {"cell": "B25",  "type": "text",   "required": false, "ask": "统一社会信用代码是？"},
+        "经营收入":              {"cell": "_备注_", "type": "number", "required": false, "note": "填入备注: 经营收入 xxx 元"},
+        "成本费用":              {"cell": "_备注_", "type": "number", "required": false, "note": "填入备注: 成本费用 xxx 元（含房租/进货/人工/水电）"},
+        "自己交的社保":            {"cell": "_备注_", "type": "number", "required": false, "note": "填入备注: 社保 xxx 元/年"},
+        "以前年度亏损":            {"cell": "_备注_", "type": "number", "required": false, "note": "填入备注: 弥补以前年度亏损 xxx 元"},
+        "申报周期":              {"cell": "_备注_", "type": "select", "required": false, "options": ["季度", "年度"], "note": "填入备注: 申报周期"},
+        "出生地":                {"cell": "C29",  "type": "text",   "required": false, "note": "华侨/港澳台/外籍必填"},
+        "性别":                  {"cell": "C30",  "type": "select", "required": false, "options": ["男","女"], "note": "华侨/港澳台/外籍必填"},
+        "首次入境时间":            {"cell": "G29",  "type": "date",   "required": false, "note": "华侨/港澳台/外籍填写"},
+        "预计离境时间":            {"cell": "G30",  "type": "date",   "required": false, "note": "华侨/港澳台/外籍填写"},
+        "涉税事由":              {"cell": "C31",  "type": "select", "required": false, "options": ["任职受雇","提供临时劳务","转让财产","从事投资和经营活动","其他"], "note": "华侨/港澳台/外籍必填"}
       }
     }
   },

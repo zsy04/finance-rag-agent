@@ -6,7 +6,7 @@
 
 from .user_context import get_user_context, update_user_context
 from .search_knowledge import search_knowledge
-from .calculate_income_tax import calculate_income_tax
+from .calculate_income_tax import calculate_income_tax, calculate_business_income_tax
 from .query_social_insurance import query_social_insurance
 from .fill_tax_form import fill_tax_form, get_required_fields as get_form_fields
 from .filing_guide import filing_guide
@@ -15,6 +15,7 @@ ALL_TOOLS = [
     get_user_context,
     search_knowledge,
     calculate_income_tax,
+    calculate_business_income_tax,
     query_social_insurance,
     update_user_context,
     fill_tax_form,

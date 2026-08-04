@@ -1,19 +1,19 @@
-# 财税助手后端依赖
-# LangChain v1 标准API
+# 财税助手后端依赖（版本已锁定下限，避免不兼容升级）
+# LangChain v1 标准 API
 langchain>=1.3.0,<2.0.0
 langchain-core>=1.4.0,<2.0.0
-langchain-openai
+langchain-openai>=0.1.0,<1.0.0
 langgraph>=1.2.0,<1.3.0
-langgraph-checkpoint
+langgraph-checkpoint>=2.0.0
 # FastAPI
-fastapi
-uvicorn[standard]
-# RAG 检索
-FlagEmbedding
-qdrant-client
-numpy
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+# RAG 检索（HuggingFace 安装需设 HF_ENDPOINT=https://hf-mirror.com）
+FlagEmbedding>=1.2.0
+qdrant-client>=1.10.0
+numpy>=1.26.0
 # 数据校验
-pydantic
-python-dotenv
+pydantic>=2.0.0
+python-dotenv>=1.0.0
 # 申报表填写
-openpyxl
+openpyxl>=3.1.0

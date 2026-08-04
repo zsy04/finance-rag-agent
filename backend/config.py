@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 
 # 明确指定 .env 路径（避免 CWD 不同导致找不到）
 _env_path = Path(__file__).parent / ".env"
-load_dotenv(_env_path)
+if _env_path.exists():
+    load_dotenv(_env_path)
+else:
+    load_dotenv()  # 回退到 CWD 搜索（Docker 中环境变量直接注入）
 
 #----------API-------------
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
@@ -28,6 +31,8 @@ ALLOWED_ORIGINS = [
 #----------模型-----------
 BGE_MODEL_PATH = "BAAI/bge-m3"
 RERANKER_MODEL_PATH = "BAAI/bge-reranker-v2-m3"
+# 嵌入设备：auto(自动检测GPU优先) / cpu(强制CPU) / cuda(强制GPU)
+EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "auto")
 
 #----------路径-----------
 PROJECT_ROOT = Path(__file__).parent.parent

@@ -34,7 +34,7 @@ export function WelcomeScreen({ onSuggestionClick }: WelcomeScreenProps) {
           <button
             key={text}
             onClick={() => onSuggestionClick(text)}
-            className="rounded-[var(--radius-lg)] border border-[#E2E8F0] bg-[var(--color-bg-page)] p-3 text-left text-sm transition-all duration-[var(--transition-fast)] hover:border-[#93C5FD] hover:bg-[var(--color-primary-light)]"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-page)] p-3 text-left text-sm transition-all duration-[var(--transition-fast)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]"
           >
             {text}
           </button>

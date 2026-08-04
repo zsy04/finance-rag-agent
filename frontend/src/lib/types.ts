@@ -80,7 +80,6 @@ export interface Message {
   role: MessageRole;
   content: string;
   resultCard?: ResultCardData | null;
-  steps?: string[];
   sources?: Source[];
   disclaimer?: string;
   isStreaming?: boolean;

@@ -6,7 +6,9 @@
 旧版 POST /chat/with-search — Legacy 带来源的直连通路
 """
 
+import asyncio
 import json
+import logging
 import uuid
 
 from fastapi import APIRouter
@@ -17,7 +19,9 @@ from pydantic import BaseModel, Field
 from rag.retriever import get_retriever
 from services.generator import stream_answer
 from agent.engine import get_agent
-from tools.user_context import _current_thread_id
+from tools.user_context import set_current_thread_id
+
+logger = logging.getLogger(__name__)
 
 # ── 路由 ──────────────────────────────────────────────
 
@@ -78,29 +82,37 @@ async def _agent_stream(message: str, thread_id: str):
                 try:
                     parsed = json.loads(raw)
 
-                    # 1. result（结果卡片）
+                    # 1. result（结果卡片）— 先发，前端先插入卡片
                     if parsed.get("result_card"):
                         yield _sse("result", parsed["result_card"])
 
-                    # 2. source ×N（来源链接）
+                    # 2. source ×N（来源链接）— 再发，附在卡片下方
                     if parsed.get("sources"):
                         for src in parsed["sources"]:
                             yield _sse("source", src)
 
-                    # 3. disclaimer（免责声明）
+                    # 3. disclaimer（免责声明）— 最后发
                     if parsed.get("disclaimer"):
                         yield _sse("disclaimer", {"text": parsed["disclaimer"]})
 
                 except (json.JSONDecodeError, TypeError):
-                    pass  # 非 JSON 返回，跳过解包
+                    # 非 JSON 返回（如纯文本错误消息），记录日志便于排查
+                    logger.debug("工具返回非 JSON，跳过解包: %s", raw[:200])
 
             # 工具错误 → thinking（非致命，Agent 会自行处理并继续）
             elif kind == "on_tool_error":
                 err_msg = str(event.get("data", {}).get("error", "工具调用失败"))
                 yield _sse("thinking", {"tool_error": err_msg})
 
-    except Exception as e:
-        yield _sse("error", {"content": f"服务异常: {e}"})
+    except (ConnectionError, asyncio.TimeoutError, RuntimeError) as e:
+        # 网络/超时/运行时错误 → 对用户友好提示，内部记完整 traceback
+        logger.exception("Agent 流式处理异常 (thread_id=%s)", thread_id)
+        yield _sse("error", {"content": "服务内部错误，请稍后重试"})
+    except Exception:
+        # 兜底：未预期的编程错误（AttributeError/KeyError 等）应正常抛出，
+        # 但 SSE 流需先关闭，故发 error 事件后重新 raise 以便上层日志捕获
+        logger.exception("Agent 流式处理未预期异常 (thread_id=%s)", thread_id)
+        yield _sse("error", {"content": "服务内部错误，请稍后重试"})
 
     yield _sse("done", {})
 
@@ -120,7 +132,7 @@ async def agent_chat(req: AgentChatRequest):
       event: done        → 回复完成
     """
     # 设置 contextvar → @tool 内部可通过 _current_thread_id.get() 读取
-    _current_thread_id.set(req.thread_id)
+    set_current_thread_id(req.thread_id)
 
     return StreamingResponse(
         _agent_stream(req.message, req.thread_id),

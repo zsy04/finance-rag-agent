@@ -14,11 +14,10 @@ export function TopBar() {
         </span>
       </div>
 
-      {/* 右侧：城市标识 */}
+      {/* 右侧：城市标识（MVP 仅展示，不可切换） */}
       <div className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
         <LocationSvg className="h-4 w-4" />
         <span>郑州</span>
-        <span className="text-[var(--color-text-tertiary)]">▼</span>
       </div>
     </header>
   );

@@ -1,6 +1,7 @@
 # 环境
 .env
 *.env
+!.env.example
 
 # Python
 __pycache__/
@@ -36,3 +37,20 @@ rag-data/staging/
 rag-data/raw/
 backend/eval/report.json
 outputs/
+
+# ── 毕设答辩相关（不上传 GitHub） ──
+docs/财务RAG-产品定义与答辩策略.md
+docs/财务RAG-毕业设计综合文档.md
+docs/财务RAG-项目复盘报告.md
+docs/财务RAG-后端审查与重构方案.md
+docs/财务RAG-前端代码审查报告.md
+docs/财务RAG-后端代码审查报告.md
+
+# ── 部署策略（不上传 GitHub） ──
+docs/服务器部署指南.md
+docs/启动指导.md
+start.bat
+**/Dockerfile
+**/nginx.conf
+docker-compose.yml
+**/.dockerignore
