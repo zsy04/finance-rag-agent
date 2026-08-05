@@ -1,71 +1,115 @@
 # 财税助手 — Finance RAG Agent
 
-> 面向零财务基础大众的 AI 财税助手 Web 应用。自然语言对话替代复杂税务软件，让每个人都能看懂自己的税、算对自己的钱、填对申报表。
+> 面向零财务基础大众的 AI 财税助手：自然语言对话，替代复杂税务软件。让每个人都能 **看懂自己的税、算对自己的钱、填对申报表**。
 
-![Tech](https://img.shields.io/badge/Python-3.11+-blue) ![Frontend](https://img.shields.io/badge/React-18-61dafb) ![LLM](https://img.shields.io/badge/LLM-DeepSeek-green) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2019-61dafb)](https://react.dev/)
+[![LangChain](https://img.shields.io/badge/Agent-LangChain-green)](https://www.langchain.com/)
+[![Qdrant](https://img.shields.io/badge/Vector%20DB-Qdrant-8A2BE2)](https://qdrant.tech/)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
+
+一套自建的 **RAG + Agent + 上下文工程 + Multi-Agent** 全链路方案：DeepSeek 负责理解与调度，税率计算走纯代码引擎（零幻觉），法律知识来自税总法规库清洗后的 115+ 份文档。
 
 ---
 
-## 功能
+## 特性
 
-| 功能 | 说明 |
-|------|------|
-| 智能问答 | 自然语言提问财税问题，RAG 检索精准答案，法规溯源 |
-| 税率计算 | 个税（工资/劳务/稿酬/经营所得）、年终奖对比、分步明细 |
-| 社保查询 | 郑州社保+公积金精准扣除（全国架构预留城市扩展） |
-| 申报指引 | 个税APP汇算清缴操作流程、个体户季度申报指引 |
-| 申报材料 | A表（雇员）/ B表（个体户）在线填写，一键导出 xlsx |
-| 长对话记忆 | 历史自动摘要（trigger 40K token），超长对话不爆窗，压缩时用户可见提示 |
+- **智能问答**：自然语言提问财税问题，四层分层召回 + 法规溯源，回答附文号出处
+- **税率计算**：个税（工资/劳务/稿酬/经营所得）、年终奖择优、社保公积金，全部分步推导
+- **申报材料生成**：A 表（雇员）/ B 表（个体户）字段映射自动填表，一键导出 xlsx
+- **上下文工程**：工具返回提取式瘦身 + 历史自动摘要（trigger 40K），长对话不爆窗
+- **Multi-Agent**：计税/社保双子 Agent 自治调度，`AGENT_MODE` 一键回退
+- **轻量知识图谱**：20 条关联规则 JSON 驱动，两跳推理，零数据库依赖
+- **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 77.5%
 
-## 上下文工程（P0 ✅ 2026-08-04 完成）
+---
 
-| 模块 | 说明 |
-|------|------|
-| `context/guard.py` | 工具返回瘦身：检索拼接文本提取式压缩（必保句=数字/文号/百分比），单条 >400 字才触发 |
-| `context/history_summarizer.py` | 历史摘要：继承官方 SummarizationMiddleware，trigger=40K/keep=20，清单式 prompt（12 字段逐一核对），中文 token 口径 |
-| SSE `context` 事件 | 摘要发生时下一轮流开始时提示用户（"较早的对话已归档…"），前端 📦 提示条 |
-| 评测闭环 | 长对话场景集四指标：judge 忠实度 **100%** / 事件触发率 **100%** / probe 字段完整率 92% / 历史峰值 <41K 不爆窗 |
+## 架构总览
 
-## 技术栈
+```mermaid
+graph TD
+    U[用户] -->|SSE 流式| FE[React 19 + shadcn/ui]
+    FE -->|POST /api/chat| API[FastAPI]
 
-| 层级 | 选型 |
-|------|------|
-| LLM | DeepSeek (`deepseek-chat`)，LangChain `create_agent`，流式 SSE |
-| Embedding | BGE-M3（FlagEmbedding），稠密 1024d + 稀疏双向量，支持 GPU/CPU 切换 |
-| 向量库 | Qdrant，原生混合检索（RRF 融合） |
-| 重排器 | BGE-Reranker-v2-m3，双阶段检索 |
-| 后端 | FastAPI + StreamingResponse，8 个 Agent @tool + 上下文工程（历史摘要/工具瘦身）+ **Multi-Agent 化（P1 ✅ 2026-08-05 完成，双子 Agent）** |
-| 前端 | React 18 + TypeScript + shadcn/ui + Tailwind CSS |
-| 知识图谱 | 轻量 JSON 关系索引（20 条关联规则，两跳推理） |
-| 评测 | 检索层 40 条（Recall@5/MRR/NDCG）+ 工具层 26 条（主 Agent 路由 100%）+ 生成层长对话场景集（judge 忠实度/字段校验）+ **多 Agent 双层评测（主层对拍 8/8 + 子层 10/10）** |
+    subgraph BE[后端 Agent 层]
+        API --> AGENT[主 Agent<br/>LangChain create_agent]
+        AGENT --> SUB1[tax_subagent<br/>计税子 Agent]
+        AGENT --> SUB2[social_subagent<br/>社保子 Agent]
+        AGENT --> TOOLS[8 个 @tool]
+        AGENT --> CTX[上下文工程<br/>guard 瘦身 + 历史摘要]
+    end
 
-## 检索链路
+    TOOLS --> RAG[RAG 管线]
+    TOOLS --> ENG[计税/社保引擎<br/>纯 Python 零幻觉]
+    TOOLS --> FORM[填表引擎<br/>openpyxl + 字段映射]
+
+    RAG --> QW[Query 改写]
+    RAG --> QD[Qdrant 混合检索<br/>BGE-M3 dense+sparse]
+    QD --> RR[BGE-Reranker 精排<br/>Top-30 → Top-5]
+    QD --> KG[轻量关系索引<br/>20 条规则两跳推理]
+
+    ENG --> TAX[税率表 JSON<br/>综合/经营/车船/印花]
+    QD --> VDB[(Qdrant<br/>2937 chunks)]
+    FORM --> XLSX[(xlsx 申报表)]
+```
+
+---
+
+## 检索链路（四层分层召回）
 
 ```
 用户提问 → Query 改写（口语→术语映射）
-         → 元数据预过滤（relevance_tier 分层）
-         → BGE-M3 双向量编码（稠密 1024d + 稀疏词汇）
-         → Qdrant 混合检索（RRF 融合 → Top-30）
-         → BGE-Reranker-v2-m3 精排 → Top-5
-         → 轻量关系索引二次检索（两跳推理）
-         → 拼接上下文 + System Prompt
-         → DeepSeek 流式输出（SSE）
+        → Layer 1 元数据预过滤（relevance_tier 分层）
+        → Layer 2 BGE-M3 双向量编码（稠密 1024d + 稀疏词汇）
+        →      Qdrant 混合检索（RRF 融合 → Top-30）
+        → Layer 3 BGE-Reranker-v2-m3 精排 → Top-5
+        → Layer 4 轻量关系索引二次检索（两跳推理）
+        → 拼接上下文 + System Prompt
+        → DeepSeek 流式输出（SSE）
 ```
 
-## Agent 工具集（8 个）
+## Agent 工具集（8 个 @tool + 双子 Agent）
 
 | 工具 | 功能 |
 |------|------|
 | `search_knowledge` | RAG 知识库检索（三层分层召回 + 关系图谱扩展） |
-| `calculate_income_tax` | 综合所得个税计算（工资/劳务/稿酬/特许权使用费 + 年终奖对比） |
-| `calculate_business_income_tax` | 经营所得个税计算（个体户，5%-35% 五级超额累进，支持季度/年度） |
+| `calculate_income_tax` | 综合所得个税计算（工资/劳务/稿酬 + 年终奖择优） |
+| `calculate_business_income_tax` | 经营所得个税计算（个体户，5%-35% 五级超额累进） |
 | `query_social_insurance` | 社保+公积金计算（郑州，灵活就业/职工双模式） |
-| `fill_tax_form` | 申报表自动填写（A表/B表），字段映射 + openpyxl，直接导出 xlsx |
-| `filing_guide` | 申报流程指引（个税APP汇算清缴/个体户季度申报） |
+| `fill_tax_form` | 申报表自动填写（A 表/B 表），字段映射 + openpyxl 导出 xlsx |
+| `filing_guide` | 申报流程指引（个税 APP 汇算清缴/个体户季度申报） |
 | `get_user_context` | 对话上下文记忆（城市/收入/扣除项/亏损，跨轮复用） |
 | `update_user_context` | 保存用户上下文信息 |
 
-## 快速启动
+**Multi-Agent 化**（`AGENT_MODE=multi`，默认）：计税/社保升级为独立子 Agent（Tool-as-Subagent，无状态全局单例），领域隔离降低 prompt 相互污染；`AGENT_MODE=tools` 一键回退纯工具形态。详见 [Multi-Agent 集成设计文档](docs/财务RAG-Multi-Agent 集成设计文档.md)。
+
+## 上下文工程
+
+| 模块 | 说明 |
+|------|------|
+| `context/guard.py` | 工具返回提取式压缩（必保数字/文号/百分比），替换 `content[:800]` 硬截断 |
+| `context/history_summarizer.py` | 历史自动摘要（trigger 40K / keep 20），清单式 prompt 画像字段必保 |
+| SSE `context` 事件 | 摘要发生时前端提示"较早的对话已归档" |
+
+设计详见 [Context Engineering 集成设计文档](docs/财务RAG-Context Engineering 集成设计文档.md)。
+
+---
+
+## 评测体系（四层闭环）
+
+| 层级 | 评测集 | 结果 |
+|------|--------|------|
+| 检索层 | 40 条 query × 10 类税法场景 | Recall@5 = **77.5%**（40/40 全通过），MRR 0.83 |
+| 工具层 | 26 条主 Agent 路由 | **26/26 = 100%** |
+| 生成层 | 长对话场景集（LLM-as-judge） | 忠实度 **100%** / 事件触发率 **100%** / 峰值 <41K 不爆窗 |
+| 多 Agent 层 | 主层对拍 8 条 + 子层 10 条 | **8/8 + 10/10** 全绿（含绕过检测 2/2） |
+
+迭代方式：**先跑通 → 建 bad case 评测 → 诊断根因 → 修复 → 重测**，防过拟合。RAG Recall@5 从 67.5% 优化至 77.5%，经历 7 轮迭代。
+
+---
+
+## 快速开始
 
 ### 本地开发
 
@@ -79,64 +123,99 @@ docker compose -f docker-compose.qdrant.yml up -d
 # 3. 向量化入库（首次 ~15min GPU / ~1h CPU）
 cd scripts && python embed_and_upsert.py
 
-# 4. 启动后端
+# 4. 启动后端（http://localhost:8000，含 SSE 流式接口）
 cd backend
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
-# 5. 启动前端
+# 5. 启动前端（http://localhost:5173）
 cd frontend
 npm install && npm run dev
-
-# 访问 http://localhost:5173
 ```
 
-> **无 GPU 用户**：设置环境变量 `EMBEDDING_DEVICE=cpu`，BGE-M3 会自动回退 CPU（稍慢但可用）。
+> **无 GPU 用户**：设置环境变量 `EMBEDDING_DEVICE=cpu`，BGE-M3 自动回退 CPU（稍慢但可用）。
 > **国内用户**：设置 `HF_ENDPOINT=https://hf-mirror.com` 加速模型下载。
 
-### 评测
+### 运行评测
 
 ```bash
 cd backend
-python eval/eval.py          # 40 条 query，recall@5 / MRR / NDCG
+python eval/eval.py          # 检索层：40 条 query，recall@5 / MRR / NDCG
 python eval/eval.py -v       # 逐条打印详情
 python eval/eval.py --category 个税  # 按分类评测
+python eval/agent_eval.py    # 工具层：主 Agent 路由 26 条
+python eval/multi_agent_eval.py  # 多 Agent 双层评测
 ```
+
+---
 
 ## 项目结构
 
 ```
 ├── backend/
-│   ├── agent/           # Agent 大脑（LangGraph + 8 @tool + 历史摘要 middleware + Multi-Agent 双子 Agent 规划）
-│   ├── context/         # 上下文工程（guard 工具瘦身 + history_summarizer 历史摘要）
+│   ├── agent/           # Agent 大脑（create_agent + prompts + 历史摘要 middleware）
+│   ├── context/         # 上下文工程（guard 瘦身 + history_summarizer）
 │   ├── rag/             # RAG 检索引擎（retriever + query_rewriter）
-│   ├── routers/         # FastAPI 路由（chat/tax/social/form，SSE 9 种事件）
-│   ├── services/        # 计税引擎（纯 Python，零幻觉）
-│   ├── tools/           # LangChain @tool 工具函数（规划：subagents.py 双子 Agent）
-│   └── eval/            # 评测（检索 40 条 + 长对话场景集 + 规划：双层多 Agent 评测）
+│   ├── routers/         # FastAPI 路由（chat/tax/social/form，SSE 8 种事件）
+│   ├── services/        # 计税/社保引擎（纯 Python，零幻觉）
+│   ├── tools/           # 8 个 @tool + subagents.py 双子 Agent
+│   └── eval/            # 四层评测（eval / agent_eval / multi_agent_eval / context_eval）
 ├── frontend/
 │   └── src/
-│       ├── components/chat/     # 对话视图
-│       ├── components/calculator/ # 税率计算器
-│       ├── components/form/     # 申报材料生成
-│       └── components/layout/   # 布局（Sidebar + TopBar）
-├── rag-data/processed/
-│   ├── national/rates/         # JSON 税率表 + 行业基准
-│   ├── national/templates/     # 申报表模板（A表/B表 xlsx）
-│   └── cities/zhengzhou/       # 郑州社保+公积金数据
-├── scripts/                    # 数据处理工具链
-├── docs/                       # 技术文档
-└── qdrant_data/                # Qdrant 向量数据
+│       ├── components/chat/        # 对话视图（SSE 流式 + 结果卡片 + 溯源）
+│       ├── components/calculator/  # 税率计算器（分步明细）
+│       ├── components/form/        # 申报材料生成（A 表/B 表）
+│       └── components/layout/      # 布局（Sidebar + TopBar）
+├── rag-data/
+│   ├── processed/national/rates/   # JSON 税率表 + 行业基准
+│   ├── processed/national/templates/ # 申报表字段映射
+│   └── processed/cities/zhengzhou/ # 郑州社保+公积金数据
+├── scripts/            # 数据工具链（清洗/切分/向量化/评测）
+└── docs/               # 工程文档
 ```
+
+---
+
+## 技术栈
+
+| 层级 | 选型 |
+|------|------|
+| LLM | DeepSeek（`deepseek-chat`），LangChain `create_agent`，流式 SSE |
+| Embedding | BGE-M3（FlagEmbedding），稠密 1024d + 稀疏双向量，GPU/CPU 自动切换 |
+| 向量库 | Qdrant，原生混合检索（RRF 融合） |
+| 重排器 | BGE-Reranker-v2-m3，双阶段检索 |
+| 后端 | FastAPI + Python 3.13 + StreamingResponse |
+| 前端 | React 19 + TypeScript + shadcn/ui + Tailwind CSS |
+| 知识图谱 | 轻量 JSON 关系索引（20 条规则，两跳推理） |
 
 ## 核心设计决策
 
 - **准确性优先于速度**：财税场景错不起
 - **金额计算不走 LLM**：税率/社保全部 JSON + Python 公式，零幻觉
-- **语义边界切分**：税法按 `### 第X条`、问答按 `## 问句` 切分，不硬按字符数
-- **先跑通再评测收敛**：建 40 条 bad case 评测集，逐轮优化避免过拟合
+- **语义边界切分**：税法按 `### 第X条`、问答按 `## 问句` 切分，不硬按字符数（800/80 窗口 + 15% 重叠）
+- **先跑通再评测收敛**：建 bad case 评测集，逐轮优化避免过拟合
 - **AI 嵌入 vs AI 原生**：核心逻辑代码化，AI 负责调度和理解层
-- **上下文工程**：历史摘要 + 工具返回瘦身，评测驱动迭代（三轮回合修 3 个根因，见 docs/开发踩坑记录）
-- **Multi-Agent 化（P1 ✅ 2026-08-05 完成）**：计税/社保拆为双子 Agent（Tool-as-Subagent，无状态+全局单例），`AGENT_MODE` 模式开关回退，prompt 双版本防"调不到子 Agent"，失败降级复用 tool_calls 参数，绕过检测强制重算。三层评测全绿：主 Agent 路由 26/26、主层对拍 8/8、子层 10/10——设计见 `docs/财务RAG-Multi-Agent 集成设计文档.md`（v1.5）
+- **评测驱动落地**：每个新模块（上下文工程/Multi-Agent）先设计验收指标，再编码、再评测闭环
+
+---
+
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [技术架构与 Agent 方案](docs/财务RAG-技术架构与Agent方案.md) | 技术栈选型、检索链路、Agent 工具设计 |
+| [Multi-Agent 集成设计](docs/财务RAG-Multi-Agent 集成设计文档.md) | 双子 Agent 架构、降级机制、绕过检测 |
+| [Context Engineering 集成设计](docs/财务RAG-Context Engineering 集成设计文档.md) | 上下文工程 v2.0 设计 |
+| [开发踩坑记录](docs/财务RAG-开发踩坑记录.md) | 从 RAG 优化到 Multi-Agent 的完整踩坑史 |
+| [后端开发路线图](docs/财务RAG-后端开发路线图.md) | 7 步开发路线 |
+| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 / 评测自动化 / 持久化） |
+
+## Roadmap
+
+- [ ] MCP Server 封装（个税计算工具标准化，验证 MCP 协议链路）
+- [ ] 评测集扩展 40 → 60 条 + 一键评测（run_all.py）
+- [ ] 用户上下文持久化（JSON 文件 / MongoDB）
+- [ ] 更多城市扩展（架构已预留 `cities/`，新城市只需 JSON 配置）
+- [ ] PDF 上传解析、小程序端
 
 ## License
 

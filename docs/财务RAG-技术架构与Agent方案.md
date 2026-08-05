@@ -235,6 +235,8 @@ LLM 组织语言 → StreamingResponse 流式输出（SSE）
 
 **Agent 实现方式**：LangChain `create_agent` + `MemorySaver`，6 个 `@tool` 通过 Function Calling 自动路由。详见 `财务RAG-后端开发路线图.md`。
 
+> **2026-08-04 演进：Multi-Agent 化（P1 设计完成，待编码）**——计税/社保拆为双子 Agent（Tool-as-Subagent），`AGENT_MODE` 模式开关 + prompt 双版本 + 失败降级 + 绕过检测，10 项设计决策齐全。实现级设计见 **《财务RAG-Multi-Agent 集成设计文档》（v1.5）**；编码规划见《财务RAG-项目补充与添加实施规划》§4.1。原单 Agent 架构（本节）为 `AGENT_MODE=tools` 形态，仍是回退保底路径。
+
 ---
 
 ## 六、UX 用户体验设计规范
