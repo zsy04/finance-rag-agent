@@ -50,6 +50,11 @@ export function useChat() {
                   ...m,
                   disclaimer: event.data.text as string,
                 };
+              case 'context':
+                return {
+                  ...m,
+                  contextNotice: event.data.message as string,
+                };
               case 'thinking':
                 return m;
               case 'error':

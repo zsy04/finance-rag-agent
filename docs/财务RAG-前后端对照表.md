@@ -28,12 +28,16 @@
 | `result` | 计算/填表完成 | `{"type": "tax_result\|social_result\|form_result", "data": {...}}` | 插入结果卡片（蓝色左边条 + 数据） |
 | `source` | RAG 检索返回来源 | `{"title": "...", "url": "...", "tier": "...", "relation": "..."}` | 折叠显示来源链接 |
 | `disclaimer` | AI 免责声明 | `{"text": "本结果由 AI 辅助……"}` | 灰色小字追加到回复末尾 |
+| `context` | **历史摘要归档提示**（middleware 摘要后下一轮流开始时发送） | `{"type": "history_archived", "message": "较早的对话已归档为摘要……"}` | AI 气泡顶部显示 📦 提示条（primary 色背景） |
 | `error` | **致命**处理失败（Agent 无法继续） | `{"content": "错误消息"}` | 红色边框气泡 + `[🔄 重试]` 按钮。**若 content 已有文本则不覆盖** |
 | `done` | 回复完成 | `{}` | 恢复输入框可用，停止闪烁光标 |
 
 > **关键变更（2026-07-31）**：
 > - `on_tool_error` 不再发送 `error` 事件，改为 `thinking` 事件（工具错误非致命，Agent 会自行处理并继续）
 > - 前端 `error` 事件处理：若消息已有内容则不覆盖（保留 Agent 已生成的回答），仅空内容时显示错误
+>
+> **新增（2026-08-04，P0 上下文工程）**：
+> - `context` 事件：历史摘要发生时由 middleware 置标志，路由层在**下一轮流开始时**补发（时序语义：本轮触发摘要 → 下次提问先看到"已归档"提示）。前端 `SSEEventType` + `Message.contextNotice` 字段 + 提示条渲染（types.ts / useChat.ts / ChatMessage.tsx 三处）。**事件总数：8 → 9 种**。
 
 > **注意**：原设计中的 `confirm` 事件已降级为 LLM 自然反问（通过 `step` 事件承载），Agent 反问"请问你的收入类型是工资还是劳务报酬？"以普通流式文本呈现。
 

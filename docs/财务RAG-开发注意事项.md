@@ -114,17 +114,17 @@
 ### 2.3 SSE 消费方式
 
 ```javascript
-// 前端消费 SSE 流
+// 前端消费 SSE 流（9 种事件，2026-08-04 更新：+context，-confirm）
 const eventSource = new EventSource('/api/chat?message=...');
 
-eventSource.addEventListener('thinking', (e) => { /* 加载提示 */ });
-eventSource.addEventListener('step',     (e) => { /* 追加计算步骤到 AI 气泡 */ });
-eventSource.addEventListener('confirm',  (e) => { /* 暂停流式，显示确认按钮 */ });
-eventSource.addEventListener('result',   (e) => { /* 插入结果卡片 */ });
-eventSource.addEventListener('source',   (e) => { /* 折叠展示来源 */ });
-eventSource.addEventListener('disclaimer',(e) => { /* 灰字免责 */ });
-eventSource.addEventListener('error',    (e) => { /* 红色错误气泡 + 重试 */ });
-eventSource.addEventListener('done',     (e) => { /* 恢复输入框 */ });
+eventSource.addEventListener('thinking',   (e) => { /* 加载提示 / 工具执行动画 */ });
+eventSource.addEventListener('step',       (e) => { /* 追加流式文字到 AI 气泡 */ });
+eventSource.addEventListener('result',     (e) => { /* 插入结果卡片 */ });
+eventSource.addEventListener('source',     (e) => { /* 折叠展示来源 */ });
+eventSource.addEventListener('disclaimer', (e) => { /* 灰字免责 */ });
+eventSource.addEventListener('context',    (e) => { /* 📦 历史摘要归档提示条（Message.contextNotice） */ });
+eventSource.addEventListener('error',      (e) => { /* 红色错误气泡 + 重试（已有内容不覆盖） */ });
+eventSource.addEventListener('done',       (e) => { /* 恢复输入框 */ });
 ```
 
 ### 2.4 状态处理

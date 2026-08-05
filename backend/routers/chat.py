@@ -55,6 +55,16 @@ async def _agent_stream(message: str, thread_id: str):
     agent = get_agent()
     config = {"configurable": {"thread_id": thread_id}}
 
+    # 历史摘要提示：若上一轮发生过摘要（middleware 置标志），先发 context 事件提示用户。
+    # 时序说明：本轮触发的摘要会在下一轮流开始时补发（语义可接受，设计文档 §3.6）。
+    from context.history_summarizer import pop_summarized_flag
+
+    if pop_summarized_flag(thread_id):
+        yield _sse("context", {
+            "type": "history_archived",
+            "message": "较早的对话已归档为摘要，您的城市、工资、扣除项等关键信息已保留",
+        })
+
     yield _sse("thinking", {"message": "正在为您处理……"})
 
     try:

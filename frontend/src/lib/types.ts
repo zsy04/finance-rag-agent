@@ -82,6 +82,7 @@ export interface Message {
   resultCard?: ResultCardData | null;
   sources?: Source[];
   disclaimer?: string;
+  contextNotice?: string;  // 历史摘要提示（SSE context 事件）
   isStreaming?: boolean;
   isError?: boolean;
 }
@@ -103,6 +104,7 @@ export type SSEEventType =
   | 'result'
   | 'source'
   | 'disclaimer'
+  | 'context'
   | 'error'
   | 'done';
 

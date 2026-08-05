@@ -1,0 +1,423 @@
+{
+  "generated_at": "2026-08-04 22:31:56",
+  "summary": {
+    "probe_accuracy_avg": 0.917,
+    "faithfulness_avg": 1.0,
+    "context_event_rate": 1.0,
+    "summarized_total": 6,
+    "context_events_total": 6
+  },
+  "scenarios": [
+    {
+      "id": "s1",
+      "turns": 20,
+      "curve": [
+        {
+          "turn": 1,
+          "tokens": 5545
+        },
+        {
+          "turn": 2,
+          "tokens": 8387
+        },
+        {
+          "turn": 3,
+          "tokens": 9830
+        },
+        {
+          "turn": 4,
+          "tokens": 12712
+        },
+        {
+          "turn": 5,
+          "tokens": 18500
+        },
+        {
+          "turn": 6,
+          "tokens": 21847
+        },
+        {
+          "turn": 7,
+          "tokens": 29182
+        },
+        {
+          "turn": 8,
+          "tokens": 38113
+        },
+        {
+          "turn": 9,
+          "tokens": 39593
+        },
+        {
+          "turn": 10,
+          "tokens": 24996
+        },
+        {
+          "turn": 11,
+          "tokens": 25860
+        },
+        {
+          "turn": 12,
+          "tokens": 29064
+        },
+        {
+          "turn": 13,
+          "tokens": 38463
+        },
+        {
+          "turn": 14,
+          "tokens": 39421
+        },
+        {
+          "turn": 15,
+          "tokens": 22809
+        },
+        {
+          "turn": 16,
+          "tokens": 25891
+        },
+        {
+          "turn": 17,
+          "tokens": 28968
+        },
+        {
+          "turn": 18,
+          "tokens": 31167
+        },
+        {
+          "turn": 19,
+          "tokens": 32032
+        },
+        {
+          "turn": 20,
+          "tokens": 32824
+        }
+      ],
+      "max_tokens": 39593,
+      "summarized_count": 2,
+      "context_event_count": 2,
+      "probe_accuracy": 0.667,
+      "probe_checks": {
+        "city": {
+          "expected": "郑州",
+          "hit": true
+        },
+        "salary": {
+          "expected": "12000",
+          "hit": true
+        },
+        "income_type": {
+          "expected": "工资",
+          "hit": true
+        },
+        "housing_rent": {
+          "expected": "1500",
+          "hit": true
+        },
+        "children_edu": {
+          "expected": "1000",
+          "hit": false
+        },
+        "elderly_support": {
+          "expected": "2000",
+          "hit": false
+        }
+      },
+      "judge": {
+        "faithfulness": 1.0,
+        "supported": [
+          "children_edu: 1000",
+          "city: 郑州",
+          "elderly_support: 2000",
+          "housing_rent: 1500",
+          "income_type: 工资",
+          "salary: 12000"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "s2",
+      "turns": 15,
+      "curve": [
+        {
+          "turn": 1,
+          "tokens": 1141
+        },
+        {
+          "turn": 2,
+          "tokens": 1672
+        },
+        {
+          "turn": 3,
+          "tokens": 6134
+        },
+        {
+          "turn": 4,
+          "tokens": 11095
+        },
+        {
+          "turn": 5,
+          "tokens": 12113
+        },
+        {
+          "turn": 6,
+          "tokens": 16310
+        },
+        {
+          "turn": 7,
+          "tokens": 17032
+        },
+        {
+          "turn": 8,
+          "tokens": 19909
+        },
+        {
+          "turn": 9,
+          "tokens": 25185
+        },
+        {
+          "turn": 10,
+          "tokens": 26652
+        },
+        {
+          "turn": 11,
+          "tokens": 30996
+        },
+        {
+          "turn": 12,
+          "tokens": 32344
+        },
+        {
+          "turn": 13,
+          "tokens": 38044
+        },
+        {
+          "turn": 14,
+          "tokens": 19529
+        },
+        {
+          "turn": 15,
+          "tokens": 20318
+        }
+      ],
+      "max_tokens": 38044,
+      "summarized_count": 1,
+      "context_event_count": 1,
+      "probe_accuracy": 1.0,
+      "probe_checks": {
+        "city": {
+          "expected": "郑州",
+          "hit": true
+        },
+        "income_type": {
+          "expected": "经营",
+          "hit": true
+        },
+        "previous_loss": {
+          "expected": "5000",
+          "hit": true
+        },
+        "business_name": {
+          "expected": "嵩原便利店",
+          "hit": true
+        }
+      },
+      "judge": {
+        "faithfulness": 1.0,
+        "supported": [
+          "business_name: 嵩原便利店",
+          "city: 郑州",
+          "income_type: 经营",
+          "previous_loss: 5000"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "s3",
+      "turns": 15,
+      "curve": [
+        {
+          "turn": 1,
+          "tokens": 5421
+        },
+        {
+          "turn": 2,
+          "tokens": 8433
+        },
+        {
+          "turn": 3,
+          "tokens": 13320
+        },
+        {
+          "turn": 4,
+          "tokens": 19050
+        },
+        {
+          "turn": 5,
+          "tokens": 24095
+        },
+        {
+          "turn": 6,
+          "tokens": 30554
+        },
+        {
+          "turn": 7,
+          "tokens": 38998
+        },
+        {
+          "turn": 8,
+          "tokens": 33879
+        },
+        {
+          "turn": 9,
+          "tokens": 35509
+        },
+        {
+          "turn": 10,
+          "tokens": 36880
+        },
+        {
+          "turn": 11,
+          "tokens": 38175
+        },
+        {
+          "turn": 12,
+          "tokens": 39801
+        },
+        {
+          "turn": 13,
+          "tokens": 40837
+        },
+        {
+          "turn": 14,
+          "tokens": 27180
+        },
+        {
+          "turn": 15,
+          "tokens": 27944
+        }
+      ],
+      "max_tokens": 40837,
+      "summarized_count": 2,
+      "context_event_count": 2,
+      "probe_accuracy": 1.0,
+      "probe_checks": {
+        "city": {
+          "expected": "郑州",
+          "hit": true
+        },
+        "salary": {
+          "expected": "15000",
+          "hit": true
+        },
+        "income_type": {
+          "expected": "工资",
+          "hit": true
+        },
+        "deduction_mortgage": {
+          "expected": "1000",
+          "hit": true
+        }
+      },
+      "judge": {
+        "faithfulness": 1.0,
+        "supported": [
+          "city: 郑州",
+          "deduction_mortgage: 1000",
+          "income_type: 工资",
+          "salary: 15000"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "id": "s4",
+      "turns": 12,
+      "curve": [
+        {
+          "turn": 1,
+          "tokens": 3779
+        },
+        {
+          "turn": 2,
+          "tokens": 5268
+        },
+        {
+          "turn": 3,
+          "tokens": 7807
+        },
+        {
+          "turn": 4,
+          "tokens": 14474
+        },
+        {
+          "turn": 5,
+          "tokens": 18938
+        },
+        {
+          "turn": 6,
+          "tokens": 25984
+        },
+        {
+          "turn": 7,
+          "tokens": 28172
+        },
+        {
+          "turn": 8,
+          "tokens": 30068
+        },
+        {
+          "turn": 9,
+          "tokens": 30400
+        },
+        {
+          "turn": 10,
+          "tokens": 36818
+        },
+        {
+          "turn": 11,
+          "tokens": 30000
+        },
+        {
+          "turn": 12,
+          "tokens": 30281
+        }
+      ],
+      "max_tokens": 36818,
+      "summarized_count": 1,
+      "context_event_count": 1,
+      "probe_accuracy": 1.0,
+      "probe_checks": {
+        "city": {
+          "expected": "郑州",
+          "hit": true
+        },
+        "salary": {
+          "expected": "8000",
+          "hit": true
+        },
+        "income_type": {
+          "expected": "工资",
+          "hit": true
+        }
+      },
+      "judge": {
+        "faithfulness": 1.0,
+        "supported": [
+          "city: 郑州",
+          "income_type: 工资",
+          "salary: 8000"
+        ],
+        "missing": []
+      }
+    }
+  ],
+  "baseline_tokens": {
+    "s1": 64947,
+    "s2": 43181,
+    "s3": 70982,
+    "s4": 37433
+  }
+}

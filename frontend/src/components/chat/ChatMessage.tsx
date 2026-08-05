@@ -30,6 +30,14 @@ export function ChatMessage({ message, onRetry }: ChatMessageProps) {
           message.isError && 'border-l-4 border-l-[var(--color-error)] rounded-[16px_16px_16px_4px]',
         )}
       >
+        {/* 0. 历史摘要提示（SSE context 事件） */}
+        {message.contextNotice && (
+          <div className="mb-2 flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-primary-light)] px-2.5 py-1.5 text-xs text-[var(--color-primary)]">
+            <span className="shrink-0">📦</span>
+            <span>{message.contextNotice}</span>
+          </div>
+        )}
+
         {/* 1. 结果卡片 */}
         {message.resultCard && <ResultCard resultCard={message.resultCard} />}
 

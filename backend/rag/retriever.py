@@ -22,8 +22,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 # 必须在 import qdrant_client / FlagEmbedding 等任何间接依赖 HuggingFace 的模块之前设置，
-# 否则 HF_HUB_OFFLINE 会被忽略，启动时可能触发网络请求
+# 否则模型加载会触发网络请求。transformers 5.x 的 from_pretrained 即使本地缓存完整
+# 也会强制 list_repo_templates() 联网检查（离线时 ConnectTimeout 卡 10-30 秒），
+# 因此需同时设 HF_HUB_OFFLINE + TRANSFORMERS_OFFLINE 双保险。
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 import numpy as np
 from qdrant_client import QdrantClient
