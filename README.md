@@ -21,7 +21,7 @@
 - **上下文工程**：工具返回提取式瘦身 + 历史自动摘要（trigger 40K），长对话不爆窗
 - **Multi-Agent**：计税/社保双子 Agent 自治调度，`AGENT_MODE` 一键回退
 - **轻量知识图谱**：20 条关联规则 JSON 驱动，两跳推理，零数据库依赖
-- **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 77.5%
+- **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 85%（60 条全通过）
 
 ---
 
@@ -100,12 +100,12 @@ graph TD
 
 | 层级 | 评测集 | 结果 |
 |------|--------|------|
-| 检索层 | 40 条 query × 10 类税法场景 | Recall@5 = **77.5%**（40/40 全通过），MRR 0.83 |
+| 检索层 | 60 条 query × 12 类税法场景 | Recall@5 = **85%**（60/60 全通过），MRR 0.84 |
 | 工具层 | 26 条主 Agent 路由 | **26/26 = 100%** |
 | 生成层 | 长对话场景集（LLM-as-judge） | 忠实度 **100%** / 事件触发率 **100%** / 峰值 <41K 不爆窗 |
 | 多 Agent 层 | 主层对拍 8 条 + 子层 10 条 | **8/8 + 10/10** 全绿（含绕过检测 2/2） |
 
-迭代方式：**先跑通 → 建 bad case 评测 → 诊断根因 → 修复 → 重测**，防过拟合。RAG Recall@5 从 67.5% 优化至 77.5%，经历 7 轮迭代。
+迭代方式：**先跑通 → 建 bad case 评测 → 诊断根因 → 修复 → 重测**，防过拟合。RAG Recall@5 从 67.5% 优化至 85%，经历 8 轮迭代（关键提升：检索结果文档级去重 + 评测集扩展至 60 条）。
 
 ---
 
@@ -139,11 +139,12 @@ npm install && npm run dev
 
 ```bash
 cd backend
-python eval/eval.py          # 检索层：40 条 query，recall@5 / MRR / NDCG
-python eval/eval.py -v       # 逐条打印详情
+python eval/run_all.py          # 一键三层评测（检索 + 工具 + 生成，聚合报告）
+python eval/eval.py             # 检索层：60 条 query，recall@5 / MRR / NDCG
+python eval/eval.py -v          # 逐条打印详情
 python eval/eval.py --category 个税  # 按分类评测
-python eval/agent_eval.py    # 工具层：主 Agent 路由 26 条
-python eval/multi_agent_eval.py  # 多 Agent 双层评测
+python eval/agent_eval.py       # 工具层：主 Agent 路由 26 条
+python eval/multi_agent_eval.py # 多 Agent 双层评测
 ```
 
 ---
@@ -207,13 +208,13 @@ python eval/multi_agent_eval.py  # 多 Agent 双层评测
 | [Context Engineering 集成设计](docs/财务RAG-Context Engineering 集成设计文档.md) | 上下文工程 v2.0 设计 |
 | [开发踩坑记录](docs/财务RAG-开发踩坑记录.md) | 从 RAG 优化到 Multi-Agent 的完整踩坑史 |
 | [后端开发路线图](docs/财务RAG-后端开发路线图.md) | 7 步开发路线 |
-| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 / 评测自动化 / 持久化） |
+| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化待实施） |
 
 ## Roadmap
 
-- [ ] MCP Server 封装（个税计算工具标准化，验证 MCP 协议链路）
-- [ ] 评测集扩展 40 → 60 条 + 一键评测（run_all.py）
-- [ ] 用户上下文持久化（JSON 文件 / MongoDB）
+- [x] MCP Server 封装（tax-calc：个税/经营所得/社保 3 工具，WorkBuddy 宿主实测通过）
+- [x] 评测集扩展 40 → 60 条 + 一键评测（run_all.py，Recall@5 = 85%）
+- [ ] 用户上下文持久化（SQLite + 自建消息表 + 历史回显，已定案待实施）
 - [ ] 更多城市扩展（架构已预留 `cities/`，新城市只需 JSON 配置）
 - [ ] PDF 上传解析、小程序端
 

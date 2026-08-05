@@ -447,8 +447,8 @@ class Retriever:
         # Layer 2
         points = self._hybrid_search(enriched_query, limit=30, query_filter=q_filter)
 
-        # Layer 3
-        results = self._rerank_and_weight(query, points, top_k=top_k)
+        # Layer 3：Reranker 精排（放宽取 top_k*2，为 Layer 4 的文档级去重留出冗余槽位）
+        results = self._rerank_and_weight(query, points, top_k=top_k * 2)
 
         # Layer 4: 关系索引扩展（关联法规）
         if self.relations:
@@ -456,7 +456,18 @@ class Retriever:
             if additional:
                 results = results + additional
 
-        return results
+        # 文档级去重：同一 doc_title 只保留最高分 chunk，避免超长法规多 chunk 挤占 top-k 槽位
+        # （长文档切分多 chunk 后，Reranker 可能让同一文档占满结果列表）
+        deduped: list[dict] = []
+        seen_titles: set[str] = set()
+        for r in results:
+            title = r.get("doc_title", "")
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
+            deduped.append(r)
+
+        return deduped[:top_k]
 
 
 # ── 便捷函数（供 Agent @tool 直接调用） ─────────────────

@@ -14,11 +14,11 @@
 | 2 | **TokenBudget** 预算参数 | 上下文工程 | 🥇 P0 | 0.5 天 | ✅ 已简化（参数固化于摘要器） |
 | 3 | **ContextEvaluator** 历史摘要评测 | 上下文工程 | 🥇 P0 | 1 天 | ✅ 已完成（judge 100% / 事件 100% / probe 92%） |
 | 4 | **Multi-Agent 化**（工具升级子 Agent） | Agent 工程化 | 🥈 P1 | 1-2 天 | ✅ 已完成（双层评测全绿） |
-| 5 | **MCP Server 封装**（个税计算工具） | Agent 工程化 | 🥈 P1 | 1-2 天 | 🔲 |
-| 6 | **对话历史摘要裁剪** | Agent 工程化 | 🥈 P1 | 0.5 天 | 🔲 |
-| 7 | **MongoDB 用户上下文存储** | 数据/存储 | 🥉 P2 | 1 天 | 🔲 |
+| 5 | **MCP Server 封装**（个税计算工具） | Agent 工程化 | 🥈 P1 | 1-2 天 | ✅ 已完成（tax-calc 3 工具，WorkBuddy 宿主实测通过） |
+| 6 | **对话历史摘要裁剪** | Agent 工程化 | 🥈 P1 | 0.5 天 | ✅ 已完成（已被 history_summarizer 覆盖） |
+| 7 | **用户上下文持久化**（grill 定案：SQLite + 自建消息表 + 历史回显） | 数据/存储 | 🥉 P2 | 1.5-2 天 | 🔲 已定案待实施 |
 | 8 | **LlamaIndex 对比 demo** | 数据/存储 | 🥉 P2 | 半天 | 🔲 可选 |
-| 9 | **评测集扩展 + 评测自动化** | 打磨收尾 | 🥉 P2 | 1 天 | 🔲 |
+| 9 | **评测集扩展 + 评测自动化** | 打磨收尾 | 🥉 P2 | 1 天 | ✅ 已完成（60 条，Recall@5 = 85%，run_all.py 落地） |
 
 **依赖关系**：**P0-0 基线采集**✅ 已完成（keep=20 / trigger=40K 已回填）；① 的 guard 部分 ✅ 已实现（`backend/context/guard.py`，替换 `content[:800]`），摘要器部分待做；② 并入 ① 实现（参数直接用基线定值）；③ 验证 ① 效果（闭环）；⑥ 依赖 ② 的阈值设计；⑨ 与 ③ 共用长对话场景集。
 
@@ -141,12 +141,35 @@
 
 ## 5. P2 — 数据与打磨
 
-### 5.1 ⑦ MongoDB 用户上下文存储（1 天，可选）
+### 5.1 ⑦ 用户上下文持久化（grill 定案 2026-08-05：SQLite + 自建消息表 + 历史回显）
 
-- **目标**：把 `tools/user_context.py` 的 in-memory dict 换成 MongoDB 持久化，解决进程重启丢记忆问题。
-- **改动文件**：修改 `backend/tools/user_context.py`（存储层抽象：`MemoryStore` 接口 + `MongoStore` 实现）；`docker-compose.yml` 加 mongo 服务
-- **验收标准**：① 重启后端后同一 thread_id 上下文仍在；② 工具接口不变。
-- ⚠️ 注意：引入新依赖会增加答辩部署复杂度，**建议放在 P0/P1 全部完成之后**，或用"JSON 文件持久化"作为低配替代（避免动 Docker 编排）。
+> ⚠️ **grill 审查修订（2026-08-05）**：原方案「in-memory dict → MongoDB」被推翻，重新定案为 **SQLite + 自建消息表 + 历史回显**。三个关键发现驱动修订：
+> 1. 前端 `useChat.ts:8` thread_id 每次 `crypto.randomUUID()` 刷新即变 → 后端无论存什么都取不回，**必须先前端 localStorage 固定 thread_id**，持久化才有意义（这也是"重启不丢"验收成立的前提）；
+> 2. 对话历史天然由 langgraph `InMemorySaver`（engine.py:112）管理，但**不换 Saver，改自建消息表**——消息可读可控、可迁移、可配合评测，且不依赖 langgraph 二进制序列化格式；
+> 3. 存储介质选 **SQLite**（标准库零依赖，答辩零风险），MongoDB 降级为"后期迁移"目标——靠 `MemoryStore` 抽象层 + 一次性迁移脚本实现，结构固定可平滑迁移。不引入 Redis（单进程单用户无缓存需求）。
+
+- **目标**：用户画像 + 对话历史双持久化，实现"刷新/重开浏览器后历史回显 + Agent 接着聊"；为登录体系与多用户预留 user 维度。
+- **核心设计**：
+  - 前端 thread_id 存 localStorage（**单会话模型**：一浏览器 = 一会话，MVP 语义；登录后扩展为 user_id + 多会话）
+  - 对话历史自建消息表，**恢复注入复用 SummarizationMiddleware 调用内压缩**（trigger=40K / keep=20，不重写摘要逻辑）
+  - `MemoryStore` 接口 + `SQLiteStore` 实现 → 后期换 MongoDB 仅换实现类，业务零改动
+  - 画像/消息表**预留 user_id 列**（当前 user_id = thread_id 占位，登录后零返工）
+  - `get_llm()` 预留"配置源"接口位（TODO），支持后期切换 DeepSeek key（管理员切换=改配置源；BYOK=登录体系后加密入库）
+- **改动文件**：
+  - 新增 `backend/storage/sqlite_store.py`（`MemoryStore` 接口 + `SQLiteStore`，sqlite3 标准库，三张表：`user_contexts` / `threads` / `messages`）
+  - 修改 `backend/tools/user_context.py`（in-memory dict → MemoryStore，**工具签名与返回格式不变**）
+  - 修改 `backend/routers/chat.py`（① 请求前从 SQLite 读历史注入 messages；② 流结束后写回 user 消息 + 拼接的完整回复；③ 新增 `GET /api/chat/history?thread_id=xx`）
+  - 修改 `backend/agent/engine.py`（每请求独立 thread_id 防 InMemorySaver 双份累积；`get_llm()` 留配置源 TODO）
+  - 修改前端 `src/hooks/useChat.ts`（thread_id localStorage 持久化 + 挂载时 fetch history 渲染）、`src/lib/sse.ts`（新增 `getHistory` API）
+- **实施步骤**：
+  1. 建表 + `MemoryStore`/`SQLiteStore` 实现（含写锁并发保护）
+  2. `user_context.py` 切换存储实现 → 回归验证工具行为不变
+  3. `chat.py` 注入/写回逻辑 + `GET /api/chat/history`
+  4. `engine.py` 每请求独立 thread_id + 配置源 TODO 位
+  5. 前端 localStorage + 历史回显渲染
+  6. 验收评测（见下）
+- **验收标准**：① 重启后端后同一 thread_id 画像+历史完整恢复；② 刷新页面历史回显 + Agent 接得上话；③ 新浏览器 = 新 thread_id，不串号；④ 工具接口不变；⑤ `agent_eval` 回归 ≥90% 不降；⑥ 20+ 轮长对话摘要正常触发、无消息双份膨胀。
+- **工作量**：1.5-2 天（较原 1 天增加：历史回显 API + 注入机制 + 前端改动）。
 
 ### 5.2 ⑧ LlamaIndex 对比 demo（半天，可选）
 
@@ -179,7 +202,7 @@ P0-0 基线采集 ──→ P0-1 历史摘要器 ──→ P0-2 TokenBudget(参�
 |---|---|---|---|
 | 第 1 周 | P0-0 基线采集 → P0 三件套（摘要器/预算/评测）+ ⑨ 评测扩展 | ~4-5 天 | context/ 模块 + context 事件 + 四指标评测报告 |
 | 第 2 周 | P1 三件套 | ~3-4 天 | 子 Agent demo + MCP Server + 事件完善 |
-| 余量 | P2 按答辩时间取舍 | ~2 天 | MongoDB / LlamaIndex / 自动化 |
+| 余量 | P2 按答辩时间取舍 | ~2 天 | 用户上下文持久化（§5.1）/ LlamaIndex / 自动化 |
 
 > 详细排期与实施顺序见《Context Engineering 集成设计文档》v2.0 §11（含编码 Checklist §12）。
 
@@ -194,7 +217,7 @@ P0-0 基线采集 ──→ P0-1 历史摘要器 ──→ P0-2 TokenBudget(参�
 3. **评测驱动**：改动后必须跑对应评测（检索层 eval.py / 工具层 agent_eval.py / 生成层 context_eval.py），不达验收标准不算完成
 4. **编码规范**：遵循《财务RAG-开发注意事项.md》（CSS 令牌 / API 路由 / 无障碍）与《财务RAG-后端代码审查报告.md》列出的问题清单
 5. **新增代码落点**：上下文工程模块统一放 `backend/context/`（对齐概念梳理 §7 的 lest 落点）；demo 类脚本放 `scripts/` 不入运行时
-6. **答辩环境约束**：任何新增依赖（MCP SDK / MongoDB）不得成为运行时硬依赖，保证"启动 Qdrant + 后端即能演示"
+6. **答辩环境约束**：任何新增依赖（MCP SDK / 后期 MongoDB 迁移）不得成为运行时硬依赖，保证"启动 Qdrant + 后端即能演示"（§5.1 定案：MVP 存储用 SQLite 标准库，零外部依赖，天然满足）
 
 ---
 

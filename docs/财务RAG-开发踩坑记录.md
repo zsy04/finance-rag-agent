@@ -1,11 +1,11 @@
 # 财务RAG-开发踩坑记录
 
 > 定位：lest 开发过程中遇到的**技术问题与解决方案**档案，供排查复用、面试叙事、文档同步。
-> 更新：2026-08-04 创建（收录 P0 上下文工程三件套开发全程踩坑）。
+> 更新：2026-08-05 追加（MCP 封装 + 评测自动化 3 坑）。
 
 ---
 
-## 1. 踩坑总表（10 项）
+## 1. 踩坑总表（14 项）
 
 | # | 问题 | 模块 | 一句话根因 | 状态 |
 |---|---|---|---|---|
@@ -20,6 +20,9 @@
 | 9 | `agent.nodes["model"]` 无 .model 属性 | 采集脚本 | PregelNode 不暴露内部 llm | ✅ 已修 |
 | 10 | 模型离线加载仍 18.7s | 检索器 | 首次加载模型权重文件（非网络问题） | ✅ 预加载缓解 |
 | 11 | **官方摘要 trim 默认砍早期画像轮** | 历史摘要 | `trim_tokens_to_summarize` 默认 4000 且 `strategy="last"`——高密度对话超限砍头部，城市/工资/扣除项丢失 | ✅ 已修 |
+| 12 | **mcp 2.0 移除 `mcp.server.fastmcp`** | MCP 封装 | `pip install mcp` 默认装 2.0.0，内置 FastMCP 被移除（独立成包）→ import 即失败 | ✅ 已修（锁 mcp==1.29.0） |
+| 13 | **评测汇总把百分比数值当比例格式化** | 评测自动化 | run_all.py 对 float 统一 `:.2%`，agent accuracy（0-100 数值）显示成 10000.00% | ✅ 已修（按字段值域区分） |
+| 14 | **超长法规多 chunk 挤占 top5 槽位** | 检索器 | Reranker 精排后无文档级去重，《个人所得税法》4 chunk 占满 top5，压掉其他文档 | ✅ 已修（doc_title 去重） |
 
 ---
 
@@ -124,3 +127,24 @@
 - **根因**：`SummarizationMiddleware._trim_messages_for_summary` 默认 `trim_tokens_to_summarize=4000` 且 `strategy="last"`（保留**末尾/最近**消息）。信息密度高的对话（轮 1-9 含大量工具结果，30-40K token）超限后被裁剪——**最早的画像轮（轮 1-3 的城市/工资/扣除项）被直接砍掉，摘要 LLM 根本看不到**，与摘要 prompt 无关。
 - **修复**：`HistorySummarizer.__init__` 传 `trim_tokens_to_summarize=None`（跳过 trim，全量喂摘要 LLM；摘要输入 ~40K token ≈ ¥0.04/次，成本可接受）。
 - **规律**：官方中间件"最近优先"的默认策略与"画像在早期轮次"的 lest 场景天然冲突；凡依赖官方 middleware 处理长历史，必须检查其内部裁剪/保留策略。
+
+### 2.12 `pip install mcp` 默认装 2.0.0，`mcp.server.fastmcp` 已移除（⚠️ 版本坑）
+
+- **现象**：`pip install mcp` 成功后，`from mcp.server.fastmcp import FastMCP` 抛 `ModuleNotFoundError`；`mcp.server` 下只剩 `apps / lowlevel / mcpserver / stdio` 等新模块。
+- **根因**：mcp 2.0.0（2026 大重构）将内置 FastMCP 移出官方 SDK（FastMCP 独立成包维护），经典 `FastMCP` API 只存在于 1.x。
+- **修复**：`pip install "mcp==1.29.0"`（1.x 最终版），脚本零改动；若重装/换环境务必指定版本。
+- **规律**：快速上手的框架库，`pip install <pkg>` 拉到的 may be breaking change——装完第一件事先 `import` 验证再写业务代码。
+
+### 2.13 评测汇总把百分比数值当比例格式化（显示层 bug）
+
+- **现象**：run_all.py 三层汇总报告里，工具层 accuracy 显示 `10000.00%`（实际 26/26 = 100%），达标判断却正常。
+- **根因**：agent_eval_report.json 的 `accuracy` 存的是 0-100 数值（`round(100.0,1)`），而 run_all.py 汇总打印对 float 统一用 `:.2%`（0-1 比例格式）→ 100.0 被乘 100。
+- **修复**：打印按字段值域区分——`accuracy`→`%.1f%`；`recall/mrr/ndcg/probe/faithfulness/context_event_rate`（0-1 比例）→`%.2%`。
+- **规律**：跨模块聚合数值时，先确认数据源字段的值域（比例 vs 百分数）再统一格式化，勿假设同构。
+
+### 2.14 超长法规多 chunk 挤占 top5 槽位（检索器真实缺陷）
+
+- **现象**：60 条评测首跑 #47（年终奖合并 vs 单独计税）miss——top5 中 4 个都是《个人所得税法》的不同 chunk，《百问百答》被挤出前五；修复标注后仍未全命中。
+- **根因**：`retriever.retrieve()` 链路为"Reranker 精排 → 直接截 top_k"，无**文档级去重**。超长法规（如个税法）切多 chunk 后，Reranker 对同一文档的多个 chunk 打高分 → 挤占其他文档槽位（Recall@5 全局 72.5% → 修复后 85%）。
+- **修复**：`retrieve()` 精排放宽取 `top_k*2` → 按 `doc_title` 去重（同文档只留最高分 chunk）→ 截断 top_k。同时修正 3 条评测标注（#45/#47/#56 的 expected_docs 关联判断失误）。
+- **规律**：混合检索 + 重排的 pipeline，务必在最终截断前做**文档级去重**——评估指标（recall/precision）和 LLM 上下文质量都按"文档"计，不按"chunk"计。
