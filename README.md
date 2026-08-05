@@ -15,6 +15,16 @@
 | 社保查询 | 郑州社保+公积金精准扣除（全国架构预留城市扩展） |
 | 申报指引 | 个税APP汇算清缴操作流程、个体户季度申报指引 |
 | 申报材料 | A表（雇员）/ B表（个体户）在线填写，一键导出 xlsx |
+| 长对话记忆 | 历史自动摘要（trigger 40K token），超长对话不爆窗，压缩时用户可见提示 |
+
+## 上下文工程（P0 ✅ 2026-08-04 完成）
+
+| 模块 | 说明 |
+|------|------|
+| `context/guard.py` | 工具返回瘦身：检索拼接文本提取式压缩（必保句=数字/文号/百分比），单条 >400 字才触发 |
+| `context/history_summarizer.py` | 历史摘要：继承官方 SummarizationMiddleware，trigger=40K/keep=20，清单式 prompt（12 字段逐一核对），中文 token 口径 |
+| SSE `context` 事件 | 摘要发生时下一轮流开始时提示用户（"较早的对话已归档…"），前端 📦 提示条 |
+| 评测闭环 | 长对话场景集四指标：judge 忠实度 **100%** / 事件触发率 **100%** / probe 字段完整率 92% / 历史峰值 <41K 不爆窗 |
 
 ## 技术栈
 
@@ -24,10 +34,10 @@
 | Embedding | BGE-M3（FlagEmbedding），稠密 1024d + 稀疏双向量，支持 GPU/CPU 切换 |
 | 向量库 | Qdrant，原生混合检索（RRF 融合） |
 | 重排器 | BGE-Reranker-v2-m3，双阶段检索 |
-| 后端 | FastAPI + StreamingResponse，8 个 Agent @tool |
+| 后端 | FastAPI + StreamingResponse，8 个 Agent @tool + 上下文工程（历史摘要/工具瘦身）+ **Multi-Agent 化（P1 ✅ 2026-08-05 完成，双子 Agent）** |
 | 前端 | React 18 + TypeScript + shadcn/ui + Tailwind CSS |
 | 知识图谱 | 轻量 JSON 关系索引（20 条关联规则，两跳推理） |
-| 评测 | 40 条查询覆盖 10 类别，Recall@5 / MRR / NDCG |
+| 评测 | 检索层 40 条（Recall@5/MRR/NDCG）+ 工具层 26 条（主 Agent 路由 100%）+ 生成层长对话场景集（judge 忠实度/字段校验）+ **多 Agent 双层评测（主层对拍 8/8 + 子层 10/10）** |
 
 ## 检索链路
 
@@ -96,12 +106,13 @@ python eval/eval.py --category 个税  # 按分类评测
 
 ```
 ├── backend/
-│   ├── agent/           # Agent 大脑（LangGraph + 8 @tool）
+│   ├── agent/           # Agent 大脑（LangGraph + 8 @tool + 历史摘要 middleware + Multi-Agent 双子 Agent 规划）
+│   ├── context/         # 上下文工程（guard 工具瘦身 + history_summarizer 历史摘要）
 │   ├── rag/             # RAG 检索引擎（retriever + query_rewriter）
-│   ├── routers/         # FastAPI 路由（chat/tax/social/form）
+│   ├── routers/         # FastAPI 路由（chat/tax/social/form，SSE 9 种事件）
 │   ├── services/        # 计税引擎（纯 Python，零幻觉）
-│   ├── tools/           # LangChain @tool 工具函数
-│   └── eval/            # 检索评测（40 条数据集）
+│   ├── tools/           # LangChain @tool 工具函数（规划：subagents.py 双子 Agent）
+│   └── eval/            # 评测（检索 40 条 + 长对话场景集 + 规划：双层多 Agent 评测）
 ├── frontend/
 │   └── src/
 │       ├── components/chat/     # 对话视图
@@ -124,6 +135,8 @@ python eval/eval.py --category 个税  # 按分类评测
 - **语义边界切分**：税法按 `### 第X条`、问答按 `## 问句` 切分，不硬按字符数
 - **先跑通再评测收敛**：建 40 条 bad case 评测集，逐轮优化避免过拟合
 - **AI 嵌入 vs AI 原生**：核心逻辑代码化，AI 负责调度和理解层
+- **上下文工程**：历史摘要 + 工具返回瘦身，评测驱动迭代（三轮回合修 3 个根因，见 docs/开发踩坑记录）
+- **Multi-Agent 化（P1 ✅ 2026-08-05 完成）**：计税/社保拆为双子 Agent（Tool-as-Subagent，无状态+全局单例），`AGENT_MODE` 模式开关回退，prompt 双版本防"调不到子 Agent"，失败降级复用 tool_calls 参数，绕过检测强制重算。三层评测全绿：主 Agent 路由 26/26、主层对拍 8/8、子层 10/10——设计见 `docs/财务RAG-Multi-Agent 集成设计文档.md`（v1.5）
 
 ## License
 

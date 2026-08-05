@@ -38,3 +38,8 @@ EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "auto")
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "rag-data"/"processed"
 BACKEND_DIR = Path(__file__).parent
+
+# ── Agent 模式开关（v1.2）──
+# "multi"：子 Agent 形态（计税/社保由 tax_subagent / social_subagent 处理，答辩默认）
+# "tools"：纯工具形态（原 8 工具，回退保底 / 演示单 vs 多 Agent 对比）
+AGENT_MODE = os.getenv("AGENT_MODE", "multi")

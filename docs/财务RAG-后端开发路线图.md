@@ -488,6 +488,8 @@ result = agent.invoke(
 assert "税" in result["messages"][-1].content
 ```
 
+> **2026-08-05 演进：Multi-Agent 化（P1 ✅ 已完成）**——Step 6 的单 Agent 基础上，计税/社保已升级为双子 Agent（Tool-as-Subagent，`AGENT_MODE` 模式开关回退，prompt 双版本 + 失败降级 + 绕过检测）。三层评测全绿：主 Agent 路由 26/26、主层对拍 8/8、子层 10/10。实现级设计见 **《财务RAG-Multi-Agent 集成设计文档》（v1.5）**；实施记录见《财务RAG-项目补充与添加实施规划》§4.1。
+
 ---
 
 ## Step 7：SSE 流式上线
