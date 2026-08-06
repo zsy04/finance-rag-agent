@@ -1,7 +1,7 @@
 import type { Message } from '@/lib/types';
 import { ResultCard } from './ResultCard';
 import { MarkdownRenderer } from './MarkdownRenderer';
-import { WarningSvg, RetrySvg, DownloadSvg } from '@/components/icons';
+import { WarningSvg, RetrySvg, DownloadSvg, AiSvg } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageProps {
@@ -21,11 +21,11 @@ export function ChatMessage({ message, onRetry }: ChatMessageProps) {
         isUser ? 'justify-end' : 'justify-start',
       )}
     >
-      {/* AI 头像 + 名称标签（设计稿对齐：渐变蓝 AI 标识 + 「已检索 N 份」） */}
+      {/* AI 头像 + 名称标签（2026-08-06：浅蓝底 + 小机器人图标 + 「已检索 N 份」） */}
       {!isUser && (
         <div className="mr-3 flex w-9 shrink-0 flex-col items-center">
-          <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#014DB2] to-[#001645]">
-            <span className="text-[13px] font-bold text-white">AI</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary-light)]">
+            <AiSvg className="h-5 w-5" />
           </div>
           <span className="mt-1 hidden text-center text-[10px] leading-tight text-[var(--color-text-tertiary)] lg:block">
             {hasSources

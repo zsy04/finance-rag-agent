@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
 
-  <path d="M15 4V2a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v2" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M15 4H9v2h6V4z" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="18" y1="14" x2="5" y2="14" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="7.5" y1="7.5" x2="6" y2="6" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="15.5" y1="7.5" x2="17" y2="6" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="7.5" y1="10.5" x2="5.5" y2="8.5" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="15.5" y1="10.5" x2="17.5" y2="8.5" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M3 21l2-7 7 2-2 7-7-2z" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 生成申报表（currentColor：深蓝底按钮上显示为白，浅底显示为深蓝，随父级 color） -->
+  <path d="M15 4V2a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M15 4H9v2h6V4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="18" y1="14" x2="5" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="7.5" y1="7.5" x2="6" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="15.5" y1="7.5" x2="17" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="7.5" y1="10.5" x2="5.5" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="15.5" y1="10.5" x2="17.5" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M3 21l2-7 7 2-2 7-7-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
 </svg>

@@ -219,7 +219,7 @@ export function TaxCalculator() {
             size="lg"
             className="w-full max-w-xs"
           >
-            <CalculatorSvg className="h-4 w-4" />
+            <CalculatorSvg className="h-4 w-4 text-white" />
             {loading ? '计算中……' : '开始计算'}
           </Button>
           <Button

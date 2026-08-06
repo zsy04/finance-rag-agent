@@ -665,7 +665,7 @@ export function FilingForm() {
           <SaveSvg className="h-4 w-4" />保存草稿
         </Button>
         <Button onClick={handleGenerate} disabled={loading}>
-          <GenerateSvg className="h-4 w-4" />{loading ? '生成中……' : '生成申报表'}
+          <GenerateSvg className="h-4 w-4 text-white" />{loading ? '生成中……' : '生成申报表'}
         </Button>
       </div>
 

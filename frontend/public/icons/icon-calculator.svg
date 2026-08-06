@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
 
-  <rect x="5" y="2" width="14" height="20" rx="2" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <rect x="7" y="4" width="10" height="5" rx="1" fill="#014DB2" fill-opacity="0.1" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="9" cy="14" r="0.8" fill="#014DB2"/>
-  <circle cx="12" cy="14" r="0.8" fill="#014DB2"/>
-  <circle cx="15" cy="14" r="0.8" fill="#014DB2"/>
-  <circle cx="9" cy="18" r="0.8" fill="#014DB2"/>
-  <circle cx="12" cy="18" r="0.8" fill="#014DB2"/>
-  <circle cx="15" cy="18" r="0.8" fill="#014DB2"/>
+  <!-- 税率计算（currentColor：深蓝底按钮上显示为白，浅底显示为深蓝，随父级 color） -->
+  <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="7" y="4" width="10" height="5" rx="1" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="9" cy="14" r="0.8" fill="currentColor"/>
+  <circle cx="12" cy="14" r="0.8" fill="currentColor"/>
+  <circle cx="15" cy="14" r="0.8" fill="currentColor"/>
+  <circle cx="9" cy="18" r="0.8" fill="currentColor"/>
+  <circle cx="12" cy="18" r="0.8" fill="currentColor"/>
+  <circle cx="15" cy="18" r="0.8" fill="currentColor"/>
 
 </svg>
