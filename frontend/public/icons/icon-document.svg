@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
 
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <polyline points="14 2 14 8 20 8" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="8" y1="13" x2="16" y2="13" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="8" y1="17" x2="16" y2="17" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="8" y1="9" x2="12" y2="9" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 政策法规：实心圆角文档（折角+三条行线，整体居中） -->
+  <path d="M7 3.5 C6.45 3.5 6 3.95 6 4.5 L6 19.5 C6 20.05 6.45 20.5 7 20.5 L17 20.5 C17.55 20.5 18 20.05 18 19.5 L18 8.5 L13.5 3.5 Z" fill="#014DB2"/>
+  <path d="M13.5 3.5 L13.5 8.5 L18 8.5 Z" fill="#0A2540"/>
+  <line x1="8.5" y1="12" x2="15.5" y2="12" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="8.5" y1="15" x2="15.5" y2="15" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="8.5" y1="18" x2="13" y2="18" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
 
 </svg>

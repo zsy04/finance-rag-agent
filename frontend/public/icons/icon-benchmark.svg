@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
 
-  <!-- 行业基准：柱状图（三条柱子 + 上升趋势），线性风格 2px stroke -->
-  <line x1="5" y1="20" x2="19" y2="20" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <rect x="7" y="12" width="3" height="8" rx="1" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <rect x="10.5" y="8" width="3" height="12" rx="1" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <rect x="14" y="4" width="3" height="16" rx="1" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 行业基准：实心柱状图（三条递增高柱，以画布中心轴对称居中） -->
+  <rect x="4.2" y="14" width="3.6" height="6" rx="1.2" fill="#014DB2"/>
+  <rect x="10.2" y="10" width="3.6" height="10" rx="1.2" fill="#014DB2"/>
+  <rect x="16.2" y="6" width="3.6" height="14" rx="1.2" fill="#014DB2"/>
 
 </svg>

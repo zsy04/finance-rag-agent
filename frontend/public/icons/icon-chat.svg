@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
 
-  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="8" y1="10" x2="16" y2="10" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="8" y1="14" x2="13" y2="14" stroke="#014DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 会话：圆润实心气泡（内部三点严格水平居中，气泡整体居中） -->
+  <path d="M4.5 5.5 C4.5 4.67 5.17 4 6 4 L18 4 C18.83 4 19.5 4.67 19.5 5.5 L19.5 14.5 C19.5 15.33 18.83 16 18 16 L10.5 16 L7.2 18.6 L7.6 16 L6 16 C5.17 16 4.5 15.33 4.5 14.5 Z" fill="#014DB2"/>
+  <circle cx="8.4" cy="10" r="1.15" fill="#FFFFFF"/>
+  <circle cx="12" cy="10" r="1.15" fill="#FFFFFF"/>
+  <circle cx="15.6" cy="10" r="1.15" fill="#FFFFFF"/>
 
 </svg>
