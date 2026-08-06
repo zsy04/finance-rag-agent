@@ -1,7 +1,7 @@
 # 财务RAG-开源准备清单
 
 > 定位：GitHub 仓库 `zsy04/finance-rag-agent` 转 Public 前的**检查与执行清单**。
-> 创建：2026-08-05。状态：⏳ 执行中（.gitignore 已更新，待 git rm --cached + 最终检查）
+> 创建：2026-08-05。状态：✅ **2026-08-06 已基本完成**——git rm --cached 已提交（47f6f04）、仓库已转 Public（匿名访问 HTTP 200）、8-06 最新成果（设计稿落地/SQLite 持久化/主题文档）已准备好提交推送
 
 ---
 
@@ -19,6 +19,8 @@
 | `docs/财务RAG-后端审查与重构方案.md` | 内部审查 |
 | `docs/财务RAG-前端代码审查报告.md` | 内部审查 |
 | `docs/财务RAG-后端代码审查报告.md` | 内部审查 |
+| `docs/主题文档/财务RAG-答辩与论文材料.md` | 答辩/论文/复盘/求职主题整合版（2026-08-06 重组新增） |
+| `docs/主题文档/财务RAG-评测与质量文档.md` | 含前后端内部审查记录（P-01~P-16 / C1~L5），随审查类排除 |
 
 ### 1.2 求职相关（已排除）
 
@@ -32,18 +34,21 @@
 |------|------|
 | `docs/服务器部署指南.md` | 服务器部署细节（含路径/环境） |
 | `docs/启动指导.md` | 本机启动说明 |
+| `docs/主题文档/财务RAG-部署运维文档.md` | 部署运维主题整合版（含本机路径/启动细节，2026-08-06 随部署策略类排除） |
 | `start.bat` | 本地启动脚本 |
 | `**/Dockerfile`、`**/nginx.conf`、`**/.dockerignore` | Docker 构建细节 |
 | `docker-compose.yml` | 完整编排（含后端/前端镜像构建） |
 
 > 保留：`docker-compose.qdrant.yml`（仅 Qdrant，README 快速启动依赖，无敏感信息）。
 
+> **2026-08-06 追加**：SQLite 对话库 `backend/data/`（chat.db）已加入排除——含真实用户对话数据，绝不上传。
+
 ### 1.4 训练数据（已排除）
 
 | 路径 | 说明 |
 |------|------|
 | `rag-data/raw/` | 原始下载文件 |
-| `rag-data/staging/` | 原始法规 .doc/.html（**120 个文件已跟踪，待移除**） |
+| `rag-data/staging/` | 原始法规 .doc/.html（**已 git rm --cached，2026-08-06 确认索引干净**） |
 | `rag-data/processed/national/tax_law/` | 清洗后法规 MD |
 | `rag-data/processed/national/qa_corpus/` | 问答语料 |
 | `rag-data/processed/national/operations/` | 操作指引 |
@@ -88,13 +93,13 @@ git commit -m "chore: 开源准备 — 排除训练数据/答辩/部署/求职�
 
 ## 3. 转 Public 前最终检查清单
 
-- [ ] 上述 `git rm --cached` 已执行并提交、推送
-- [ ] `git ls-files` 全量扫一遍无遗漏敏感文件（命令：`git ls-files | grep -iE "简历|outputs|\.env|staging"`）
-- [ ] README 已重写（2026-08-05 版），badge/技术栈与代码一致（React 19 ✅）
-- [ ] README 中不引用被排除的文档（答辩策略/部署指南等）
-- [ ] GitHub 仓库 Settings → Danger Zone → Change visibility → Public
-- [ ] 转 Public 后确认首页渲染正常、README 图片/链接无 404
-- [ ] 确认无 DEEPSEEK_API_KEY 等密钥暴露（.env.example 可保留为占位）
+- [x] 上述 `git rm --cached` 已执行并提交、推送（commit 47f6f04，2026-08-05）
+- [x] `git ls-files` 全量扫一遍无遗漏敏感文件（2026-08-06 复查：仅 .env.example 占位保留）
+- [x] README 已重写（2026-08-05 版），badge/技术栈与代码一致（React 19 ✅）
+- [x] README 中不引用被排除的文档（答辩策略/部署指南等；2026-08-06 主题文档索引已收敛为 6 份公开文档）
+- [x] GitHub 仓库 Settings → Danger Zone → Change visibility → Public（2026-08-06 已转，匿名访问 HTTP 200）
+- [ ] 推送 8-06 最新提交后，确认首页渲染正常、README 图片/链接无 404
+- [x] 确认无 DEEPSEEK_API_KEY 等密钥暴露（.env.example 可保留为占位；.env 从未进过 git 历史）
 
 ---
 

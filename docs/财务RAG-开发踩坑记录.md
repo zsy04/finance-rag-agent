@@ -1,11 +1,11 @@
 # 财务RAG-开发踩坑记录
 
 > 定位：lest 开发过程中遇到的**技术问题与解决方案**档案，供排查复用、面试叙事、文档同步。
-> 更新：2026-08-05 追加（MCP 封装 + 评测自动化 3 坑）。
+> 更新：2026-08-06 追加（设计稿落地联调 3 坑：venv 环境 / curl 中文 / 会话复活）。
 
 ---
 
-## 1. 踩坑总表（14 项）
+## 1. 踩坑总表（17 项）
 
 | # | 问题 | 模块 | 一句话根因 | 状态 |
 |---|---|---|---|---|
@@ -23,6 +23,9 @@
 | 12 | **mcp 2.0 移除 `mcp.server.fastmcp`** | MCP 封装 | `pip install mcp` 默认装 2.0.0，内置 FastMCP 被移除（独立成包）→ import 即失败 | ✅ 已修（锁 mcp==1.29.0） |
 | 13 | **评测汇总把百分比数值当比例格式化** | 评测自动化 | run_all.py 对 float 统一 `:.2%`，agent accuracy（0-100 数值）显示成 10000.00% | ✅ 已修（按字段值域区分） |
 | 14 | **超长法规多 chunk 挤占 top5 槽位** | 检索器 | Reranker 精排后无文档级去重，《个人所得税法》4 chunk 占满 top5，压掉其他文档 | ✅ 已修（doc_title 去重） |
+| 15 | **系统 Python 无 ToolErrorMiddleware（ImportError）** | 环境 | 项目用 `backend/venv`（langchain 1.3.14），系统 Python 是 1.3.12 缺 `ToolErrorMiddleware`；venv 又缺 `markdown` | ✅ venv 启动 + 补装 markdown |
+| 16 | **Windows curl 中文参数返回空** | 联调 | curl 直接拼中文 URL（category=法律）被 shell 编码破坏 → 返回空 JSON；Python urllib / `--data-urlencode` 正常 | ✅ 前端用 encodeURIComponent |
+| 17 | **删除会话后"复活"（再对话又出现）** | 会话持久化 | 前端 localStorage 残留已删 thread_id，挂载不校验 → 发消息时后端 `ensure_thread`（INSERT OR IGNORE）自动重建 | ✅ 挂载校验 tid 是否存在 |
 
 ---
 
@@ -148,3 +151,24 @@
 - **根因**：`retriever.retrieve()` 链路为"Reranker 精排 → 直接截 top_k"，无**文档级去重**。超长法规（如个税法）切多 chunk 后，Reranker 对同一文档的多个 chunk 打高分 → 挤占其他文档槽位（Recall@5 全局 72.5% → 修复后 85%）。
 - **修复**：`retrieve()` 精排放宽取 `top_k*2` → 按 `doc_title` 去重（同文档只留最高分 chunk）→ 截断 top_k。同时修正 3 条评测标注（#45/#47/#56 的 expected_docs 关联判断失误）。
 - **规律**：混合检索 + 重排的 pipeline，务必在最终截断前做**文档级去重**——评估指标（recall/precision）和 LLM 上下文质量都按"文档"计，不按"chunk"计。
+
+### 2.15 系统 Python 与 venv 版本不一致 → ImportError（环境坑）
+
+- **现象**：`python -m uvicorn main:app` 启动报 `ImportError: cannot import name 'ToolErrorMiddleware' from 'langchain.agents.middleware'`；用系统 Python（3.13）导入 langchain.agents 冷启动耗时 13s。
+- **根因**：项目后端依赖装在 `backend/venv`（langchain 1.3.14，含 `ToolErrorMiddleware`）；系统 Python 里是 langchain 1.3.12（该 middleware 叫 `ToolRetryMiddleware`）。两套环境并存，用错环境即崩。
+- **修复**：统一用 `backend/venv/Scripts/python.exe` 启动（start.bat 已如此）；venv 缺 `markdown` 模块，`pip install "markdown~=3.8.0"` 补齐。
+- **规律**：多环境机器先确认 `which python` / 项目 README 指定的解释器；`import` 验证依赖版本再跑服务。
+
+### 2.16 Windows curl 中文查询参数被编码破坏（联调坑）
+
+- **现象**：`curl "localhost:8000/api/library/documents?category=法律"` 返回空（JSON 解析失败），而 Python urllib 请求正常。
+- **根因**：Windows Git Bash 下 curl 直接拼接中文参数时 shell 编码与 URL 编码冲突，中文字节被破坏 → 服务端收不到合法参数。
+- **修复**：`curl -G --data-urlencode "category=法律"`，或直接用 Python urllib/requests 验证；前端侧 fetch + `encodeURIComponent` 天然正确。
+- **规律**：联调脚本含中文参数，先确认客户端编码；用 `--data-urlencode` 最稳。
+
+### 2.17 删除会话后"复活"——localStorage 残留 thread_id 触发后端自动重建（状态同步坑）
+
+- **现象**：删除一个会话后，再次对话时被删会话又出现在左侧列表里。
+- **根因**：前端 `localStorage`（key=`lest_thread_id`）保存当前 thread_id；删除会话后若该 tid 仍残留（挂载/刷新时机），下次发消息 → 后端 `append_message → ensure_thread`（`INSERT OR IGNORE INTO threads`）**自动重建**已被删的 thread 记录 → 列表复活。后端 `delete_thread` 本身已彻底（messages+contexts+threads 三删，幂等 200）。
+- **修复**（`useChat.ts` 挂载逻辑）：拉取会话列表后**校验当前 tid 是否仍存在**——不在则切到最新会话（或新建空会话）并同步 localStorage，从源头杜绝用已删 tid 发消息。
+- **规律**：本地持久化 + 服务端权威状态的场景，前端挂载时必须做"本地 id 有效性校验"，否则删除类操作会被后续写入隐式撤销。

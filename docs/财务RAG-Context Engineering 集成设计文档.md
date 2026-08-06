@@ -172,7 +172,7 @@ v2：**提供历史摘要的全部参数**——触发阈值、keep 值、token 
 ```python
 # context/budget.py
 class TokenBudget:
-    WINDOW = 64_000            # deepseek-chat 上下文（可配置）
+    WINDOW = 64_000            # deepseek-v4-flash 上下文（可配置）
     RESERVED_OUTPUT = 4_000    # 输出预留（硬性）
     def __init__(self, trigger_tokens: int = 40_000, keep_messages: int = 20,
                  summary_target_tokens: int = 1_500): ...

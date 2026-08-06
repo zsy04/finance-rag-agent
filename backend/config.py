@@ -11,7 +11,9 @@ else:
 
 #----------API-------------
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_MODEL = "deepseek-chat"
+# 模型：DeepSeek V4 Flash（2026-07-24 后 deepseek-chat 已弃用，统一用 deepseek-v4-flash）
+# 可通过环境变量 DEEPSEEK_MODEL 覆盖（如切换其他模型）
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
 if not DEEPSEEK_API_KEY:
     raise RuntimeError(
         "DEEPSEEK_API_KEY 未配置。请在 backend/.env 中设置 DEEPSEEK_API_KEY=sk-xxxx"
@@ -38,6 +40,10 @@ EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "auto")
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "rag-data"/"processed"
 BACKEND_DIR = Path(__file__).parent
+
+#----------存储（用户上下文持久化 §5.1）-----------
+# SQLite 数据库路径：标准库零依赖，答辩零风险；多进程部署时换 MongoDB（仅换实现类）
+SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", str(BACKEND_DIR / "data" / "chat.db"))
 
 # ── Agent 模式开关（v1.2）──
 # "multi"：子 Agent 形态（计税/社保由 tax_subagent / social_subagent 处理，答辩默认）

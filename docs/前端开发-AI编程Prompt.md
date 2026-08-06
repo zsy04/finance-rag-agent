@@ -40,19 +40,19 @@ npm install lucide-react
 
 @layer base {
   :root {
-    --color-primary: #1E3A8A;
-    --color-primary-light: #DBEAFE;
-    --color-primary-dark: #172554;
-    --color-text-primary: #0F172A;
-    --color-text-secondary: #475569;
-    --color-text-tertiary: #94A3B8;
-    --color-bg-page: #F1F5F9;
+    --color-primary: #014DB2;
+    --color-primary-light: #EBF2FD;
+    --color-primary-dark: #001645;
+    --color-text-primary: #0A1628;
+    --color-text-secondary: #6B7280;
+    --color-text-tertiary: #9CA3AF;
+    --color-bg-page: #F5F6F8;
     --color-bg-surface: #FFFFFF;
-    --color-border: #CBD5E1;
+    --color-border: #E5E7EB;
     --color-success: #15803D;
     --color-warning: #B45309;
     --color-error: #B91C1C;
-    --color-info: #1E40AF;
+    --color-info: #014DB2;
     --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-mono: 'JetBrains Mono', 'Courier New', monospace;
     --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-full: 9999px;

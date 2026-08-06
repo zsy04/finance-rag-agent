@@ -1,4 +1,12 @@
-import type { SSEEvent, TaxResult, SocialResult } from '@/lib/types';
+import type {
+  SSEEvent,
+  TaxResult,
+  SocialResult,
+  Message,
+  ThreadMeta,
+  ProviderConfig,
+  ProviderTemplate,
+} from '@/lib/types';
 
 /**
  * 使用 fetch + ReadableStream 消费 SSE 流
@@ -7,11 +15,16 @@ import type { SSEEvent, TaxResult, SocialResult } from '@/lib/types';
 export async function* streamChat(
   message: string,
   threadId: string,
+  provider?: ProviderConfig,
 ): AsyncGenerator<SSEEvent> {
+  const body: Record<string, unknown> = { message, thread_id: threadId };
+  // 模型切换器：用户配置了自定义 provider → 后端转发调用（缺省=默认 DeepSeek）
+  if (provider) body.provider = provider;
+
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, thread_id: threadId }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -69,6 +82,74 @@ export async function* streamChat(
       // 跳过无法解析的事件
     }
   }
+}
+
+/**
+ * 会话列表 — GET /api/chat/threads（侧边栏多会话：新建/删除/切换）
+ */
+export async function getThreads(): Promise<ThreadMeta[]> {
+  const res = await fetch('/api/chat/threads');
+  if (!res.ok) throw new Error(`会话列表加载失败: ${res.status}`);
+  const data = (await res.json()) as { threads: ThreadMeta[] };
+  return data.threads;
+}
+
+/**
+ * 历史回显 — GET /api/chat/history
+ * 返回完整 Message JSON 列表（含 resultCard/sources/disclaimer/contextNotice），
+ * 挂载时 fetch 后直接 setMessages 渲染。
+ */
+export async function getHistory(threadId: string): Promise<Message[]> {
+  const res = await fetch(
+    `/api/chat/history?thread_id=${encodeURIComponent(threadId)}`,
+  );
+  if (!res.ok) throw new Error(`历史加载失败: ${res.status}`);
+  const data = (await res.json()) as { messages: Message[] };
+  return data.messages;
+}
+
+/**
+ * 清空指定会话（消息 + 画像 + 会话记录）— 「新会话」按钮（换人演示重置）
+ */
+export async function deleteHistory(threadId: string): Promise<void> {
+  const res = await fetch(
+    `/api/chat/history?thread_id=${encodeURIComponent(threadId)}`,
+    { method: 'DELETE' },
+  );
+  if (!res.ok) throw new Error(`清除会话失败: ${res.status}`);
+}
+
+/**
+ * 模型供应商模板列表 — GET /api/models（设置页下拉数据源，不含 key）
+ */
+export async function getModels(): Promise<ProviderTemplate[]> {
+  const res = await fetch('/api/models');
+  if (!res.ok) throw new Error(`模型列表加载失败: ${res.status}`);
+  const data = (await res.json()) as { templates: ProviderTemplate[] };
+  return data.templates;
+}
+
+/**
+ * 测试模型连接 — POST /api/models/test（设置页「测试」按钮）
+ * 后端发一次最小请求验证 base_url + api_key + model 可用（浏览器直连会被 CORS 拦截）
+ */
+export async function testProvider(p: ProviderConfig): Promise<{
+  ok: boolean;
+  model?: string;
+  reply?: string;
+  error?: string;
+}> {
+  const res = await fetch('/api/models/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      base_url: p.base_url,
+      api_key: p.api_key,
+      model: p.model,
+    }),
+  });
+  if (!res.ok) return { ok: false, error: `测试请求失败: ${res.status}` };
+  return (await res.json()) as { ok: boolean; model?: string; reply?: string; error?: string };
 }
 
 /**

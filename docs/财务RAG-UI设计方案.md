@@ -15,23 +15,23 @@
 ```css
 :root {
   /* ═══ 主色调 — 深藏蓝 ═══ */
-  --color-primary: #1E3A8A;
-  --color-primary-light: #DBEAFE;
-  --color-primary-dark: #172554;
+  --color-primary: #014DB2;
+  --color-primary-light: #EBF2FD;
+  --color-primary-dark: #001645;
 
   /* ═══ 中性色 ═══ */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #94A3B8;
-  --color-bg-page: #F1F5F9;
+  --color-text-primary: #0A1628;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-bg-page: #F5F6F8;
   --color-bg-surface: #FFFFFF;
-  --color-border: #CBD5E1;
+  --color-border: #E5E7EB;
 
   /* ═══ 语义色 ═══ */
   --color-success: #15803D;
   --color-warning: #B45309;
   --color-error: #B91C1C;
-  --color-info: #1E40AF;
+  --color-info: #014DB2;
 
   /* ═══ 字体 ═══ */
   --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -62,13 +62,13 @@
 
 | 组件 | CSS 关键属性 | 状态 |
 |------|-------------|------|
-| **主按钮** `.btn-primary` | `background: #1E3A8A; color: #FFF; height: 40px; border-radius: 6px; font-weight: 500` | hover: `#172554` + `translateY(-1px)`; disabled: `opacity: 0.5` |
-| **次按钮** `.btn-secondary` | `background: #FFF; border: 1px solid #1E3A8A; color: #1E3A8A; height: 40px; border-radius: 6px` | hover: `background: #DBEAFE` |
-| **输入框** `.input` | `height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 16px` | focus: `border-color: #1E3A8A; box-shadow: 0 0 0 3px rgba(30,58,138,0.15)` |
-| **结果卡片** `.result-card` | `background: #FFF; border: 1px solid #E2E8F0; border-left: 4px solid #1E3A8A; border-radius: 8px; padding: 16px` | 展开/折叠 |
-| **气泡·用户** `.bubble-user` | `background: #1E3A8A; color: #FFF; border-radius: 16px 16px 4px 16px; max-width: 70%` | — |
-| **气泡·AI** `.bubble-ai` | `background: #F1F5F9; color: #0F172A; border-radius: 16px 16px 16px 4px; max-width: 85%` | — |
-| **导航项** `.nav-item` | `width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 6px` | active: `background: #DBEAFE; color: #1E3A8A` |
+| **主按钮** `.btn-primary` | `background: #014DB2; color: #FFF; height: 40px; border-radius: 6px; font-weight: 500` | hover: `#001645` + `translateY(-1px)`; disabled: `opacity: 0.5` |
+| **次按钮** `.btn-secondary` | `background: #FFF; border: 1px solid #014DB2; color: #014DB2; height: 40px; border-radius: 6px` | hover: `background: #EBF2FD` |
+| **输入框** `.input` | `height: 40px; border: 1px solid #E5E7EB; border-radius: 6px; padding: 0 12px; font-size: 16px` | focus: `border-color: #014DB2; box-shadow: 0 0 0 3px rgba(1,77,178,0.15)` |
+| **结果卡片** `.result-card` | `background: #FFF; border: 1px solid #E2E8F0; border-left: 4px solid #014DB2; border-radius: 8px; padding: 16px` | 展开/折叠 |
+| **气泡·用户** `.bubble-user` | `background: #014DB2; color: #FFF; border-radius: 16px 16px 4px 16px; max-width: 70%` | — |
+| **气泡·AI** `.bubble-ai` | `background: #F5F6F8; color: #0A1628; border-radius: 16px 16px 16px 4px; max-width: 85%` | — |
+| **导航项** `.nav-item` | `width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 6px` | active: `background: #EBF2FD; color: #014DB2` |
 
 ### 品牌识别
 
@@ -94,7 +94,7 @@
 
 | 场景 | 动效 |
 |------|------|
-| 导航 hover 展开 | `width: 64→200px; transition: 200ms; delay: 50ms` |
+| 导航 hover 展开 | `width: 64→300px; transition: 200ms; delay: 50ms` |
 | 流式文字输出 | 纯文字逐字追加，无额外动效 |
 | 结果卡片出现 | `opacity: 0→1 + translateY(8px→0); 300ms ease-out` |
 | 按钮 hover | `translateY(-1px) + background 加深; 120ms` |
@@ -106,45 +106,62 @@
 ## 一、整体布局
 
 ```
-┌───┬──────────────────────────────────────────┐
-│   │  顶部栏 — 🏷️ Logo + 标题 + 📍郑州 ▼         │
-│ 导 ├──────────────────────────────────────────┤
-│ 航 │        主内容区（约 92% 宽度）               │
-│ 栏 │                                            │
-│   │  根据左侧选中项切换视图：                      │
-│ 💬 │  → 对话模式                                 │
-│   │                                            │
-│ 📊 │  → 税率计算器                               │
-│   │                                            │
-│ 📄 │  → 申报材料生成                             │
-│   │                                            │
-└───┴──────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│ 顶部栏 — 🏷️ Logo + 标题 │ 💬智能问答 📊税率计算 📋申报指引 📄材料生成 │
+├──────────┬───────────────────────────────────────┤
+│ 左侧栏   │        主内容区（约 92% 宽度）            │
+│ 会话区   │                                        │
+│ 资料库区 │  根据顶部 tab 切换视图：                   │
+│          │  → 智能问答（chat）                      │
+│ 折叠态   │  → 税率计算（calculator）                │
+│ 68px 图标│  → 申报指引（guide，静态指引页）          │
+│ hover 展开│ → 申报材料（form）                     │
+│ 300px    │  → 政策法规（documents，资料库）         │
+│          │  → 行业基准（benchmark，资料库）         │
+└──────────┴───────────────────────────────────────┘
 ```
 
 ### 布局规格
 
 | 区域 | 宽度 | 行为 |
 |------|:--:|------|
-| 左侧导航栏 | 64px（默认）/ 200px（hover 展开） | 鼠标悬停时展开显示文字标签 |
-| 顶部栏 | 全宽 | 固定在顶部，一行高度 |
-| 主内容区 | 剩余宽度 | 根据导航选择切换视图 |
+| 左侧栏 | 64px（折叠）/ **300px（hover 展开）** | 折叠态仅 3 图标（会话/政策法规/行业基准），悬停展开显示全部（会话区 + 资料库区） |
+| 顶部栏 | 全宽 | 固定顶部；**中部 4 个功能 tab**（激活深蓝实心白字），**无操作按钮** |
+| 主内容区 | 剩余宽度 | 根据顶部 tab 切换视图（6 视图） |
 
 ### 顶部栏
 
 ```
-[🧾 财税助手]                            📍 郑州 ▼
+[🧾 lest 财税助手]   [智能问答] [税率计算] [申报指引] [材料生成]
 ```
 
-- 左侧：产品 Logo + "财税助手" 标题
-- 右侧：城市标识（当前城市 + 下拉切换，MVP 仅显示"郑州"）
+- 左侧：产品 Logo + "lest 财税助手" 标题（深色 Bold，对齐设计稿）
+- 中部：4 个功能 tab（智能问答/税率计算/申报指引/材料生成），`flex-1` 均分，点击切换视图；激活项深蓝底白字
+- 右侧：**用户栏**（2026-08-06 模型切换器启用原预留区）——模型下拉（默认 DeepSeek + 用户自配列表，切换时提示工具兼容性）+ ⚙ 设置入口（打开模型设置弹窗）；登录体系到位后补铃铛/头像/姓名
 
-### 左侧导航栏
+> **2026-08-06 变更**：移除顶栏「新会话」按钮与智能问答页头「历史记录」「新建对话」按钮（功能重复，统一收敛到左侧会话栏的 `+` 新建）。
+>
+> **2026-08-06 变更 2**：顶栏右侧用户区启用——模型切换器（设置弹窗 + 模型下拉），详见《财务RAG-模型切换器需求记录.md》。
 
-| 图标 | 文字标签（hover 展开） | 点击后 |
-|:--:|------|------|
-| 💬 | 智能对话 | 主内容区 → 聊天界面 |
-| 📊 | 税率计算 | 主内容区 → 税率计算器表单 |
-| 📄 | 申报材料 | 主内容区 → 申报表单 |
+### 左侧栏（会话 + 资料库）
+
+```
+┌──────────────────────┐
+│ 会话          [+新建]  │  ← 会话区（独立分区）
+│ 小微企业所得税 3条 10:20 │  ← 会话项（标题+元信息+×删除，无图标）
+│ 个税专项附加   5条 昨天  │
+├──────────────────────┤  ← 分隔线
+│ 资料库                │  ← 资料库区
+│ 📖 政策法规            │  → documents 视图
+│ 📊 行业基准            │  → benchmark 视图
+└──────────────────────┘
+```
+
+| 元素 | 行为 |
+|------|------|
+| 会话区 | 标题「会话」+ 新建按钮 + 会话列表；会话项显示 `N 条消息 · 今天HH:MM/昨天/MM-DD` 元信息，hover 显示 ×删除 |
+| 资料库区 | 分隔线下方；政策法规 → 资料库列表页；行业基准 → 基准查询页（申报记录已删） |
+| 折叠态 | 仅 3 图标（会话/法规/基准），hover 展开 300px |
 
 ---
 
@@ -182,16 +199,18 @@
 └──────────────────────────────────────────────┘
 ```
 
-### 2.2 消息气泡规范
+### 2.2 消息气泡规范（2026-08-06 配色对齐设计稿）
 
 | 元素 | 用户消息 | AI 回复 |
 |------|---------|--------|
 | 对齐 | 右 | 左 |
-| 背景色 | 深藏蓝（`#1E3A8A`） | 浅灰蓝（`#F1F5F9`） |
-| 文字色 | 白 | 近黑（`#0F172A`） |
-| 头像 | 无 | 🤖 小图标（左上角） |
+| 背景色 | 主色蓝（`#014DB2`） | 浅灰（`#F5F6F8` 页面底） |
+| 文字色 | 白 | 近黑（`#0A1628`） |
+| 头像 | 无 | 渐变蓝「AI」标识 + 「已检索 N 份」标签（左） |
 | 输出方式 | — | 流式 SSE 逐字 |
 | 最大宽度 | 70% | 85% |
+
+> **页头结构**（2026-08-06）：面包屑「工作台 / 智能问答」+ 26px 大标题 + 绿色「● RAG 检索已就绪」徽标；右侧**无按钮**（历史记录/新建对话已移除）。消息区外层为白底 16px 圆角卡片 + 轻阴影 + 24px 内边距。
 
 ### 2.3 流式计算过程展示
 

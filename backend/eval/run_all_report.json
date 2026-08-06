@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-08-05 18:49:03",
+  "layer_status": {
+    "retrieval": true
+  },
+  "layers": {
+    "retrieval": {
+      "total_queries": 60,
+      "recall@5": 0.85,
+      "recall@3": 0.6833,
+      "mrr": 0.8422,
+      "ndcg@5": 0.7585,
+      "failed_count": 0,
+      "elapsed_seconds": 1696.8,
+      "report": "eval\\retrieval_report.json"
+    },
+    "agent": {
+      "agent_mode": "multi",
+      "total": 26,
+      "correct": 26,
+      "accuracy": 100.0,
+      "report": "eval\\agent_eval_report.json"
+    },
+    "context": {
+      "probe_accuracy_avg": 0.917,
+      "faithfulness_avg": 1.0,
+      "context_event_rate": 1.0,
+      "summarized_total": 6,
+      "context_events_total": 6,
+      "report": "eval\\context_eval_report.json"
+    }
+  }
+}

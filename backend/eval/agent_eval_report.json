@@ -1,7 +1,8 @@
 {
-  "total": 20,
-  "correct": 17,
-  "accuracy": 85.0,
+  "agent_mode": "multi",
+  "total": 26,
+  "correct": 26,
+  "accuracy": 100.0,
   "results": [
     {
       "id": 1,
@@ -10,7 +11,8 @@
         "search_knowledge"
       ],
       "actual": [
-        "search_knowledge"
+        "search_knowledge",
+        "get_user_context"
       ],
       "hit": true
     },
@@ -32,7 +34,8 @@
         "search_knowledge"
       ],
       "actual": [
-        "search_knowledge"
+        "search_knowledge",
+        "get_user_context"
       ],
       "hit": true
     },
@@ -43,7 +46,8 @@
         "search_knowledge"
       ],
       "actual": [
-        "search_knowledge"
+        "search_knowledge",
+        "get_user_context"
       ],
       "hit": true
     },
@@ -54,7 +58,8 @@
         "search_knowledge"
       ],
       "actual": [
-        "search_knowledge"
+        "search_knowledge",
+        "get_user_context"
       ],
       "hit": true
     },
@@ -62,12 +67,12 @@
       "id": 6,
       "query": "我年收入96000元工资类型社保年缴9888元租房月扣1500算个税",
       "expected": [
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "actual": [
         "get_user_context",
-        "update_user_context",
-        "calculate_income_tax"
+        "tax_subagent",
+        "update_user_context"
       ],
       "hit": true
     },
@@ -75,11 +80,11 @@
       "id": 7,
       "query": "年薪12万交多少税",
       "expected": [
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "actual": [
         "get_user_context",
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "hit": true
     },
@@ -87,11 +92,11 @@
       "id": 8,
       "query": "劳务报酬3万元个税怎么算",
       "expected": [
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "actual": [
         "get_user_context",
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "hit": true
     },
@@ -99,11 +104,11 @@
       "id": 9,
       "query": "年终奖5万要交多少税",
       "expected": [
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "actual": [
         "get_user_context",
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "hit": true
     },
@@ -111,12 +116,12 @@
       "id": 10,
       "query": "月薪8000工资扣除社保后个税多少",
       "expected": [
-        "calculate_income_tax"
+        "tax_subagent"
       ],
       "actual": [
         "get_user_context",
-        "query_social_insurance",
-        "calculate_income_tax",
+        "social_subagent",
+        "tax_subagent",
         "update_user_context"
       ],
       "hit": true
@@ -125,10 +130,12 @@
       "id": 11,
       "query": "郑州工资8000社保扣多少",
       "expected": [
-        "query_social_insurance"
+        "social_subagent"
       ],
       "actual": [
-        "query_social_insurance"
+        "get_user_context",
+        "social_subagent",
+        "update_user_context"
       ],
       "hit": true
     },
@@ -136,11 +143,11 @@
       "id": 12,
       "query": "灵活就业社保一个月交多少钱",
       "expected": [
-        "query_social_insurance"
+        "social_subagent"
       ],
       "actual": [
         "get_user_context",
-        "query_social_insurance"
+        "social_subagent"
       ],
       "hit": true
     },
@@ -148,10 +155,11 @@
       "id": 13,
       "query": "五险一金缴费比例是多少",
       "expected": [
-        "query_social_insurance"
+        "social_subagent"
       ],
       "actual": [
-        "query_social_insurance"
+        "get_user_context",
+        "social_subagent"
       ],
       "hit": true
     },
@@ -159,10 +167,11 @@
       "id": 14,
       "query": "郑州公积金缴存基数",
       "expected": [
-        "query_social_insurance"
+        "social_subagent"
       ],
       "actual": [
-        "query_social_insurance"
+        "get_user_context",
+        "social_subagent"
       ],
       "hit": true
     },
@@ -173,9 +182,9 @@
         "fill_tax_form"
       ],
       "actual": [
-        "get_user_context"
+        "fill_tax_form"
       ],
-      "hit": false
+      "hit": true
     },
     {
       "id": 16,
@@ -184,9 +193,9 @@
         "fill_tax_form"
       ],
       "actual": [
-        "get_user_context"
+        "fill_tax_form"
       ],
-      "hit": false
+      "hit": true
     },
     {
       "id": 17,
@@ -194,8 +203,10 @@
       "expected": [
         "fill_tax_form"
       ],
-      "actual": [],
-      "hit": false
+      "actual": [
+        "fill_tax_form"
+      ],
+      "hit": true
     },
     {
       "id": 18,
@@ -204,8 +215,8 @@
         "filing_guide"
       ],
       "actual": [
-        "get_user_context",
-        "filing_guide"
+        "filing_guide",
+        "get_user_context"
       ],
       "hit": true
     },
@@ -217,7 +228,7 @@
       ],
       "actual": [
         "filing_guide",
-        "search_knowledge"
+        "get_user_context"
       ],
       "hit": true
     },
@@ -229,7 +240,83 @@
       ],
       "actual": [
         "filing_guide",
+        "get_user_context"
+      ],
+      "hit": true
+    },
+    {
+      "id": 21,
+      "query": "我是个体户，帮我填B表再算税",
+      "expected": [
+        "fill_tax_form",
+        "tax_subagent"
+      ],
+      "actual": [
+        "fill_tax_form",
+        "tax_subagent",
+        "get_user_context"
+      ],
+      "hit": true
+    },
+    {
+      "id": 22,
+      "query": "个体工商户申报B表，先填基础信息再计税",
+      "expected": [
+        "fill_tax_form",
+        "tax_subagent"
+      ],
+      "actual": [
+        "get_user_context",
+        "fill_tax_form",
+        "tax_subagent"
+      ],
+      "hit": true
+    },
+    {
+      "id": 23,
+      "query": "个税APP怎么退税",
+      "expected": [
+        "filing_guide"
+      ],
+      "actual": [
+        "filing_guide",
+        "get_user_context"
+      ],
+      "hit": true
+    },
+    {
+      "id": 24,
+      "query": "租房扣除标准",
+      "expected": [
         "search_knowledge"
+      ],
+      "actual": [
+        "search_knowledge",
+        "get_user_context"
+      ],
+      "hit": true
+    },
+    {
+      "id": 25,
+      "query": "工资8000交多少税",
+      "expected": [
+        "tax_subagent"
+      ],
+      "actual": [
+        "get_user_context",
+        "tax_subagent"
+      ],
+      "hit": true
+    },
+    {
+      "id": 26,
+      "query": "社保缴费比例",
+      "expected": [
+        "social_subagent"
+      ],
+      "actual": [
+        "get_user_context",
+        "social_subagent"
       ],
       "hit": true
     }

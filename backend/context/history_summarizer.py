@@ -125,6 +125,17 @@ class HistorySummarizer(SummarizationMiddleware):
         return result
 
 
-def build_history_summarizer(llm: BaseChatModel) -> HistorySummarizer:
-    """工厂：供 agent.engine.build_agent 调用，复用 Agent 的 DeepSeek 实例"""
-    return HistorySummarizer(model=llm)
+def build_history_summarizer(
+    llm: BaseChatModel, context_window: int | None = None
+) -> HistorySummarizer:
+    """工厂：供 agent.engine.build_agent 调用，复用 Agent 的 LLM 实例。
+
+    Args:
+        llm: LLM 实例（默认 DeepSeek；自定义 provider 时用该 provider 的 LLM 做摘要）
+        context_window: 模型上下文窗口。模型切换器（2026-08-06）：不同模型窗口差异大
+            （8K~128K），trigger 按窗口 60% 动态计算（下限 8K），避免小窗口模型爆窗；
+            None → 保持基线 trigger=40K（既有行为不变）。
+    """
+    from services.provider_registry import compute_trigger_tokens
+
+    return HistorySummarizer(model=llm, trigger_tokens=compute_trigger_tokens(context_window))

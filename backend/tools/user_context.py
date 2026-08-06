@@ -1,30 +1,25 @@
-"""对话上下文记忆工具（方案 C）
+"""对话上下文记忆工具（方案 C + 持久化）
 
 get_user_context  — 读取当前会话已收集的用户信息
 update_user_context — 更新当前会话的用户信息
 
-存储：per-thread dict（contexts），thread_id 通过 contextvars.ContextVar 传递
-锁：threading.Lock 保护并发写
+存储：MemoryStore 抽象层 + SQLiteStore 实现（grill 定案 2026-08-05）
+  - 画像表 user_contexts 主键 user_id，当前 user_id = thread_id 占位（登录体系后零返工）
+  - thread_id 通过 contextvars.ContextVar 传递（PoC 已验证传播正常）
+  - 后期换 MongoDB：仅换 storage 实现类，本文件业务零改动
 """
 
 import json
 import logging
-import threading
 from contextvars import ContextVar
 from langchain_core.tools import tool
+
+from storage.sqlite_store import get_store
 
 logger = logging.getLogger(__name__)
 
 # thread_id 通过 contextvar 传递给 @tool（PoC 已验证传播正常）
 _current_thread_id: ContextVar[str] = ContextVar("current_thread_id")
-
-# per-thread 用户画像存储。
-# 注意：毕设 demo 时长有限，不做 TTL 清理；答辩后若长期运行，
-# 需加 TTL（如 30 分钟未访问即删除）或改用 SqliteSaver 持久化，避免内存泄漏。
-contexts: dict[str, dict] = {}  # {thread_id: {city, salary, income_type, deductions}}
-# TODO: 毕设 MVP 阶段内存仅增不减，长时间运行需加 TTL 自动清理（如 LRU 驱逐或定时 GC）。
-#       现阶段单用户测试无实际内存泄漏风险。
-_contexts_lock = threading.Lock()
 
 CONTEXT_KEYS = {
     "city", "salary", "income_type",
@@ -54,8 +49,7 @@ def get_user_context() -> str:
         return json.dumps(
             {"message": "还没有收集到任何用户信息"}, ensure_ascii=False
         )
-    with _contexts_lock:
-        ctx = contexts.get(thread_id, {})
+    ctx = get_store().get_context(thread_id)  # 当前 user_id = thread_id 占位
     if not ctx:
         return json.dumps(
             {"message": "还没有收集到任何用户信息"}, ensure_ascii=False
@@ -85,10 +79,7 @@ def update_user_context(key: str, value: str) -> str:
             {"error": f"不支持的 key: {key}，可选: {list(CONTEXT_KEYS)}"},
             ensure_ascii=False,
         )
-    with _contexts_lock:
-        if thread_id not in contexts:
-            contexts[thread_id] = {}
-        contexts[thread_id][key] = value
+    get_store().update_context(thread_id, key, value)
     return json.dumps(
         {"updated": key, "value": value}, ensure_ascii=False
     )

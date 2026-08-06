@@ -1,0 +1,89 @@
+{
+  "summary": {
+    "recall@1": 0.5,
+    "recall@3": 0.6833,
+    "recall@5": 0.85,
+    "precision@1": 0.7333,
+    "precision@3": 0.3556,
+    "precision@5": 0.27,
+    "mrr": 0.8422,
+    "ndcg@5": 0.7585
+  },
+  "by_category": {
+    "个税-专项扣除": {
+      "total": 12,
+      "passed": 12,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.8333
+    },
+    "个税-基础": {
+      "total": 5,
+      "passed": 5,
+      "pass_rate": 1.0,
+      "avg_recall@5": 1.0
+    },
+    "个税-汇算": {
+      "total": 9,
+      "passed": 9,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.7222
+    },
+    "个税-特殊": {
+      "total": 8,
+      "passed": 8,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.875
+    },
+    "其他税种": {
+      "total": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.875
+    },
+    "印花税": {
+      "total": 2,
+      "passed": 2,
+      "pass_rate": 1.0,
+      "avg_recall@5": 1.0
+    },
+    "增值税": {
+      "total": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.875
+    },
+    "契税": {
+      "total": 2,
+      "passed": 2,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.75
+    },
+    "社保": {
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0,
+      "avg_recall@5": 1.0
+    },
+    "程序法": {
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.8333
+    },
+    "经营主体": {
+      "total": 6,
+      "passed": 6,
+      "pass_rate": 1.0,
+      "avg_recall@5": 0.75
+    },
+    "车辆税": {
+      "total": 2,
+      "passed": 2,
+      "pass_rate": 1.0,
+      "avg_recall@5": 1.0
+    }
+  },
+  "failed": [],
+  "total_queries": 60,
+  "elapsed_seconds": 1696.8
+}

@@ -11,6 +11,8 @@ v1.5 multi-agent: ALL_TOOLS 按 AGENT_MODE 两形态组装
 import json
 import logging
 import threading
+from contextvars import ContextVar
+from typing import Any
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import ToolErrorMiddleware, ModelCallLimitMiddleware
@@ -20,6 +22,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL, AGENT_MODE
 from agent.prompts import SYSTEM_PROMPT_MULTI, SYSTEM_PROMPT_TOOLS
 from context.history_summarizer import build_history_summarizer
+from services.provider_registry import provider_key, resolve_context_window
 from tools import (
     get_user_context, search_knowledge,
     calculate_income_tax, calculate_business_income_tax,
@@ -50,24 +53,58 @@ def _on_tool_error(exc: Exception, tool_call) -> str:
     )
 
 
-# ── LLM 单例（主/子 Agent 共用，避免各建一个 ChatOpenAI）──
-_llm = None
+# ── LLM/Agent 缓存（主/子 Agent 共用 LLM 实例；按 provider 多实例，默认 DeepSeek 单例）──
+# 模型切换器（2026-08-06）：provider = {base_url, api_key, model, context_window}，
+# 由前端设置页配置 → localStorage → 请求携带 → 路由层 set_current_provider →
+# get_llm/get_agent 按 provider 签名缓存（同配置复用，切换即时生效）。
+_llm_cache: dict[str, ChatOpenAI] = {}
 _llm_lock = threading.Lock()
 
+# 当前请求的 provider（contextvar 传播给子 Agent / 摘要器等深层调用）
+_current_provider: ContextVar[dict[str, Any] | None] = ContextVar(
+    "current_provider", default=None
+)
 
-def get_llm():
-    """获取 LLM 单例（线程安全）。主 Agent 与子 Agent 共用一个实例。"""
-    global _llm
-    if _llm is None:
+
+def set_current_provider(provider: dict[str, Any] | None) -> None:
+    """设置当前请求的 provider（路由层调用）。None = 默认 DeepSeek"""
+    _current_provider.set(provider)
+
+
+def get_current_provider() -> dict[str, Any] | None:
+    """读取当前请求的 provider（子 Agent 等深层调用使用）"""
+    return _current_provider.get()
+
+
+def get_llm(provider: dict[str, Any] | None = None) -> ChatOpenAI:
+    """获取 LLM（按 provider 缓存，线程安全）。
+
+    provider=None → 默认 DeepSeek（config.DEEPSEEK_MODEL + DEEPSEEK_API_KEY）。
+    provider 含 base_url/api_key/model → 按签名缓存（OpenAI 兼容协议统一接入）。
+    temperature 恒为 0：财税场景确定性优先（模型切换器需求 §4 定案）。
+    """
+    key = provider_key(provider)
+    if key not in _llm_cache:
         with _llm_lock:
-            if _llm is None:
-                _llm = ChatOpenAI(
-                    model=DEEPSEEK_MODEL,
-                    api_key=DEEPSEEK_API_KEY,
-                    base_url="https://api.deepseek.com/v1",
-                    temperature=0,
-                )
-    return _llm
+            if key not in _llm_cache:
+                if not provider:
+                    llm = ChatOpenAI(
+                        model=DEEPSEEK_MODEL,
+                        api_key=DEEPSEEK_API_KEY,
+                        base_url="https://api.deepseek.com/v1",
+                        temperature=0,
+                    )
+                else:
+                    # BYOK：用户自带 key/base_url/模型名（OpenAI 兼容端点）
+                    llm = ChatOpenAI(
+                        model=provider["model"],
+                        api_key=provider.get("api_key") or DEEPSEEK_API_KEY,
+                        base_url=provider.get("base_url")
+                        or "https://api.deepseek.com/v1",
+                        temperature=0,
+                    )
+                _llm_cache[key] = llm
+    return _llm_cache[key]
 
 
 # ── ALL_TOOLS + SYSTEM_PROMPT 按 AGENT_MODE 组装 ──
@@ -97,38 +134,53 @@ else:  # tools 形态 = 原单 Agent（回退/演示）
     SYSTEM_PROMPT = SYSTEM_PROMPT_TOOLS
 
 
-def build_agent():
+def build_agent(llm: ChatOpenAI | None = None, context_window: int | None = None):
     """构建财税助手 Agent
+
+    Args:
+        llm: LLM 实例（None → get_llm() 默认 DeepSeek）
+        context_window: 模型上下文窗口（None → 摘要 trigger 用默认 40K）
 
     Returns:
         CompiledStateGraph — 支持 invoke / stream / astream_events
     """
-    llm = get_llm()
+    if llm is None:
+        llm = get_llm()
 
     agent = create_agent(
         model=llm,
         tools=ALL_TOOLS,
         system_prompt=SYSTEM_PROMPT,
+        # InMemorySaver 仅作"单轮会话缓冲"（持久化 §5.1）：
+        # 路由层每请求传入独立内部 thread_id（{业务tid}#{uuid}），checkpoint 永不跨轮累积，
+        # 历史上下文由 chat.py 从 SQLite 注入，流结束后写回——真正持久化在 SQLite。
         checkpointer=InMemorySaver(),
         middleware=[
             ToolErrorMiddleware(on_error=_on_tool_error),    # 工具异常不崩溃
             ModelCallLimitMiddleware(run_limit=AGENT_MODEL_CALL_LIMIT),    # 控制成本
-            build_history_summarizer(llm),    # 历史摘要：trigger=40K/keep=20 + 摘要标志→context 事件
+            build_history_summarizer(llm, context_window=context_window),  # 窗口动态 trigger
         ],
     )
     return agent
 
 
-# 全局单例（懒加载 + 双重检查锁，与 get_retriever() 模式一致）
-_agent = None
+# 全局 Agent 缓存：默认单例 + 自定义 provider 多实例（懒加载 + 双重检查锁）
+_agent_cache: dict[str, Any] = {}
 _agent_lock = threading.Lock()
 
 
-def get_agent():
-    """获取 Agent 单例（线程安全）"""
-    global _agent
-    if _agent is None:
+def get_agent(provider: dict[str, Any] | None = None):
+    """获取 Agent（按 provider 缓存，线程安全）。
+
+    provider=None → 默认 DeepSeek Agent（与原 get_agent() 行为一致）；
+    provider 提供 base_url/api_key/model → 对应 provider 的 Agent 实例。
+    """
+    key = provider_key(provider)
+    if key not in _agent_cache:
         with _agent_lock:
-            if _agent is None:
-                _agent = build_agent()
-    return _agent
+            if key not in _agent_cache:
+                llm = get_llm(provider)
+                _agent_cache[key] = build_agent(
+                    llm, context_window=resolve_context_window(provider)
+                )
+    return _agent_cache[key]

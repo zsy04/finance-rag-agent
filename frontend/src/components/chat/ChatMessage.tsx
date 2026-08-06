@@ -21,6 +21,20 @@ export function ChatMessage({ message, onRetry }: ChatMessageProps) {
         isUser ? 'justify-end' : 'justify-start',
       )}
     >
+      {/* AI 头像 + 名称标签（设计稿对齐：渐变蓝 AI 标识 + 「已检索 N 份」） */}
+      {!isUser && (
+        <div className="mr-3 flex w-9 shrink-0 flex-col items-center">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#014DB2] to-[#001645]">
+            <span className="text-[13px] font-bold text-white">AI</span>
+          </div>
+          <span className="mt-1 hidden text-center text-[10px] leading-tight text-[var(--color-text-tertiary)] lg:block">
+            {hasSources
+              ? `已检索 ${message.sources!.length} 份`
+              : '财税助手'}
+          </span>
+        </div>
+      )}
+
       <div
         className={cn(
           'px-4 py-3',

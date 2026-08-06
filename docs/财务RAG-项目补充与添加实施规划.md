@@ -6,7 +6,7 @@
 
 ---
 
-## 1. 补充项总览（9 项）
+## 1. 补充项总览（10 项）
 
 | # | 补充项 | 方向 | 优先级 | 工作量 | 状态 |
 |---|---|---|---|---|---|
@@ -16,9 +16,10 @@
 | 4 | **Multi-Agent 化**（工具升级子 Agent） | Agent 工程化 | 🥈 P1 | 1-2 天 | ✅ 已完成（双层评测全绿） |
 | 5 | **MCP Server 封装**（个税计算工具） | Agent 工程化 | 🥈 P1 | 1-2 天 | ✅ 已完成（tax-calc 3 工具，WorkBuddy 宿主实测通过） |
 | 6 | **对话历史摘要裁剪** | Agent 工程化 | 🥈 P1 | 0.5 天 | ✅ 已完成（已被 history_summarizer 覆盖） |
-| 7 | **用户上下文持久化**（grill 定案：SQLite + 自建消息表 + 历史回显） | 数据/存储 | 🥉 P2 | 1.5-2 天 | 🔲 已定案待实施 |
+| 7 | **用户上下文持久化**（grill 定案：SQLite + 自建消息表 + 历史回显） | 数据/存储 | 🥉 P2 | 1.5-2 天 | ✅ 已实施（2026-08-06，冒烟全绿） |
 | 8 | **LlamaIndex 对比 demo** | 数据/存储 | 🥉 P2 | 半天 | 🔲 可选 |
 | 9 | **评测集扩展 + 评测自动化** | 打磨收尾 | 🥉 P2 | 1 天 | ✅ 已完成（60 条，Recall@5 = 85%，run_all.py 落地） |
+| 10 | **设计稿落地**（顶栏 tab / 侧边栏重构 / 折叠态图标 / 资料库接口） | 前端+数据 | 🥈 P1 | 前端 2.5-4 天 + 后端 0.5-1 天 | 🔲 蓝图已定稿（《设计稿落地实施规划》），待实施 |
 
 **依赖关系**：**P0-0 基线采集**✅ 已完成（keep=20 / trigger=40K 已回填）；① 的 guard 部分 ✅ 已实现（`backend/context/guard.py`，替换 `content[:800]`），摘要器部分待做；② 并入 ① 实现（参数直接用基线定值）；③ 验证 ① 效果（闭环）；⑥ 依赖 ② 的阈值设计；⑨ 与 ③ 共用长对话场景集。
 
@@ -170,6 +171,12 @@
   6. 验收评测（见下）
 - **验收标准**：① 重启后端后同一 thread_id 画像+历史完整恢复；② 刷新页面历史回显 + Agent 接得上话；③ 新浏览器 = 新 thread_id，不串号；④ 工具接口不变；⑤ `agent_eval` 回归 ≥90% 不降；⑥ 20+ 轮长对话摘要正常触发、无消息双份膨胀。
 - **工作量**：1.5-2 天（较原 1 天增加：历史回显 API + 注入机制 + 前端改动）。
+
+> ✅ **实施记录（2026-08-06）**：全部代码落地，冒烟全绿。
+> - 改动文件：新增 `backend/storage/{__init__,sqlite_store}.py`（MemoryStore + SQLiteStore，三表 threads/messages/user_contexts，单连接+写锁）；修改 `backend/config.py`（SQLITE_DB_PATH，默认 `backend/data/chat.db`）、`backend/tools/user_context.py`（dict → MemoryStore，工具签名与返回格式不变）、`backend/routers/chat.py`（历史注入只取正文 + 流结束写回完整 Message JSON + `GET /api/chat/history`）、`backend/agent/engine.py`（`get_llm()` 配置源 TODO 位 + InMemorySaver 角色注释）、前端 `sse.ts`（getHistory）/ `useChat.ts`（localStorage 固定 thread_id + 挂载回显 + isHydrating）/ `App.tsx`（加载占位）。
+> - 关键实现决策：① 内部 thread_id = `{业务tid}#{uuid8}` 每请求独立 → InMemorySaver 永不跨轮累积；② 注入历史仅 role+content，附件不喂 LLM；③ 摘要中间件调用内压缩、结果不回写（写回只写本轮新增 → 无消息双份膨胀）；④ 异常/错误回复不写回（用户重试自然落库）。
+> - 实测：py_compile 全过；SQLiteStore 读写往返/隔离/幂等通过；user_context 工具行为回归一致（含非法 key 分支）；前端 `tsc --noEmit` 零错误。
+> - 待验收（用户自跑）：`agent_eval.py` 回归 ≥90% + 手动端到端（重启恢复/刷新回显/串号隔离/长对话摘要触发）。
 
 ### 5.2 ⑧ LlamaIndex 对比 demo（半天，可选）
 

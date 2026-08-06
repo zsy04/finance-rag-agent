@@ -1,19 +1,26 @@
-# 财税助手后端依赖（版本已锁定下限，避免不兼容升级）
-# LangChain v1 标准 API
+# 财税助手后端依赖（2026-08-06 重写，对齐 venv 实际安装）
+# 安装：先设 HF_ENDPOINT=https://hf-mirror.com 再 pip install -r requirements.txt
+#
+# ── Agent / LLM（LangChain v1 标准 API）──
 langchain>=1.3.0,<2.0.0
 langchain-core>=1.4.0,<2.0.0
-langchain-openai>=0.1.0,<1.0.0
+langchain-openai>=1.4.0
 langgraph>=1.2.0,<1.3.0
 langgraph-checkpoint>=2.0.0
-# FastAPI
+#
+# ── Web 框架（SSE 流式）──
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
-# RAG 检索（HuggingFace 安装需设 HF_ENDPOINT=https://hf-mirror.com）
-FlagEmbedding>=1.2.0
-qdrant-client>=1.10.0
-numpy>=1.26.0
-# 数据校验
 pydantic>=2.0.0
 python-dotenv>=1.0.0
-# 申报表填写
-openpyxl>=3.1.0
+#
+# ── RAG 检索 ──
+FlagEmbedding>=1.2.0      # BGE-M3 编码器 + BGE-Reranker-v2-m3 精排（retriever.py 直接使用）
+torch>=2.0.0              # FlagEmbedding 底座；纯 CPU 机器可装 CPU 版（见 README 无 GPU 策略）
+qdrant-client>=1.10.0
+numpy>=1.26.0
+#
+# ── 数据 / 文档处理 ──
+PyYAML>=6.0               # YAML frontmatter 解析（metadata.json / 法规元数据）
+Markdown>=3.8.0           # 法规正文 → HTML（services/library_engine.py）
+openpyxl>=3.1.0           # 申报表 xlsx 导出（fill_tax_form）

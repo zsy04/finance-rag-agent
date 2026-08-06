@@ -2,24 +2,24 @@
 
 @layer base {
   :root {
-    /* 主色调 — 深藏蓝 */
-    --color-primary: #1E3A8A;
-    --color-primary-light: #DBEAFE;
-    --color-primary-dark: #172554;
+    /* 主色调 — 设计稿深蓝 #014DB2（2026-08-06 对齐设计稿） */
+    --color-primary: #014DB2;
+    --color-primary-light: #EBF2FD;
+    --color-primary-dark: #001645;
 
-    /* 中性色 */
-    --color-text-primary: #0F172A;
-    --color-text-secondary: #475569;
-    --color-text-tertiary: #94A3B8;
-    --color-bg-page: #F1F5F9;
+    /* 中性色 — 设计稿暖白底 + 蓝灰文字 */
+    --color-text-primary: #0A1628;
+    --color-text-secondary: #6B7280;
+    --color-text-tertiary: #9CA3AF;
+    --color-bg-page: #F5F6F8;
     --color-bg-surface: #FFFFFF;
-    --color-border: #CBD5E1;
+    --color-border: #E5E7EB;
 
-    /* 语义色 */
-    --color-success: #15803D;
-    --color-warning: #B45309;
-    --color-error: #B91C1C;
-    --color-info: #1E40AF;
+    /* 语义色 — 设计稿语义三元组 */
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-info: #014DB2;
 
     /* 字体 */
     --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -88,11 +88,82 @@ body {
   animation: fade-in-up 0.3s var(--ease-standard) both;
 }
 
+/* 会话项轻量滑入（新建会话时：轻微下移 + 淡入，克制不喧宾夺主） */
+@keyframes drop-in {
+  0% { opacity: 0; transform: translateY(-5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-drop-in {
+  animation: drop-in 0.25s ease-out both;
+}
+
+/* 侧边栏条目拖影（会话项/资料库项通用：轻浮起 + 淡蓝阴影，克制） */
+.thread-item {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+.thread-item:hover {
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 6px rgba(1, 77, 178, 0.06);
+}
+.thread-item:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(1, 77, 178, 0.05);
+}
+
+/* 法规正文排版（后端 HTML 注入容器，2026-08-06） */
+.doc-prose {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  line-height: 1.8;
+}
+.doc-prose h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.doc-prose h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 20px 0 8px;
+}
+.doc-prose p {
+  margin: 8px 0;
+}
+.doc-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.doc-prose th,
+.doc-prose td {
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.doc-prose th {
+  background: var(--color-bg-page);
+  font-weight: 600;
+}
+.doc-prose code {
+  background: var(--color-bg-page);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
+
 /* 无障碍：尊重减少动效 */
 @media (prefers-reduced-motion: reduce) {
   .icon-spinning,
   .cursor-blink,
-  .fade-in-up {
+  .fade-in-up,
+  .animate-drop-in,
+  .thread-item {
     animation: none !important;
+    transition: none !important;
   }
 }

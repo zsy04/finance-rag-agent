@@ -10,6 +10,7 @@ from routers.tax import router as tax_router
 from routers.social import router as social_router
 from routers.chat import router as chat_router
 from routers.form import router as form_router
+from routers.library import router as library_router
 
 app = FastAPI(title="财税助手api", version="1.0")
 
@@ -25,6 +26,7 @@ app.include_router(tax_router)
 app.include_router(social_router)
 app.include_router(chat_router)
 app.include_router(form_router)
+app.include_router(library_router)
 
 @app.get("/health")
 async def health():

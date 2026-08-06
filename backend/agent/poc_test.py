@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv("backend/.env")
 
 API_KEY = os.getenv("DEEPSEEK_API_KEY")
-MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
 BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
 
 print(f"模型: {MODEL}")

@@ -10,15 +10,25 @@
 
 | 前端操作 | HTTP | 后端路由 | 请求 | 响应 |
 |---------|:--:|---------|------|------|
-| 对话发送消息 | POST | `/api/chat` | `{message, thread_id}` | SSE 流（7 种事件） |
+| 对话发送消息 | POST | `/api/chat` | `{message, thread_id, provider?}` | SSE 流（7 种事件） |
+| 模型供应商模板（模型切换器） | GET | `/api/models` | — | JSON `{templates:[{id,label,base_url,default_model,context_window}]}`（不含 key） |
+| 模型连接测试（模型切换器） | POST | `/api/models/test` | `{base_url, api_key, model}` | JSON `{ok, model, reply?/error?}` |
 | 旧版直连问答 | POST | `/chat` | `{query}` | SSE 流（旧格式，token/done/error） |
 | 税率计算器提交 | POST | `/api/tax/calculate` | `{annual_income, income_type, social_insurance?, housing_rent?, children_edu?, elderly_support?, bonus?}` | JSON |
 | 社保计算器提交 | POST | `/api/social/calculate` | `{salary, employment_type, housing_fund_ratio?, flexible_base_level?}` | JSON |
 | 历史会话回显（🔲 计划新增） | GET | `/api/chat/history` | `{thread_id}` | JSON 消息数组（按时间升序） |
+| 法规列表（资料库） | GET | `/api/library/documents` | `category, keyword, limit, offset` | JSON `{total, items:[{id,title,category,level,updated,source}]}` |
+| 法规正文（资料库） | GET | `/api/library/documents/{id}` | — | JSON `{id,title,category,html_content}`（后端转 HTML） |
+| 行业基准查询（资料库） | GET | `/api/library/benchmark` | `category, keyword` | JSON `{total, industries:[{category,sub_industry,indicators:{10项}}]}` |
+| 城市列表（资料库，预留） | GET | `/api/library/cities` | — | JSON 城市数组（MVP 仅郑州） |
 
 > **备注**：对话上下文由 Agent 内部管理（`get_user_context` / `update_user_context` @tool），前端不需要传递 `context` 参数。申报表生成已融入 Agent 通路（`fill_tax_form` @tool），无独立 REST 端点。
 >
 > **计划新增（2026-08-05，grill 定案：用户上下文持久化 §5.1）**：`GET /api/chat/history` 用于前端挂载时回显历史对话；前端 thread_id 改为 localStorage 持久化（单会话模型，一浏览器 = 一会话）；后端 `user_context`/消息落 SQLite（`MemoryStore` 抽象层，工具接口不变）。详见《项目补充与添加实施规划》§5.1。
+>
+> **计划新增（2026-08-06，设计稿落地 §4）**：资料库三接口（`/api/library/documents` 列表 / `/api/library/documents/{id}` 正文(HTML) / `/api/library/benchmark` 行业基准）+ 预留 `/api/library/cities`。实现见《设计稿落地实施规划》§4，新文件 `backend/services/library_engine.py` + `backend/routers/library.py`。
+>
+> **已新增（2026-08-06，模型切换器 §6）**：`/api/chat` 请求体加可选 `provider`（`{base_url?, api_key?, model, context_window?}`，缺省=默认 DeepSeek）+ `/api/models`（模板列表）+ `/api/models/test`（连接测试）。详见《财务RAG-模型切换器需求记录.md》，实现：`backend/services/provider_registry.py` + `agent/engine.py`（get_llm/get_agent 按 provider 缓存）。
 
 ---
 

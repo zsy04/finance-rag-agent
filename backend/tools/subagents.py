@@ -25,6 +25,7 @@ import json
 import logging
 import re
 import threading
+from typing import Any
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import ToolErrorMiddleware, ModelCallLimitMiddleware
@@ -69,35 +70,37 @@ def _build_subagent(llm, system_prompt, tools):
     )
 
 
-# ── 全局单例（懒加载 + 双检锁，与 get_agent() 模式一致）──
-_tax_subagent = None
-_social_subagent = None
+# ── 子 Agent 缓存：按 LLM 实例缓存（模型切换器 2026-08-06）──
+# LLM 本身被 engine.get_llm 按 provider 缓存（同 provider 同实例），
+# 这里用 id(llm) 作 key → provider 变化时自动重建子 Agent，同 provider 复用。
+_tax_subagents: dict[int, Any] = {}
+_social_subagents: dict[int, Any] = {}
 _lock = threading.Lock()
 
 
 def get_tax_subagent(llm):
-    """获取计税子 Agent 单例（线程安全）"""
-    global _tax_subagent
-    if _tax_subagent is None:
+    """获取计税子 Agent（按 LLM 实例缓存，线程安全）"""
+    key = id(llm)
+    if key not in _tax_subagents:
         with _lock:
-            if _tax_subagent is None:
-                _tax_subagent = _build_subagent(
+            if key not in _tax_subagents:
+                _tax_subagents[key] = _build_subagent(
                     llm, TAX_SUBAGENT_PROMPT,
                     [get_user_context, update_user_context,
                      calculate_income_tax, calculate_business_income_tax])
-    return _tax_subagent
+    return _tax_subagents[key]
 
 
 def get_social_subagent(llm):
-    """获取社保子 Agent 单例（线程安全）"""
-    global _social_subagent
-    if _social_subagent is None:
+    """获取社保子 Agent（按 LLM 实例缓存，线程安全）"""
+    key = id(llm)
+    if key not in _social_subagents:
         with _lock:
-            if _social_subagent is None:
-                _social_subagent = _build_subagent(
+            if key not in _social_subagents:
+                _social_subagents[key] = _build_subagent(
                     llm, SOCIAL_SUBAGENT_PROMPT,
                     [get_user_context, update_user_context, query_social_insurance])
-    return _social_subagent
+    return _social_subagents[key]
 
 
 def _extract_fields(messages) -> tuple:
@@ -180,8 +183,11 @@ def _forced_recalc(query: str, messages) -> tuple:
 
 async def _run_tax_subagent(query: str) -> str:
     """计税子 Agent 核心逻辑（async），由 tax_subagent 包装函数调用"""
-    from agent.engine import get_llm
-    sub = get_tax_subagent(get_llm())
+    from agent.engine import get_llm, get_current_provider
+
+    # 模型切换器：子 Agent 与主 Agent 使用同一 provider（contextvar 传播），
+    # 避免主 Agent 用千问、子 Agent 却用默认 DeepSeek 的不一致。
+    sub = get_tax_subagent(get_llm(get_current_provider()))
     result = await sub.ainvoke({"messages": [{"role": "user", "content": query}]})
     messages = result["messages"]
     answer, result_card, sources = _extract_fields(messages)
@@ -206,8 +212,9 @@ async def _run_tax_subagent(query: str) -> str:
 
 async def _run_social_subagent(query: str) -> str:
     """社保子 Agent 核心逻辑（async），由 social_subagent 包装函数调用"""
-    from agent.engine import get_llm
-    sub = get_social_subagent(get_llm())
+    from agent.engine import get_llm, get_current_provider
+
+    sub = get_social_subagent(get_llm(get_current_provider()))
     result = await sub.ainvoke({"messages": [{"role": "user", "content": query}]})
     messages = result["messages"]
     answer, result_card, sources = _extract_fields(messages)

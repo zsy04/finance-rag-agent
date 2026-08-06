@@ -12,23 +12,23 @@
 ```css
 :root {
   /* ═══ 主色调 — 深藏蓝 ═══ */
-  --color-primary: #1E3A8A;
-  --color-primary-light: #DBEAFE;
-  --color-primary-dark: #172554;
+  --color-primary: #014DB2;
+  --color-primary-light: #EBF2FD;
+  --color-primary-dark: #001645;
 
   /* ═══ 中性色 ═══ */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #94A3B8;
-  --color-bg-page: #F1F5F9;
+  --color-text-primary: #0A1628;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-bg-page: #F5F6F8;
   --color-bg-surface: #FFFFFF;
-  --color-border: #CBD5E1;
+  --color-border: #E5E7EB;
 
   /* ═══ 语义色 ═══ */
   --color-success: #15803D;
   --color-warning: #B45309;
   --color-error: #B91C1C;
-  --color-info: #1E40AF;
+  --color-info: #014DB2;
 
   /* ═══ 字体 ═══ */
   --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -74,7 +74,7 @@
 **输入框**：
 ```css
 .input { height: 40px; border: 1px solid var(--color-border); border-radius: 6px; padding: 0 12px; font-size: 16px; }
-.input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(30,58,138,0.15); outline: none; }
+.input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(1,77,178,0.15); outline: none; }
 ```
 
 **结果卡片**：
@@ -94,18 +94,19 @@
 .suggestion-chip:hover { background: var(--color-primary-light); border-color: #93C5FD; }
 ```
 
-**导航项**：
+**导航项**（顶栏 tab，2026-08-06 设计稿落地后导航从侧边栏移到顶栏）：
 ```css
-.nav-item { width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 6px; font-size: 14px; color: var(--color-text-secondary); cursor: pointer; }
-.nav-item.active { background: var(--color-primary-light); color: var(--color-primary); }
+.nav-tab { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.nav-tab.active { background: var(--color-primary); color: #FFFFFF; }
+.nav-tab:not(.active) { background: #FFFFFF; color: var(--color-text-secondary); }
 ```
 
 ### 2.2 布局约束
 
 | 区域 | 约束 |
 |------|------|
-| 左侧导航栏 | 默认 64px → hover 扩至 200px；`transition: width 200ms ease; transition-delay: 50ms` |
-| 顶部栏 | 全宽 + `sticky top-0 z-10`，高度 48px |
+| 顶栏 | 全宽 + `sticky top-0 z-10`，高度 64px；中部 4 功能 tab（智能问答/税率计算/申报指引/材料生成），右侧新会话按钮 |
+| 左侧栏 | 默认 64px（折叠，仅 3 图标：会话/政策法规/行业基准）→ hover 扩至 **300px**（会话区 + 资料库区）；`transition: width 200ms ease; transition-delay: 50ms` |
 | 主内容区 | `overflow-y: auto` |
 | 输入框区域 | 底部固定，`sticky bottom-0` |
 

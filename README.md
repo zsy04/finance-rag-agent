@@ -21,6 +21,7 @@
 - **上下文工程**：工具返回提取式瘦身 + 历史自动摘要（trigger 40K），长对话不爆窗
 - **Multi-Agent**：计税/社保双子 Agent 自治调度，`AGENT_MODE` 一键回退
 - **轻量知识图谱**：20 条关联规则 JSON 驱动，两跳推理，零数据库依赖
+- **模型切换器**：顶栏一键切换模型，设置页自填 API Key 接入 DeepSeek/千问/Kimi/GLM/OpenAI 等任意 OpenAI 兼容端点（BYOK，后端转发保留 Agent 全链路）
 - **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 85%（60 条全通过）
 
 ---
@@ -114,6 +115,9 @@ graph TD
 ### 本地开发
 
 ```bash
+# 0. 安装依赖（Python 3.11+；国内建议先 export HF_ENDPOINT=https://hf-mirror.com）
+pip install -r requirements.txt
+
 # 1. 配置 API Key
 echo 'DEEPSEEK_API_KEY=sk-xxxx' > backend/.env
 
@@ -172,6 +176,7 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 │   └── processed/cities/zhengzhou/ # 郑州社保+公积金数据
 ├── scripts/            # 数据工具链（清洗/切分/向量化/评测）
 └── docs/               # 工程文档
+    └── 主题文档/        # 按主题重组的 6 份设计文档（PRD/前端/后端/架构/数据/开发指南）
 ```
 
 ---
@@ -180,7 +185,7 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 
 | 层级 | 选型 |
 |------|------|
-| LLM | DeepSeek（`deepseek-chat`），LangChain `create_agent`，流式 SSE |
+| LLM | DeepSeek（`deepseek-v4-flash`），LangChain `create_agent`，流式 SSE；支持用户自配任意 OpenAI 兼容模型（模型切换器） |
 | Embedding | BGE-M3（FlagEmbedding），稠密 1024d + 稀疏双向量，GPU/CPU 自动切换 |
 | 向量库 | Qdrant，原生混合检索（RRF 融合） |
 | 重排器 | BGE-Reranker-v2-m3，双阶段检索 |
@@ -201,20 +206,35 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 
 ## 文档
 
+### 主题文档（按主题重组，2026-08-06）
+
 | 文档 | 说明 |
 |------|------|
-| [技术架构与 Agent 方案](docs/财务RAG-技术架构与Agent方案.md) | 技术栈选型、检索链路、Agent 工具设计 |
+| [产品需求文档（PRD）](docs/主题文档/财务RAG-产品需求文档(PRD).md) | 产品定位、用户画像、MVP 功能矩阵、四大功能需求、B 表专项、交互/非功能需求 |
+| [前端设计文档](docs/主题文档/财务RAG-前端设计文档.md) | 技术栈、组件树、CSS 设计令牌、六视图、SSE 消费、TS 类型契约、联调验收 |
+| [后端设计文档](docs/主题文档/财务RAG-后端设计文档.md) | 模块划分、计算引擎、四层检索、双子 Agent、上下文工程、SQLite 持久化、API 清单 |
+| [技术架构文档](docs/主题文档/财务RAG-技术架构文档.md) | 总体架构、技术选型决策表、四层召回、Agent/上下文/评测架构、接口契约、Roadmap |
+| [数据与资料设计文档](docs/主题文档/财务RAG-数据与资料设计文档.md) | 7 大知识域、70 项采集清单、数据资产、目录规范、工具链、结构化 JSON schema |
+| [开发指南与编码规范](docs/主题文档/财务RAG-开发指南与编码规范.md) | 编码规范、CSS 令牌、Agent 工具开发规则、AI 编码上下文方法论、7 步开发路线 |
+
+### 详细设计文档（演进过程）
+
+| 文档 | 说明 |
+|------|------|
+| [技术架构与 Agent 方案](docs/财务RAG-技术架构与Agent方案.md) | 技术栈选型、检索链路、Agent 工具设计（主题文档前身） |
 | [Multi-Agent 集成设计](docs/财务RAG-Multi-Agent 集成设计文档.md) | 双子 Agent 架构、降级机制、绕过检测 |
 | [Context Engineering 集成设计](docs/财务RAG-Context Engineering 集成设计文档.md) | 上下文工程 v2.0 设计 |
-| [开发踩坑记录](docs/财务RAG-开发踩坑记录.md) | 从 RAG 优化到 Multi-Agent 的完整踩坑史 |
-| [后端开发路线图](docs/财务RAG-后端开发路线图.md) | 7 步开发路线 |
-| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化待实施） |
+| [开发踩坑记录](docs/财务RAG-开发踩坑记录.md) | 从 RAG 优化到 Multi-Agent 的完整踩坑史（已并入评测与质量文档 §9） |
+| [后端开发路线图](docs/财务RAG-后端开发路线图.md) | 7 步开发路线（已并入开发指南 §6） |
+| [设计稿落地实施规划](docs/财务RAG-设计稿落地实施规划.md) | **最新**：UI 设计稿 → 前后端改造唯一蓝图（顶栏 tab / 侧边栏重构 / 资料库接口），决策全定案 |
+| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化 ✅ / 设计稿落地待实施） |
 
 ## Roadmap
 
 - [x] MCP Server 封装（tax-calc：个税/经营所得/社保 3 工具，WorkBuddy 宿主实测通过）
 - [x] 评测集扩展 40 → 60 条 + 一键评测（run_all.py，Recall@5 = 85%）
-- [ ] 用户上下文持久化（SQLite + 自建消息表 + 历史回显，已定案待实施）
+- [x] 用户上下文持久化（SQLite + 自建消息表 + 历史回显，已实施）
+- [ ] 设计稿落地（顶栏 tab 导航 / 侧边栏重构 / 折叠态图标 / 资料库接口，蓝图已定稿待实施）
 - [ ] 更多城市扩展（架构已预留 `cities/`，新城市只需 JSON 配置）
 - [ ] PDF 上传解析、小程序端
 

@@ -16,7 +16,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
   }, [value]);
 
   const handleSend = () => {
@@ -34,40 +34,44 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   };
 
   return (
-    <div className="sticky bottom-0 flex items-end gap-3 border-t border-[var(--color-border)] bg-[var(--color-bg-surface)] px-6 py-4">
+    /* 设计稿输入区：白底 + 1.5px 边框 + 圆角 12px，内嵌 textarea + 渐变发送按钮 */
+    <div className="mt-4 flex items-center gap-3 rounded-xl border-[1.5px] border-[#99A3B8] bg-white py-1.5 pl-4 pr-1.5">
       <textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isLoading}
-        placeholder="输入你的问题……（Enter 发送，Shift+Enter 换行）"
+        placeholder="输入你的财税问题，例如：个税专项附加扣除有哪些…"
         rows={1}
         className={cn(
-          'flex-1 resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-page)] px-4 py-3 text-base transition-all duration-[var(--transition-fast)]',
+          'flex-1 resize-none border-none bg-transparent py-2 text-[13px] leading-normal text-[var(--color-text-primary)] outline-none',
           'placeholder:text-[var(--color-text-tertiary)]',
-          'focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary-light)] focus:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-50',
         )}
         aria-label="消息输入框"
-        style={{ maxHeight: '120px' }}
+        style={{ maxHeight: '96px' }}
       />
       <button
         onClick={handleSend}
         disabled={isLoading || !value.trim()}
         className={cn(
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)]',
+          'flex h-9 w-[88px] shrink-0 items-center justify-center rounded-lg text-[13px] font-medium text-white transition-opacity',
+          'bg-gradient-to-r from-[#014DB2] to-[#002A6B]',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]',
           isLoading || !value.trim()
-            ? 'cursor-not-allowed bg-[var(--color-border)]'
-            : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:-translate-y-px',
+            ? 'cursor-not-allowed opacity-50'
+            : 'hover:opacity-90',
         )}
         aria-label={isLoading ? '正在发送' : '发送消息'}
       >
         {isLoading ? (
-          <LoadingSvg className="icon-spinning h-5 w-5 text-white" />
+          <LoadingSvg className="icon-spinning h-5 w-5" />
         ) : (
-          <SendSvg className="h-5 w-5 text-white" />
+          <>
+            <SendSvg className="mr-1 h-4 w-4" />
+            发送
+          </>
         )}
       </button>
     </div>
