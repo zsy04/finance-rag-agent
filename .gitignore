@@ -45,6 +45,13 @@ rag-data/processed/national/tax_law/
 rag-data/processed/national/qa_corpus/
 rag-data/processed/national/operations/
 
+# AI 编码开发包（不上传 GitHub，内部 AI 协作资料，本地保留）
+docs/前端开发-完整代码生成包.md
+docs/前端开发-AI编程Prompt.md
+docs/后端资料库接口-AI代码生成上下文包.md
+docs/财务RAG-AI提示词工程文档-v1.0.md
+docs/图标生成清单.md
+
 # ── 个人/项目材料（不上传 GitHub） ──
 docs/财务RAG-产品定义与答辩策略.md
 docs/财务RAG-毕业设计综合文档.md
