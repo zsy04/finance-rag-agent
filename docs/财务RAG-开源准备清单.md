@@ -51,7 +51,7 @@
 |------|------|
 | `rag-data/raw/` | 原始下载文件（doc/pdf/web，20MB） |
 | `rag-data/staging/` | 原始法规 .doc/.html（12MB，已 git add 入库） |
-| `rag-data/processed/national/tax_law/` | 清洗后法规 MD（1.1MB，法律正文含"答辩期"等法律术语，保留原文） |
+| `rag-data/processed/national/tax_law/` | 清洗后法规 MD（1.1MB，法规正文术语原样保留） |
 | `rag-data/processed/national/qa_corpus/` | 问答语料（1.6MB） |
 | `rag-data/processed/national/operations/` | 操作指引 |
 | `rag-data/chunks.jsonl` | 向量化中间产物（3.1MB，加速二次入库） |
