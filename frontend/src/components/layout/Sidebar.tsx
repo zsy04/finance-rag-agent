@@ -1,5 +1,5 @@
 import { useApp } from '@/context/AppContext';
-import { ChatSvg, DocumentSvg } from '@/components/icons';
+import { ChatSvg, DocumentSvg, BenchmarkSvg } from '@/components/icons';
 import type { ThreadMeta } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +16,7 @@ interface SidebarProps {
 /** 折叠态 3 个关键图标（2026-08-06 设计稿落地：仅保留会话/政策法规/行业基准，申报记录已删） */
 const FOLD_ICONS: { view: 'documents' | 'benchmark'; label: string; Icon: typeof ChatSvg }[] = [
   { view: 'documents', label: '政策法规', Icon: DocumentSvg },
-  { view: 'benchmark', label: '行业基准', Icon: DocumentSvg },
+  { view: 'benchmark', label: '行业基准', Icon: BenchmarkSvg },
 ];
 
 /** 消息数 + 时间元信息（按 updated_at 分档：今天/昨天/MM-DD） */
@@ -191,7 +191,7 @@ export function Sidebar({
           title="行业基准"
           aria-label="行业基准"
         >
-          <DocumentSvg className="h-5 w-5" />
+          <BenchmarkSvg className="h-5 w-5" />
         </button>
       </div>
     </nav>

@@ -15,6 +15,7 @@ import SaveSvg from '@icons/icon-save.svg?react';
 import GenerateSvg from '@icons/icon-generate.svg?react';
 import DownloadSvg from '@icons/icon-download.svg?react';
 import BlankDocSvg from '@icons/icon-blank-doc.svg?react';
+import BenchmarkSvg from '@icons/icon-benchmark.svg?react';
 
 export {
   LogoSvg,
@@ -33,4 +34,5 @@ export {
   GenerateSvg,
   DownloadSvg,
   BlankDocSvg,
+  BenchmarkSvg,
 };

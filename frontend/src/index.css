@@ -21,8 +21,8 @@
     --color-error: #EF4444;
     --color-info: #014DB2;
 
-    /* 字体 */
-    --font-primary: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    /* 字体（设计稿：Noto Sans SC + Inter，2026-08-06 对齐） */
+    --font-primary: 'Noto Sans SC', 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
     /* 圆角 */
