@@ -11,6 +11,16 @@
 
 一套自建的 **RAG + Agent + 上下文工程 + Multi-Agent** 全链路方案：DeepSeek 负责理解与调度，税率计算走纯代码引擎（零幻觉），法律知识来自税总法规库清洗后的 115+ 份文档。
 
+## 界面预览
+
+| 智能问答 | 政策法规 | 行业基准 |
+| :---: | :---: | :---: |
+| ![智能问答](docs/screenshots/01-chat.png) | ![政策法规](docs/screenshots/02-documents.png) | ![行业基准](docs/screenshots/03-benchmark.png) |
+| RAG + 工具调用 + 法规溯源 | 53 部法规分类筛选 / 关键词搜索 / 正文 HTML | 97 行业 × 10 财务指标 |
+| **申报指引** | **税率计算** | **申报材料生成** |
+| ![申报指引](docs/screenshots/04-guide.png) | ![税率计算](docs/screenshots/05-calculator.png) | ![申报材料生成](docs/screenshots/06-form.png) |
+| 4 步流程 + FAQ 速查 | 分步推导 + 法规溯源 | A 表 / B 表字段映射自动填表 |
+
 ---
 
 ## 特性
