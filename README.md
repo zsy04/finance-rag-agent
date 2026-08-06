@@ -143,7 +143,7 @@ echo 'DEEPSEEK_API_KEY=sk-xxxx' > backend/.env
 docker compose -f docker-compose.qdrant.yml up -d
 
 # 3. 向量化入库（首次 ~15min GPU / ~1h CPU）
-#    数据已包含在仓库 rag-data/（法规原文/问答语料/JSON 税率表），无需另行下载
+#    分块数据已包含在仓库 rag-data/chunks.jsonl（向量库重建唯一输入），无需另行下载
 cd scripts && python embed_and_upsert.py
 
 # 4. 启动后端（http://localhost:8000，含 SSE 流式接口）

@@ -38,6 +38,13 @@ outputs/
 # 用户对话数据（SQLite，本地会话库，绝不上传）
 backend/data/
 
+# 源文本数据（不上传 GitHub；chunks.jsonl 已入库供向量库重建，源文本本地保留）
+rag-data/staging/
+rag-data/raw/
+rag-data/processed/national/tax_law/
+rag-data/processed/national/qa_corpus/
+rag-data/processed/national/operations/
+
 # ── 个人/项目材料（不上传 GitHub） ──
 docs/财务RAG-产品定义与答辩策略.md
 docs/财务RAG-毕业设计综合文档.md

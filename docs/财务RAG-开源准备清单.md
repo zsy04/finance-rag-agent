@@ -43,20 +43,20 @@
 
 > **2026-08-06 追加**：SQLite 对话库 `backend/data/`（chat.db）已加入排除——含真实用户对话数据，绝不上传。
 
-### 1.4 训练数据（2026-08-06 改为**入库公开**）
+### 1.4 源文本数据（排除）+ 向量数据（入库）
 
-> **决策变更（2026-08-06）**：为保证开源可复现（clone 后可直接 `embed_and_upsert.py` 重建向量库），训练数据全部入库（合计 ~38.7MB，远低于 GitHub 单文件 100MB 限制）。数据均为税总官网公开法规/问答，无版权与隐私问题。
+> **决策定案（2026-08-06，二轮调整）**：`embed_and_upsert.py` 重建向量库**只读 `chunks.jsonl`**（已含全部分块文本）。因此——**chunks.jsonl 入库公开**（3.1MB，clone 后直接重建 Qdrant）；**源文本（原始下载/清洗后法规/问答语料）本地保留**（数据资产考量，且重建非必需）。
 
 | 路径 | 说明 |
 |------|------|
-| `rag-data/raw/` | 原始下载文件（doc/pdf/web，20MB） |
-| `rag-data/staging/` | 原始法规 .doc/.html（12MB，已 git add 入库） |
-| `rag-data/processed/national/tax_law/` | 清洗后法规 MD（1.1MB，法规正文术语原样保留） |
-| `rag-data/processed/national/qa_corpus/` | 问答语料（1.6MB） |
-| `rag-data/processed/national/operations/` | 操作指引 |
-| `rag-data/chunks.jsonl` | 向量化中间产物（3.1MB，加速二次入库） |
+| ✅ `rag-data/chunks.jsonl` | **入库**：向量化分块文本（3.1MB），`embed_and_upsert.py` 唯一输入，重建 Qdrant 必需 |
+| 🚫 `rag-data/raw/` | 原始下载文件（20MB，本地保留） |
+| 🚫 `rag-data/staging/` | 原始法规 .doc/.html（12MB，本地保留） |
+| 🚫 `rag-data/processed/national/tax_law/` | 清洗后法规 MD（1.1MB，本地保留） |
+| 🚫 `rag-data/processed/national/qa_corpus/` | 问答语料（1.6MB，本地保留） |
+| 🚫 `rag-data/processed/national/operations/` | 操作指引（本地保留） |
 
-> 结构化数据（代码运行时依赖）：`processed/national/rates/*.json`、`processed/national/templates/form_field_map.json`、`processed/cities/zhengzhou/social_insurance.json`、`processed/metadata/cities_index.json`、`relations.json`、`manifest.json`。
+> 结构化数据（代码运行时依赖，已入库）：`processed/national/rates/*.json`、`processed/national/templates/form_field_map.json`、`processed/cities/zhengzhou/social_insurance.json`、`processed/metadata/cities_index.json`、`relations.json`、`manifest.json`。
 
 ### 1.5 个人/生成物（已排除）
 
