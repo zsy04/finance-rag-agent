@@ -15,13 +15,16 @@
 
 ## 特性
 
-- **智能问答**：自然语言提问财税问题，四层分层召回 + 法规溯源，回答附文号出处
+- **智能问答**：自然语言提问财税问题，四层分层召回 + 法规溯源，回答附文号出处；AI 机器人头像 + 流式逐字输出
 - **税率计算**：个税（工资/劳务/稿酬/经营所得）、年终奖择优、社保公积金，全部分步推导
 - **申报材料生成**：A 表（雇员）/ B 表（个体户）字段映射自动填表，一键导出 xlsx
+- **资料库**：53 部财税法规（分类筛选/关键词搜索/正文 HTML 渲染）+ 行业基准（97 细分行业 × 10 项指标，税负率/利润率对照）
+- **多会话管理**：侧边栏会话列表（新建/切换/删除），localStorage + SQLite 双端持久化，刷新不丢历史
 - **上下文工程**：工具返回提取式瘦身 + 历史自动摘要（trigger 40K），长对话不爆窗
 - **Multi-Agent**：计税/社保双子 Agent 自治调度，`AGENT_MODE` 一键回退
 - **轻量知识图谱**：20 条关联规则 JSON 驱动，两跳推理，零数据库依赖
 - **模型切换器**：顶栏一键切换模型，设置页自填 API Key 接入 DeepSeek/千问/Kimi/GLM/OpenAI 等任意 OpenAI 兼容端点（BYOK，后端转发保留 Agent 全链路）
+- **设计稿落地 UI**：暖白底 + 深蓝主色体系，顶栏 4 tab 导航 + 侧边栏会话/资料库双区 + 星轨渐变 Logo + 圆润图标，动效克制
 - **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 85%（60 条全通过）
 
 ---
@@ -30,8 +33,9 @@
 
 ```mermaid
 graph TD
-    U[用户] -->|SSE 流式| FE[React 19 + shadcn/ui]
+    U[用户] -->|SSE 流式| FE[React 19 + shadcn/ui<br/>6 视图 + 多会话]
     FE -->|POST /api/chat| API[FastAPI]
+    FE -->|GET /api/library| LIB[资料库路由<br/>政策法规 + 行业基准]
 
     subgraph BE[后端 Agent 层]
         API --> AGENT[主 Agent<br/>LangChain create_agent]
@@ -39,6 +43,8 @@ graph TD
         AGENT --> SUB2[social_subagent<br/>社保子 Agent]
         AGENT --> TOOLS[8 个 @tool]
         AGENT --> CTX[上下文工程<br/>guard 瘦身 + 历史摘要]
+        API --> MEM[(SQLite<br/>threads/messages/画像)]
+        API --> PR[Provider Registry<br/>模型切换器 BYOK]
     end
 
     TOOLS --> RAG[RAG 管线]
@@ -53,6 +59,8 @@ graph TD
     ENG --> TAX[税率表 JSON<br/>综合/经营/车船/印花]
     QD --> VDB[(Qdrant<br/>2937 chunks)]
     FORM --> XLSX[(xlsx 申报表)]
+    LIB --> FL[53 部法规 Markdown]
+    LIB --> BI[行业基准 JSON<br/>97 行业 × 10 指标]
 ```
 
 ---
@@ -136,6 +144,7 @@ cd frontend
 npm install && npm run dev
 ```
 
+> **资料库接口**：`/api/library/*`（政策法规/行业基准）依赖 `markdown` 库（`pip install -r requirements.txt` 已含），纯文件读取秒回，无需 Qdrant。
 > **无 GPU 用户**：设置环境变量 `EMBEDDING_DEVICE=cpu`，BGE-M3 自动回退 CPU（稍慢但可用）。
 > **国内用户**：设置 `HF_ENDPOINT=https://hf-mirror.com` 加速模型下载。
 
@@ -160,18 +169,23 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 │   ├── agent/           # Agent 大脑（create_agent + prompts + 历史摘要 middleware）
 │   ├── context/         # 上下文工程（guard 瘦身 + history_summarizer）
 │   ├── rag/             # RAG 检索引擎（retriever + query_rewriter）
-│   ├── routers/         # FastAPI 路由（chat/tax/social/form，SSE 8 种事件）
-│   ├── services/        # 计税/社保引擎（纯 Python，零幻觉）
+│   ├── routers/         # FastAPI 路由（chat/tax/social/form/library，SSE 8 种事件）
+│   ├── services/        # 计税/社保/资料库引擎（纯 Python，零幻觉）
+│   ├── storage/         # SQLite 持久化（threads/messages/user_contexts 三表）
 │   ├── tools/           # 8 个 @tool + subagents.py 双子 Agent
 │   └── eval/            # 四层评测（eval / agent_eval / multi_agent_eval / context_eval）
 ├── frontend/
 │   └── src/
-│       ├── components/chat/        # 对话视图（SSE 流式 + 结果卡片 + 溯源）
+│       ├── components/chat/        # 对话视图（SSE 流式 + 结果卡片 + 溯源 + AI 机器人头像）
 │       ├── components/calculator/  # 税率计算器（分步明细）
 │       ├── components/form/        # 申报材料生成（A 表/B 表）
-│       └── components/layout/      # 布局（Sidebar + TopBar）
+│       ├── components/guide/       # 申报指引（静态指引页）
+│       ├── components/library/     # 资料库（政策法规列表/正文 + 行业基准）
+│       ├── components/layout/      # 布局（Sidebar 会话区/资料库区 + TopBar 4 tab）
+│       └── hooks/useChat.ts        # 多会话管理（localStorage 持久化 + 历史回显）
 ├── rag-data/
-│   ├── processed/national/rates/   # JSON 税率表 + 行业基准
+│   ├── processed/national/rates/   # JSON 税率表 + 行业基准（97 行业 × 10 指标）
+│   ├── processed/national/tax_law/ # 53 部法规 Markdown（YAML frontmatter）
 │   ├── processed/national/templates/ # 申报表字段映射
 │   └── processed/cities/zhengzhou/ # 郑州社保+公积金数据
 ├── scripts/            # 数据工具链（清洗/切分/向量化/评测）
@@ -192,6 +206,8 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 | 后端 | FastAPI + Python 3.13 + StreamingResponse |
 | 前端 | React 19 + TypeScript + shadcn/ui + Tailwind CSS |
 | 知识图谱 | 轻量 JSON 关系索引（20 条规则，两跳推理） |
+| 持久化 | SQLite 标准库（threads/messages/user_contexts，可平滑迁 MongoDB） |
+| 资料库 | 53 部法规 Markdown（MarkItDown 清洗 + markdown 转 HTML）+ 97 行业基准 JSON |
 
 ## 核心设计决策
 
@@ -226,15 +242,17 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 | [Context Engineering 集成设计](docs/财务RAG-Context Engineering 集成设计文档.md) | 上下文工程 v2.0 设计 |
 | [开发踩坑记录](docs/财务RAG-开发踩坑记录.md) | 从 RAG 优化到 Multi-Agent 的完整踩坑史（已并入评测与质量文档 §9） |
 | [后端开发路线图](docs/财务RAG-后端开发路线图.md) | 7 步开发路线（已并入开发指南 §6） |
-| [设计稿落地实施规划](docs/财务RAG-设计稿落地实施规划.md) | **最新**：UI 设计稿 → 前后端改造唯一蓝图（顶栏 tab / 侧边栏重构 / 资料库接口），决策全定案 |
-| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化 ✅ / 设计稿落地待实施） |
+| [设计稿落地实施规划](docs/财务RAG-设计稿落地实施规划.md) | **最新**：UI 设计稿 → 前后端改造唯一蓝图（顶栏 tab / 侧边栏重构 / 资料库接口），决策全定案、前后端已实施完成 |
+| [资料库接口前端联调文档](docs/财务RAG-资料库接口-前端联调文档.md) | 资料库 4 接口联调契约（验收命令 + TS 类型 + 真实数据结构） |
+| [后端资料库接口 AI 上下文包](docs/后端资料库接口-AI代码生成上下文包.md) | 资料库接口的 AI 编码上下文（代码范式 + 真实 JSON 结构 + 验收标准） |
+| [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化 ✅ / 设计稿落地 ✅） |
 
 ## Roadmap
 
 - [x] MCP Server 封装（tax-calc：个税/经营所得/社保 3 工具，WorkBuddy 宿主实测通过）
 - [x] 评测集扩展 40 → 60 条 + 一键评测（run_all.py，Recall@5 = 85%）
 - [x] 用户上下文持久化（SQLite + 自建消息表 + 历史回显，已实施）
-- [ ] 设计稿落地（顶栏 tab 导航 / 侧边栏重构 / 折叠态图标 / 资料库接口，蓝图已定稿待实施）
+- [x] 设计稿落地（顶栏 tab 导航 / 侧边栏重构 / 折叠态图标 / 资料库接口 + 3 新视图，已实施并联调通过）
 - [ ] 更多城市扩展（架构已预留 `cities/`，新城市只需 JSON 配置）
 - [ ] PDF 上传解析、小程序端
 
