@@ -10,7 +10,7 @@
   - query_social_insurance     社保公积金（郑州 2025 标准）
 
 复用：backend/services/tax_engine.py + social_engine.py（纯 Python 计算，不走 LLM）
-依赖：仅 mcp（开发环境），不引入 langchain —— 答辩环境约束
+依赖：仅 mcp（开发环境），不引入 langchain —— 演示环境约束
 
 用法：
   python scripts/mcp_server_demo.py                      # stdio 模式，MCP 宿主默认

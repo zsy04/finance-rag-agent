@@ -592,9 +592,9 @@ curl -N -X POST http://localhost:8000/api/chat \
 
 ---
 
-## 面试武器库
+## 演示武器库
 
-| Step | 面试能说的点 |
+| Step | 演示能说的点 |
 |------|------------|
 | 1 | "FastAPI + Async 架构，非阻塞 I/O，SSE 长连接" |
 | 2 | "税率计算不走 LLM，用 Pydantic 模型 + JSON 驱动，零幻觉" |
@@ -625,7 +625,7 @@ curl -N -X POST http://localhost:8000/api/chat \
 
 | 事项 | 说明 |
 |------|------|
-| **Qdrant Docker 启动顺序** | 必须在 Step 3 之前 `docker-compose up -d`。答辩时提前 5 分钟启动，关掉微信/Chrome 等重应用释放内存 |
+| **Qdrant Docker 启动顺序** | 必须在 Step 3 之前 `docker-compose up -d`。演示时提前 5 分钟启动，关掉微信/Chrome 等重应用释放内存 |
 | **BGE-M3 首次加载** | 首次 `BGEM3FlagModel("BAAI/bge-m3")` 会从 HuggingFace 下载约 2.2GB 模型文件到 `~/.cache/huggingface/`，需联网。之后秒加载 |
 | **BGE-Reranker 同样** | 首次下载约 1.5GB。两个模型总计约 3.7GB |
 | **GPU 显存** | BGE-M3 fp16 占用约 2GB，Reranker 约 1.5GB，DeepSeek 走 API 不占显存。RTX 4060 8GB 绰绰有余 |
@@ -652,6 +652,6 @@ curl -N -X POST http://localhost:8000/api/chat \
 |------|------|
 | **前端联调端口** | 后端 `localhost:8000`，前端 `localhost:5173`（Vite 默认）。前端 `vite.config.ts` 中配置 proxy 到 8000 避免 CORS |
 | **测试对话** | 每个 Step 的"通过标准"即为单元测试，建议写完一个 Step 跑一次 |
-| **Qdrant Dashboard** | `http://localhost:6333/dashboard` — 可视化查看向量分布，答辩时打开这个页面展示 |
-| **DeepSeek 余额** | 提前充值 10 元足够整个毕设。每 100 次对话约花 ¥0.02-0.05 |
+| **Qdrant Dashboard** | `http://localhost:6333/dashboard` — 可视化查看向量分布，演示时打开这个页面展示 |
+| **DeepSeek 余额** | 提前充值 10 元足够整个开源。每 100 次对话约花 ¥0.02-0.05 |
 | **流式调试** | 前端未就绪时用 `curl -N` 直接看原始 SSE 事件（Step 7 的通过标准）

@@ -39,7 +39,7 @@ source_docs:
 | **后端** | FastAPI | `StreamingResponse` SSE 流式输出，OpenAI 兼容 SDK |
 | **前端** | React + shadcn/ui | monorepo `frontend/`，纯 CSR |
 | **PDF 转换** | Microsoft MarkItDown v0.1.6 | 申报表模板 PDF→MD 转换 |
-| **硬件** | RTX 4060 8GB / 16GB RAM | Qdrant 答辩时启动，日常关后台释放内存 |
+| **硬件** | RTX 4060 8GB / 16GB RAM | Qdrant 演示时启动，日常关后台释放内存 |
 
 ### 1.2 开发环境依赖
 
@@ -162,7 +162,7 @@ curl http://localhost:8000/health → {"status": "ok"}
 
 | 事项 | 说明 |
 |------|------|
-| **Qdrant Docker 启动顺序** | 必须在 Step 3 之前 `docker-compose up -d`。答辩时提前 5 分钟启动，关掉微信/Chrome 等重应用释放内存 |
+| **Qdrant Docker 启动顺序** | 必须在 Step 3 之前 `docker-compose up -d`。演示时提前 5 分钟启动，关掉微信/Chrome 等重应用释放内存 |
 | **BGE-M3 首次加载** | 首次 `BGEM3FlagModel("BAAI/bge-m3")` 会从 HuggingFace 下载约 2.2GB 模型文件到 `~/.cache/huggingface/`，需联网。之后秒加载 |
 | **BGE-Reranker 同样** | 首次下载约 1.5GB。两个模型总计约 3.7GB |
 | **GPU 显存** | BGE-M3 fp16 占用约 2GB，Reranker 约 1.5GB，DeepSeek 走 API 不占显存。RTX 4060 8GB 绰绰有余 |
@@ -302,8 +302,8 @@ backend/
 > - `InMemorySaver`：管理**对话历史**（messages），LangGraph 内部自动读写，重启即丢
 > - `contexts` dict：管理**用户画像**（city/salary/income_type），`@tool` 手动读写，重启即丢
 > - 二者通过 `thread_id` 关联，职责分离
-> - 毕设阶段接受内存存储；答辩后可换 `SqliteSaver` + JSON 文件持久化（已于 2026-08-06 落地为自建 SQLite 三表方案，见 §8）
-> - **注意**：`contexts` dict 无 TTL 清理机制，毕设 demo 时长有限不影响；若长期运行需加 TTL（如 30 分钟未访问即删除）
+> - 开源阶段接受内存存储；演示后可换 `SqliteSaver` + JSON 文件持久化（已于 2026-08-06 落地为自建 SQLite 三表方案，见 §8）
+> - **注意**：`contexts` dict 无 TTL 清理机制，开源 demo 时长有限不影响；若长期运行需加 TTL（如 30 分钟未访问即删除）
 
 ---
 
@@ -668,7 +668,7 @@ assert reranked[0]["score"] > 0.5
 - 位置：`backend/rag/query_rewriter.py`
 - 机制：50+ 条口语→术语映射表 + Key 长度降序匹配，弥合用户口语与法律文本的语义鸿沟
 - 部署注意：无需重嵌，重启后端即生效
-- 面试话术（来源：`财务RAG-后端开发路线图.md` 面试武器库 Step 4.8）："Query 改写层：50+ 条口语→术语映射表 + Key 长度降序匹配，弥合用户口语与法律文本的语义鸿沟"
+- 演示话术（来源：`财务RAG-后端开发路线图.md` 演示武器库 Step 4.8）："Query 改写层：50+ 条口语→术语映射表 + Key 长度降序匹配，弥合用户口语与法律文本的语义鸿沟"
 
 优化实录中的 Query 改写案例（来源：`财务RAG-后端开发路线图.md` 优化过程表）：
 
@@ -812,7 +812,7 @@ python eval/eval.py --category 个税  # 按分类评测
 #### 4.9.5 评测使用场景
 
 - 每次修改检索链路后运行一次，对比指标变化
-- 答辩时提供客观数据支撑（如"Recall@5 达 85%，MRR 达 0.76"）
+- 演示时提供客观数据支撑（如"Recall@5 达 85%，MRR 达 0.76"）
 - 失败 case 直接指出薄弱方向（如某类 query 召回率低）
 
 #### 4.9.6 评测集扩展（补充项 ⑨）
@@ -923,9 +923,9 @@ results = retriever.retrieve("个税起征点")
 assert any("relation_source" in r for r in results)
 ```
 
-### 5.6 面试话术
+### 5.6 演示话术
 
-> 来源：`财务RAG-后端开发路线图.md` 面试武器库 Step 4.5。
+> 来源：`财务RAG-后端开发路线图.md` 演示武器库 Step 4.5。
 
 "轻量知识图谱：20条关联规则 JSON + 双向遍历 + 两跳推理，替代 Neo4j 实现法条多跳交叉引用，零数据库依赖"
 
@@ -1202,11 +1202,11 @@ agent.astream_events(messages, config, version="v2")
 |:--:|--------|------|
 | 1 | Agent 框架 | **LangChain `create_agent` + `InMemorySaver`**（v1 标准，`langchain.agents`） |
 | 2 | SSE 事件 | **8 种**，严格按 `前后端对照表` 格式（`event: xxx\ndata: {...}\n\n`） |
-| 3 | 工具优先级 | **MVP 5 个先做**，答辩闭环 2 个跟进，辅助 2 个后补 |
+| 3 | 工具优先级 | **MVP 5 个先做**，演示闭环 2 个跟进，辅助 2 个后补 |
 | 4 | 对话上下文记忆 | **方案 C**：`get_user_context` / `update_user_context` 两个 @tool + per-thread dict（加锁） |
-| 5 | 安全 | `.gitignore` 已屏蔽 `.env`，毕设不做认证/限流，答辩后轮换 API Key |
-| 6 | 代码规范散落 | 答辩后统一修（路径计算、键名混用、常量散落等） |
-| 7 | 延迟权衡 | Agent 路径比直连路径多 1 次 LLM 推理（约 +1-3s），毕设可接受；后期可对纯 RAG 问答保留旧 `/chat` 直连通路作为快速路径 |
+| 5 | 安全 | `.gitignore` 已屏蔽 `.env`，开源不做认证/限流，演示后轮换 API Key |
+| 6 | 代码规范散落 | 演示后统一修（路径计算、键名混用、常量散落等） |
+| 7 | 延迟权衡 | Agent 路径比直连路径多 1 次 LLM 推理（约 +1-3s），开源可接受；后期可对纯 RAG 问答保留旧 `/chat` 直连通路作为快速路径 |
 | 8 | 模型名 | 统一从 `config.py` 读取 `DEEPSEEK_MODEL`（当前值为 `deepseek-v4-flash`），不在代码中硬编码 |
 | 9 | API 路由前缀 | 统一切到 `/api/` 前缀，与前后端对照表对齐：`/api/chat`、`/api/tax/calculate`、`/api/social/calculate` |
 
@@ -1233,7 +1233,7 @@ agent.astream_events(messages, config, version="v2")
 | P5 | **评测闭环** | 改动必须过两道关：对拍 N 条 + agent_eval 20 条回归 ≥90% | 验收标准（§6.6.9） |
 | P6 | **版本约束** | 已实测 `langgraph-prebuilt 1.1.0` **无 `create_supervisor`**，`create_react_agent` 可用 | 完整版需自建 StateGraph，不自造官方 API |
 | P7 | **v1.1 拆分粒度** | 拆**两个**子 Agent（计税 + 社保），各领域独立 prompt，不合并 | §6.6.2 双子 Agent 结构 |
-| P8 | **v1.1 成本可接受** | 接受 +20-40% 延迟 / 1.5-2× token，补三项补偿（子 Agent 全局单例 / 主 prompt 精简抵消 / 答辩话术兜底） | §6.6.3 单例设计 + §12.5 话术 |
+| P8 | **v1.1 成本可接受** | 接受 +20-40% 延迟 / 1.5-2× token，补三项补偿（子 Agent 全局单例 / 主 prompt 精简抵消 / 演示话术兜底） | §6.6.3 单例设计 + §12.5 话术 |
 | P9 | **v1.1 双层评测** | 主层测路由（20 条迁名）+ 子层测内部选工具（subagent_eval.py） | §6.6.9 评测体系 |
 | P10 | **v1.1 路由三道防线** | 子 Agent 拒答兜底 + 主层回归 ≥90% 硬门槛 + 邻域混淆用例 | §6.6.11 + §6.6.14 风险 |
 | P11 | **v1.2 模式开关** | `AGENT_MODE` 配置切换：`multi`（子 Agent 形态，默认）/ `tools`（纯工具形态，回退与演示）——**同一时刻只有一套工具列表**，不并存注册（并存导致评测歧义 + 子 Agent 死代码） | §6.6.5 + §6.6.14 回退 |
@@ -1268,7 +1268,7 @@ backend/tools/ 新增两个子 Agent 包装工具（替代原 calculate_* / quer
 1. 计税 = **画像→计算→回写**闭环（get → calculate → update），规则密集，独立 prompt 收益最大
 2. 社保 = **查表直答**（无回写链），规则短但仍是独立领域，与计税/检索/填表混在主 prompt 会互相干扰（agent_eval 里"缴费比例"与"增值税税率"是历史易混点）
 3. 合并成"计算专家"反而稀释各自领域聚焦；分开拆 prompt 隔离最彻底
-4. 面试叙事更饱满："我把两个高频计算领域拆成了独立子 Agent，主 Agent 专注路由"
+4. 演示叙事更饱满："我把两个高频计算领域拆成了独立子 Agent，主 Agent 专注路由"
 
 **职责边界**：
 
@@ -1290,7 +1290,7 @@ StateGraph（state: {task, result})
   └─ 汇总节点：拼装最终答案
 ```
 - 工作量：2-3 天；风险：路由准确率需要评测集
-- **建议**：答辩演示用阶段一（Tool-as-Subagent）已足够讲清"多 Agent 化"；阶段二作为论文"架构演进展望"章节素材，不强制实现
+- **建议**：演示演示用阶段一（Tool-as-Subagent）已足够讲清"多 Agent 化"；阶段二作为论文"架构演进展望"章节素材，不强制实现
 
 #### 6.6.3 子 Agent System Prompt 设计
 
@@ -1491,7 +1491,7 @@ else:  # tools 形态 = 原单 Agent（回退/演示）
 
 | 形态 | ALL_TOOLS | 用途 |
 |---|---|---|
-| `multi`（默认） | 计税/社保 → 两个子 Agent | 多 Agent 演示 / 答辩主形态 |
+| `multi`（默认） | 计税/社保 → 两个子 Agent | 多 Agent 演示 / 演示主形态 |
 | `tools` | 原 8 工具 | 回退保底 / 演示"单 Agent vs 多 Agent"对比 / 异常时快速降级 |
 
 - 评测：两形态各跑一遍（tools 形态 = 现状基线，已有数据；multi 形态 = 本设计验收）
@@ -1569,7 +1569,7 @@ def _fallback_reuse_args(messages, calc_tool_names) -> tuple:
 
 **边界**：`ModelCallLimit=8` 触达时若最后一步是"LLM 生成了调用但图提前 end"，tool_calls 可能已消费 → 降级①容忍 args 缺失，落到③。降级结果与正常路径**同一引擎，数值必然一致**（对拍天然成立）。
 
-**面试叙事**："子 Agent 绕圈没算出结果时，我做了降级——从消息链里捡回 LLM 已经生成好的工具参数，直接喂给确定性计税引擎兜底。参数 LLM 负责、计算引擎负责，各取所长，用户永远拿得到结果。"
+**演示叙事**："子 Agent 绕圈没算出结果时，我做了降级——从消息链里捡回 LLM 已经生成好的工具参数，直接喂给确定性计税引擎兜底。参数 LLM 负责、计算引擎负责，各取所长，用户永远拿得到结果。"
 
 #### 6.6.8 绕过检测设计（v1.5，防"LLM 心算绕过子 Agent"）
 
@@ -1724,7 +1724,7 @@ SUBAGENT_EVAL = [
 | # | 分支 | 问题 | 决策 | 影响 |
 |---|---|---|---|---|
 | A | 拆分粒度 | 只拆计税 vs 计税+社保合并 vs 只做概念验证 | **拆两个子 Agent**（计税+社保），否决合并（社保无回写链，合并稀释聚焦） | §6.6.2 双子结构，改动面 ×2 |
-| B | 成本取舍 | +20-40% 延迟 / 1.5-2× token 是否可接受 | **接受 + 三项补偿**（子 Agent 全局单例 / 主 prompt 精简抵消 / 答辩话术兜底） | §6.6.4 单例 + §12.5 话术 |
+| B | 成本取舍 | +20-40% 延迟 / 1.5-2× token 是否可接受 | **接受 + 三项补偿**（子 Agent 全局单例 / 主 prompt 精简抵消 / 演示话术兜底） | §6.6.4 单例 + §12.5 话术 |
 | C | 评测联动 | 子 Agent 内部调用不进主消息链，仅迁名会失去内部验证 | **双层评测**：主层 20 条迁名测路由 + 子层 subagent_eval 测内部选工具 + 补 B 表用例 | §6.6.9 重构 |
 | D | B 表链路 | 先填表再计税的顺序协调归谁 | **主 Agent 协调**：prompt 强化顺序规则，子 Agent 不集成 fill_tax_form | §3.6 |
 | E | 实例化 | 每次重建 vs 全局单例 | **全局单例**（无状态 → CompiledStateGraph 并发安全，懒加载双检锁） | §6.6.4 |
@@ -1770,7 +1770,7 @@ SUBAGENT_EVAL = [
 总投入：约 2-2.5 天
 ```
 
-#### 6.6.13 面试叙事与答辩素材
+#### 6.6.13 演示叙事与演示素材
 
 **三句话版本**：
 
@@ -1787,19 +1787,19 @@ SUBAGENT_EVAL = [
 | 怎么防止主 Agent 误派？ | 三道防线：子 Agent 内部拒答兜底 + 20 条路由回归硬门槛 + 4 条邻域混淆用例专门打误派 |
 | 子 Agent 内部选工具怎么验证？ | 主 Agent 消息链里只有包装名，看不到子 Agent 内部——所以单独建了子层评测，直接对子 Agent 注入 query 验证内部调用 |
 
-**答辩 PPT 素材**：架构演进图（单 Agent（8 工具平铺）→ 协调 Agent + 计税子 Agent + 社保子 Agent（职责分层））；数据证据（对拍 8/8 一致 + 主层回归 ≥90% + 子层命中 ≥90% + 延迟实测（接受 +20-40% 的诚实数据））；诚实表述（多 Agent 的价值在解耦与可扩展，不在单任务精度）。
+**演示 PPT 素材**：架构演进图（单 Agent（8 工具平铺）→ 协调 Agent + 计税子 Agent + 社保子 Agent（职责分层））；数据证据（对拍 8/8 一致 + 主层回归 ≥90% + 子层命中 ≥90% + 延迟实测（接受 +20-40% 的诚实数据））；诚实表述（多 Agent 的价值在解耦与可扩展，不在单任务精度）。
 
 **技术动机与叙事价值**（来源：`财务RAG-Multi-Agent 集成设计文档.md` §3）：
 - **技术动机（职责分离）**：把"计税专家"从主 Agent 中剥离——主 Agent（路由/协调）识别"这是计税问题" → 把问题交给计税专家（独立 system prompt + 领域工具集 + 无对话历史 + 返回 JSON 五字段）→ 汇总回复用户
 - **叙事价值**：架构演进叙事（单 Agent + 8 工具 → 协调 Agent + 领域子 Agent）；记忆隔离叙事（子 Agent 无状态设计是有意为之——"画像独立存储 + 子 Agent 无历史"，天然防上下文污染）；与 MCP 衔接（计税子 Agent 是将来 MCP Server 封装的自然宿主）
-- **诚实边界（写进答辩话术）**：多 Agent 对**单轮单任务**不会更准（底层是同一个 tax_engine）；它的价值在**职责解耦、prompt 隔离、架构可扩展**。评测用"对拍一致 + 回归不降"证明不退化，用架构图证明演进。
+- **诚实边界（写进演示话术）**：多 Agent 对**单轮单任务**不会更准（底层是同一个 tax_engine）；它的价值在**职责解耦、prompt 隔离、架构可扩展**。评测用"对拍一致 + 回归不降"证明不退化，用架构图证明演进。
 
 #### 6.6.14 风险与回退
 
 | 风险 | 等级 | 应对 |
 |---|---|---|
-| 子 Agent 延迟增加（多 2-3 轮 LLM，+20-40%） | 🟡 | **已接受（v1.1 决策）**：全局单例省编译开销 + 主 prompt 精简抵消 + 答辩话术兜底；实测超预算再评估 |
-| token 成本 1.5-2×（子 Agent system prompt + 中间推理） | 🟡 | 子 Agent prompt 精简（规则下沉但不冗余）；答辩环境本地 API 成本可忽略 |
+| 子 Agent 延迟增加（多 2-3 轮 LLM，+20-40%） | 🟡 | **已接受（v1.1 决策）**：全局单例省编译开销 + 主 prompt 精简抵消 + 演示话术兜底；实测超预算再评估 |
+| token 成本 1.5-2×（子 Agent system prompt + 中间推理） | 🟡 | 子 Agent prompt 精简（规则下沉但不冗余）；演示环境本地 API 成本可忽略 |
 | 循环导入（subagents ↔ tools） | 🟡 | engine.py 本地组装 ALL_TOOLS，避免 tools/__init__ 深层导入 |
 | contextvar 传播失效 | 🔴 | 子 Agent 用 `ainvoke` 与主 Agent 同事件循环，理论传播正常；**评测步骤⑥ 加断言测试画像回写** |
 | 路由误判（主 Agent 错派） | 🟡 | **三道防线（v1.1）**：子 Agent 拒答兜底 + 20 条回归硬门槛 + 邻域混淆用例 |
@@ -1810,7 +1810,7 @@ SUBAGENT_EVAL = [
 | B 表链路断裂（先填表再计税顺序错） | 🟡 | 主 prompt 保留原顺序规则 + 主层补 B 表双工具用例 |
 | 多 Agent 收益被质疑（"不更准何必做"） | 🟢 | 叙事转向解耦/可扩展/架构演进（诚实表述） |
 
-**回退方案（v1.2 升级）**：**`AGENT_MODE = "tools"` 一行切换**回纯工具形态（原 8 工具，与现状完全一致）——不需要改代码、不需要删文件，进程级生效。multi 形态出任何问题，改配置即还原，答辩现场也能演示两形态对比。原文件（`calculate_income_tax` 等）始终保留，子 Agent 内部继续复用。
+**回退方案（v1.2 升级）**：**`AGENT_MODE = "tools"` 一行切换**回纯工具形态（原 8 工具，与现状完全一致）——不需要改代码、不需要删文件，进程级生效。multi 形态出任何问题，改配置即还原，演示现场也能演示两形态对比。原文件（`calculate_income_tax` 等）始终保留，子 Agent 内部继续复用。
 
 ### 6.7 对话上下文记忆（方案 C 详解）
 
@@ -2097,7 +2097,7 @@ elif kind == "on_tool_end":
   2. 启动 server，用 MCP Client 或 `mcporter` 调用验证
   3. 验证后在概念梳理 §5 补一段实战记录
 - **验收标准**：① MCP 标准协议下能列出并调用工具；② 计算结果与既有工具一致。
-- ⚠️ 注意：MCP SDK 需联网安装，注意答辩环境离线风险——demo 代码入库即可，不引入运行时依赖。
+- ⚠️ 注意：MCP SDK 需联网安装，注意演示环境离线风险——demo 代码入库即可，不引入运行时依赖。
 
 > ⚠️ **MCP 2.0 版本坑**（来源：`财务RAG-开发踩坑记录.md` #12）：`pip install mcp` 默认装 2.0.0，内置 FastMCP 被移除（独立成包）→ `from mcp.server.fastmcp import FastMCP` 抛 `ModuleNotFoundError`；修复：`pip install "mcp==1.29.0"`（1.x 最终版），脚本零改动。规律：快速上手的框架库，`pip install <pkg>` 拉到的 may be breaking change——装完第一件事先 `import` 验证再写业务代码。
 
@@ -2450,7 +2450,7 @@ dialog_scenarios.json → 真实 Agent 20 轮 → 触发摘要 → 自动字段�
 
 1. 前端 `useChat.ts:8` thread_id 每次 `crypto.randomUUID()` 刷新即变 → 后端无论存什么都取不回，**必须先前端 localStorage 固定 thread_id**，持久化才有意义（这也是"重启不丢"验收成立的前提）
 2. 对话历史天然由 langgraph `InMemorySaver`（engine.py:112）管理，但**不换 Saver，改自建消息表**——消息可读可控、可迁移、可配合评测，且不依赖 langgraph 二进制序列化格式
-3. 存储介质选 **SQLite**（标准库零依赖，答辩零风险），MongoDB 降级为"后期迁移"目标——靠 `MemoryStore` 抽象层 + 一次性迁移脚本实现，结构固定可平滑迁移。不引入 Redis（单进程单用户无缓存需求）
+3. 存储介质选 **SQLite**（标准库零依赖，演示零风险），MongoDB 降级为"后期迁移"目标——靠 `MemoryStore` 抽象层 + 一次性迁移脚本实现，结构固定可平滑迁移。不引入 Redis（单进程单用户无缓存需求）
 
 **目标**：用户画像 + 对话历史双持久化，实现"刷新/重开浏览器后历史回显 + Agent 接着聊"；为登录体系与多用户预留 user 维度。
 
@@ -3149,7 +3149,7 @@ def get_required_fields(form_type: str) -> str:
 
 **问题**：`contexts: dict[str, dict] = {}` 只增不减，每个新 `thread_id` 永久驻留内存。服务运行数小时后可能积累数千条废弃会话。
 
-**修复方案**（已实施）：毕设阶段加注释说明"不做 TTL 清理；答辩后需加 TTL 或改 SqliteSaver"，已标注在变量定义上方。
+**修复方案**（已实施）：开源阶段加注释说明"不做 TTL 清理；演示后需加 TTL 或改 SqliteSaver"，已标注在变量定义上方。
 
 #### M4. 路由导入工具模块的私有变量 ✅ 已修复
 
@@ -3206,7 +3206,7 @@ def get_required_fields(form_type: str) -> str:
 
 **问题**：健康检查只返回 `{"status": "ok"}`，不检查 Qdrant / DeepSeek 是否可达。部署时无法发现依赖故障。
 
-**状态**：毕设阶段 `{"status": "ok"}` 已满足需求，依赖故障在首次请求时即暴露，故未实施。
+**状态**：开源阶段 `{"status": "ok"}` 已满足需求，依赖故障在首次请求时即暴露，故未实施。
 
 #### L4. `requirements.txt` 缺版本锁定 ✅ 已修复
 
@@ -3214,7 +3214,7 @@ def get_required_fields(form_type: str) -> str:
 
 **问题**：`langchain-openai`、`fastapi`、`qdrant-client` 等无版本约束，`pip install` 可能拉到不兼容版本。
 
-**状态**：当前开发环境已锁定（见 `ToolErrorMiddleware` 导入问题），毕设答辩前不建议变动依赖版本。
+**状态**：当前开发环境已锁定（见 `ToolErrorMiddleware` 导入问题），开源演示前不建议变动依赖版本。
 
 #### L5. Agent `ModelCallLimitMiddleware` 阈值缺文档 ✅ 已修复
 
@@ -3256,7 +3256,7 @@ def get_required_fields(form_type: str) -> str:
 
 **性能（⭐⭐⭐⭐⭐）**：`search_knowledge` 用 `asyncio.to_thread` ✅；Legacy 用 `run_in_threadpool` ✅；BGE-M3 / Reranker / Agent 均懒加载 ✅；Retriever 双重检查锁 ✅；Agent 已对齐同样模式 ✅（H1 修复）；手动 RRF 实现，O(N) 合理 ✅
 
-**安全性（⭐⭐⭐⭐）**：API Key 启动时校验非空 ✅；从 `.env` 加载 ✅；CORS 从环境变量读取 ✅、`allow_credentials=True` ✅；REST 通路 Pydantic ✅、Agent 通路 @tool 内兜底 ✅；路由层已脱敏 ✅（H2）、中间件已脱敏 ✅；认证/限流无（毕设阶段可接受）
+**安全性（⭐⭐⭐⭐）**：API Key 启动时校验非空 ✅；从 `.env` 加载 ✅；CORS 从环境变量读取 ✅、`allow_credentials=True` ✅；REST 通路 Pydantic ✅、Agent 通路 @tool 内兜底 ✅；路由层已脱敏 ✅（H2）、中间件已脱敏 ✅；认证/限流无（开源阶段可接受）
 
 **可维护性（⭐⭐⭐⭐）**：模块级 docstring 完整 ✅；`generator.py` 已更新 ✅（M5）；关键逻辑有中文注释 ✅；引擎/检索器/路由层/Legacy 均用 `logging` ✅（M1、M7 修复）；`INCOME_RATIO` 已集中定义 ✅（H3 修复）；路由改用公开 `set_current_thread_id()` ✅（M4 修复）
 
@@ -3367,7 +3367,7 @@ langchain 1.3.12 的 `langchain.agents.middleware` 模块可用中间件为：
 
 ## 12. 后端开发路线实录
 
-> 来源：`财务RAG-后端开发路线图.md` 全量（7 步开发路线 + 评测实录 + 面试武器库 + 开发注意事项）。
+> 来源：`财务RAG-后端开发路线图.md` 全量（7 步开发路线 + 评测实录 + 演示武器库 + 开发注意事项）。
 
 ### 12.1 开发总览（7 步，按依赖顺序）
 
@@ -3460,13 +3460,13 @@ Step 7: SSE 流式上线  →  StreamingResponse + astream_events → 前端可�
 |------|------|
 | **前端联调端口** | 后端 `localhost:8000`，前端 `localhost:5173`（Vite 默认）。前端 `vite.config.ts` 中配置 proxy 到 8000 避免 CORS |
 | **测试对话** | 每个 Step 的"通过标准"即为单元测试，建议写完一个 Step 跑一次 |
-| **Qdrant Dashboard** | `http://localhost:6333/dashboard` — 可视化查看向量分布，答辩时打开这个页面展示 |
-| **DeepSeek 余额** | 提前充值 10 元足够整个毕设。每 100 次对话约花 ¥0.02-0.05 |
+| **Qdrant Dashboard** | `http://localhost:6333/dashboard` — 可视化查看向量分布，演示时打开这个页面展示 |
+| **DeepSeek 余额** | 提前充值 10 元足够整个开源。每 100 次对话约花 ¥0.02-0.05 |
 | **流式调试** | 前端未就绪时用 `curl -N` 直接看原始 SSE 事件（Step 7 的通过标准） |
 
-### 12.5 面试武器库
+### 12.5 演示武器库
 
-| Step | 面试能说的点 |
+| Step | 演示能说的点 |
 |------|------------|
 | 1 | "FastAPI + Async 架构，非阻塞 I/O，SSE 长连接" |
 | 2 | "税率计算不走 LLM，用 Pydantic 模型 + JSON 驱动，零幻觉" |
@@ -3515,7 +3515,7 @@ P0-0 基线采集 ──→ P0-1 历史摘要器 ──→ P0-2 TokenBudget(参�
 |---|---|---|---|
 | 第 1 周 | P0-0 基线采集 → P0 三件套（摘要器/预算/评测）+ ⑨ 评测扩展 | ~4-5 天 | context/ 模块 + context 事件 + 四指标评测报告 |
 | 第 2 周 | P1 三件套 | ~3-4 天 | 子 Agent demo + MCP Server + 事件完善 |
-| 余量 | P2 按答辩时间取舍 | ~2 天 | 用户上下文持久化（§8）/ LlamaIndex / 自动化 |
+| 余量 | P2 按演示时间取舍 | ~2 天 | 用户上下文持久化（§8）/ LlamaIndex / 自动化 |
 
 **补充项 ⑧ LlamaIndex 对比 demo（可选）**（来源：`财务RAG-项目补充与添加实施规划.md` §5.2）：用 lest 现有 115+ 份 Markdown 跑一个 LlamaIndex 版问答 demo，作为论文"技术选型对比"素材。改动文件：新增 `scripts/llamaindex_demo.py`（独立脚本，不入运行时）。验收标准：同一 query 下 LlamaIndex vs lest 检索效果对比记录（供论文引用）。
 
@@ -3525,7 +3525,7 @@ P0-0 基线采集 ──→ P0-1 历史摘要器 ──→ P0-2 TokenBudget(参�
 3. **评测驱动**：改动后必须跑对应评测（检索层 eval.py / 工具层 agent_eval.py / 生成层 context_eval.py），不达验收标准不算完成
 4. **编码规范**：遵循《财务RAG-开发注意事项.md》（CSS 令牌 / API 路由 / 无障碍）与《财务RAG-后端代码审查报告.md》列出的问题清单
 5. **新增代码落点**：上下文工程模块统一放 `backend/context/`；demo 类脚本放 `scripts/` 不入运行时
-6. **答辩环境约束**：任何新增依赖（MCP SDK / 后期 MongoDB 迁移）不得成为运行时硬依赖，保证"启动 Qdrant + 后端即能演示"（MVP 存储用 SQLite 标准库，零外部依赖，天然满足）
+6. **演示环境约束**：任何新增依赖（MCP SDK / 后期 MongoDB 迁移）不得成为运行时硬依赖，保证"启动 Qdrant + 后端即能演示"（MVP 存储用 SQLite 标准库，零外部依赖，天然满足）
 
 **现状盘点：三处"硬伤"驱动补充**：
 

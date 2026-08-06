@@ -42,10 +42,10 @@ DATA_DIR = PROJECT_ROOT / "rag-data"/"processed"
 BACKEND_DIR = Path(__file__).parent
 
 #----------存储（用户上下文持久化 §5.1）-----------
-# SQLite 数据库路径：标准库零依赖，答辩零风险；多进程部署时换 MongoDB（仅换实现类）
+# SQLite 数据库路径：标准库零依赖，演示零风险；多进程部署时换 MongoDB（仅换实现类）
 SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", str(BACKEND_DIR / "data" / "chat.db"))
 
 # ── Agent 模式开关（v1.2）──
-# "multi"：子 Agent 形态（计税/社保由 tax_subagent / social_subagent 处理，答辩默认）
+# "multi"：子 Agent 形态（计税/社保由 tax_subagent / social_subagent 处理，演示默认）
 # "tools"：纯工具形态（原 8 工具，回退保底 / 演示单 vs 多 Agent 对比）
 AGENT_MODE = os.getenv("AGENT_MODE", "multi")

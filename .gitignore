@@ -32,16 +32,13 @@ workbuddy/
 .workbuddy/
 
 # 可重新生成的文件
-rag-data/chunks.jsonl
-rag-data/staging/
-rag-data/raw/
 backend/eval/report.json
 outputs/
 
 # 用户对话数据（SQLite，本地会话库，绝不上传）
 backend/data/
 
-# ── 毕设答辩相关（不上传 GitHub） ──
+# ── 个人/项目材料（不上传 GitHub） ──
 docs/财务RAG-产品定义与答辩策略.md
 docs/财务RAG-毕业设计综合文档.md
 docs/财务RAG-项目复盘报告.md
@@ -64,10 +61,3 @@ start.bat
 docker-compose.yml
 **/.dockerignore
 
-# ── 训练数据（不上传 GitHub，公开法规原文+问答语料） ──
-rag-data/processed/national/tax_law/
-rag-data/processed/national/qa_corpus/
-rag-data/processed/national/operations/
-rag-data/raw/
-rag-data/staging/
-rag-data/chunks.jsonl

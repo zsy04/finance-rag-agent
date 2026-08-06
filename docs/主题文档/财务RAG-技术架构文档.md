@@ -145,7 +145,7 @@ DeepSeek V4 Flash → StreamingResponse 流式输出
 | **前端** | React 19 + shadcn/ui | monorepo `frontend/`，纯 CSR；TypeScript + Tailwind CSS |
 | **PDF 转换** | Microsoft MarkItDown v0.1.6 | 申报表模板 PDF→MD 转换 |
 | **部署** | Docker | Qdrant 容器化（Docker Desktop）；`docker compose` 编排 |
-| **硬件** | RTX 4060 8GB / 16GB RAM | Qdrant 答辩时启动，日常关后台释放内存 |
+| **硬件** | RTX 4060 8GB / 16GB RAM | Qdrant 演示时启动，日常关后台释放内存 |
 | **MCP 封装** | tax-calc | 个税/经营所得/社保 3 工具，WorkBuddy 宿主实测通过 |
 
 > 注：主源技术栈表重排器行写作"粗排 Top-20"，与 §2 检索链路及 README 的 **Top-30** 不一致；后续章节（3.1 工具定义、README 检索链路、评测数据）均以 **Top-30 → Top-5** 为准。
@@ -517,7 +517,7 @@ backend/tools/ 新增两个子 Agent 包装工具（替代原 calculate_* / quer
 1. 计税 = **画像→计算→回写**闭环（get → calculate → update），规则密集，独立 prompt 收益最大
 2. 社保 = **查表直答**（无回写链），规则短但仍是独立领域，与计税/检索/填表混在主 prompt 会互相干扰（agent_eval 里"缴费比例"与"增值税税率"是历史易混点）
 3. 合并成"计算专家"反而稀释各自领域聚焦；分开拆 prompt 隔离最彻底
-4. 面试叙事更饱满："我把两个高频计算领域拆成了独立子 Agent，主 Agent 专注路由"
+4. 演示叙事更饱满："我把两个高频计算领域拆成了独立子 Agent，主 Agent 专注路由"
 
 **阶段二：完整版 — Supervisor 自建（可选）**：⚠️ 版本事实：`langgraph-prebuilt 1.1.0` 无 `create_supervisor`，官方 API 不可用。自建方案（纯 langgraph，无新依赖）：
 
@@ -528,7 +528,7 @@ StateGraph（state: {task, result})
   └─ 汇总节点：拼装最终答案
 ```
 
-工作量 2-3 天；风险：路由准确率需要评测集。答辩演示用阶段一已足够，阶段二作为论文"架构演进展望"章节素材。
+工作量 2-3 天；风险：路由准确率需要评测集。演示演示用阶段一已足够，阶段二作为论文"架构演进展望"章节素材。
 
 #### 5.4.3 职责边界（主 Agent / 计税子 Agent / 社保子 Agent）
 
@@ -734,7 +734,7 @@ else:  # tools 形态 = 原单 Agent（回退/演示）
 
 | 形态 | ALL_TOOLS | 用途 |
 |---|---|---|
-| `multi`（默认） | 计税/社保 → 两个子 Agent | 多 Agent 演示 / 答辩主形态 |
+| `multi`（默认） | 计税/社保 → 两个子 Agent | 多 Agent 演示 / 演示主形态 |
 | `tools` | 原 8 工具 | 回退保底 / 演示"单 Agent vs 多 Agent"对比 / 异常时快速降级 |
 
 - 评测：两形态各跑一遍（tools 形态 = 现状基线，已有数据；multi 形态 = 本设计验收）
@@ -872,8 +872,8 @@ def _forced_recalc(query: str) -> tuple:
 
 | 风险 | 等级 | 应对 |
 |---|---|---|
-| 子 Agent 延迟增加（多 2-3 轮 LLM，+20-40%） | 🟡 | **已接受（v1.1 决策）**：全局单例省编译开销 + 主 prompt 精简抵消 + 答辩话术兜底；实测超预算再评估 |
-| token 成本 1.5-2×（子 Agent system prompt + 中间推理） | 🟡 | 子 Agent prompt 精简（规则下沉但不冗余）；答辩环境本地 API 成本可忽略 |
+| 子 Agent 延迟增加（多 2-3 轮 LLM，+20-40%） | 🟡 | **已接受（v1.1 决策）**：全局单例省编译开销 + 主 prompt 精简抵消 + 演示话术兜底；实测超预算再评估 |
+| token 成本 1.5-2×（子 Agent system prompt + 中间推理） | 🟡 | 子 Agent prompt 精简（规则下沉但不冗余）；演示环境本地 API 成本可忽略 |
 | 循环导入（subagents ↔ tools） | 🟡 | engine.py 本地组装 ALL_TOOLS，避免 tools/__init__ 深层导入 |
 | contextvar 传播失效 | 🔴 | 子 Agent 用 `ainvoke` 与主 Agent 同事件循环，理论传播正常；步骤⑥ 加断言测试画像回写 |
 | 路由误判（主 Agent 错派） | 🟡 | **三道防线（v1.1）**：子 Agent 拒答兜底 + 20 条回归硬门槛 + 邻域混淆用例 |
@@ -897,7 +897,7 @@ def _forced_recalc(query: str) -> tuple:
 | P5 | **评测闭环** | 改动必须过两道关：对拍 N 条 + agent_eval 20 条回归 ≥90% | 验收标准 |
 | P6 | **版本约束** | 已实测 `langgraph-prebuilt 1.1.0` **无 `create_supervisor`**，`create_react_agent` 可用 | 完整版需自建 StateGraph，不自造官方 API |
 | P7 | **v1.1 拆分粒度** | 拆**两个**子 Agent（计税 + 社保），各领域独立 prompt，不合并 | 双子 Agent 结构 |
-| P8 | **v1.1 成本可接受** | 接受 +20-40% 延迟 / 1.5-2× token，补三项补偿（子 Agent 全局单例 / 主 prompt 精简抵消 / 答辩话术兜底） | 单例设计 + 话术 |
+| P8 | **v1.1 成本可接受** | 接受 +20-40% 延迟 / 1.5-2× token，补三项补偿（子 Agent 全局单例 / 主 prompt 精简抵消 / 演示话术兜底） | 单例设计 + 话术 |
 | P9 | **v1.1 双层评测** | 主层测路由（20 条迁名）+ 子层测内部选工具（subagent_eval.py） | 评测体系改造 |
 | P10 | **v1.1 路由三道防线** | 子 Agent 拒答兜底 + 主层回归 ≥90% 硬门槛 + 邻域混淆用例 | 三道防线 + 风险 |
 | P11 | **v1.2 模式开关** | `AGENT_MODE` 配置切换：`multi`（子 Agent 形态，默认）/ `tools`（纯工具形态，回退与演示）——**同一时刻只有一套工具列表**，不并存注册（并存导致评测歧义 + 子 Agent 死代码） | 模式开关 + 回退 |
@@ -1615,7 +1615,7 @@ python eval/eval.py --category 个税  # 按分类评测
 #### 9.2.5 使用场景
 
 - 每次修改检索链路后运行一次，对比指标变化
-- 答辩时提供客观数据支撑（如"Recall@5 达 85%，MRR 达 0.76"）
+- 演示时提供客观数据支撑（如"Recall@5 达 85%，MRR 达 0.76"）
 - 失败 case 直接指出薄弱方向（如某类 query 召回率低）
 
 ### 9.3 工具层（主 Agent 路由 26 条）
@@ -1813,7 +1813,7 @@ export default defineConfig({
 
 - **Qdrant 容器**：`docker compose -f docker-compose.qdrant.yml up -d`（来源：README 快速开始；主源 §七项目结构中编排文件写作 `docker-compose.yml` 注释"Qdrant 容器"，为同一部署物不同命名阶段）
 - 需要 Docker Desktop；镜像 `docker pull qdrant/qdrant`
-- Qdrant 数据目录 `qdrant_data/`：由 Qdrant 容器卷挂载承载（向量库落盘），答辩时启动，日常关闭后台释放内存（RTX 4060 8GB 约束）
+- Qdrant 数据目录 `qdrant_data/`：由 Qdrant 容器卷挂载承载（向量库落盘），演示时启动，日常关闭后台释放内存（RTX 4060 8GB 约束）
 
 ### 10.3 本地启动流程（README 快速开始）
 

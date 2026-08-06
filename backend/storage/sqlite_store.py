@@ -1,6 +1,6 @@
 """SQLite 持久化存储 — MemoryStore 接口实现
 
-grill 定案（2026-08-05）：SQLite 标准库零依赖（答辩零风险），
+grill 定案（2026-08-05）：SQLite 标准库零依赖（演示零风险），
 MongoDB 降级为"后期迁移"目标 —— 靠 MemoryStore 抽象层 + 一次性迁移脚本实现，
 结构固定可平滑迁移。不引入 Redis（单进程单用户无缓存需求）。
 
@@ -10,7 +10,7 @@ MongoDB 降级为"后期迁移"目标 —— 靠 MemoryStore 抽象层 + 一次�
   user_contexts   用户画像（主键 user_id，当前 user_id = thread_id 占位，登录体系后零返工）
 
 并发模型：单连接 + 全局写锁。
-  毕设 demo 单进程单用户；sqlite3 默认单连接串行，锁是"跨线程读 + 写"的兜底。
+  开源 demo 单进程单用户；sqlite3 默认单连接串行，锁是"跨线程读 + 写"的兜底。
   多进程部署时：SQLite WAL 模式 or 按规划迁移 MongoDB（仅换实现类）。
 """
 

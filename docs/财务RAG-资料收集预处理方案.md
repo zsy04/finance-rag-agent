@@ -1,6 +1,6 @@
 # 财务 RAG Agent · 资料收集预处理方案
 
-> **文档类型**：前期准备部署方案 | **决策日期**：2026-07-26 | **最后更新**：2026-07-29 | **项目**：毕设
+> **文档类型**：前期准备部署方案 | **决策日期**：2026-07-26 | **最后更新**：2026-07-29 | **项目**：开源
 > **关联文档链**：`财务RAG-资料收集蓝图.md`（概念层）→ `财务RAG-MVP资料收集执行表.md`（清单层）→ **本文档**（部署层）→ `财务RAG-技术架构与Agent方案.md`（编码层）
 > **本文定位**：资料收集阶段的唯一执行依据。**Phase 1 已完成，本文档同步更新为实际产出记录。**
 
@@ -155,7 +155,7 @@ doc_title: 国务院关于提高个人所得税有关专项附加扣除标准的
 |:--:|------|------|
 | 1.1 | 创建 `rag-data/` 完整目录树 | 目录就绪 |
 | 1.2 | 创建 `manifest.json`（70 项均为 pending） | 进度追踪文件 |
-| 1.3 | 安装 PDF→MD 转换工具 | 已安装 **Microsoft MarkItDown v0.1.6**（`pip install 'markitdown[pdf]'`），路径：`C:/Users/22808/.workbuddy/binaries/python/envs/default/Scripts/markitdown` | ✅ 已完成 |
+| 1.3 | 安装 PDF→MD 转换工具 | 已安装 **Microsoft MarkItDown v0.1.6**（`pip install 'markitdown[pdf]'`），路径：`markitdown`（加入 PATH 后直接使用命令） | ✅ 已完成 |
 | 1.4 | 用 1~2 个 PDF 小样本测试转换质量 | 已验证：税法类 PDF（政府网站渲染型）内容混入了大量导航/页眉/页脚噪声，正文提取质量⸺。**结论见下方工具评估** | ✅ 已完成 |
 
 ### 阶段 2：第一轮 — 网页类资料（按批次顺序执行）
@@ -209,7 +209,7 @@ doc_title: 国务院关于提高个人所得税有关专项附加扣除标准的
 工具：Microsoft MarkItDown v0.1.6
 仓库：https://github.com/microsoft/markitdown
 安装：pip install 'markitdown[pdf]'
-路径：C:/Users/22808/.workbuddy/binaries/python/envs/default/Scripts/markitdown
+路径：`markitdown`（加入 PATH 后直接使用命令）
 状态：✅ 已安装、已导入、CLI 正常、Python API 正常
 ```
 
@@ -246,7 +246,7 @@ doc_title: 国务院关于提高个人所得税有关专项附加扣除标准的
 | 混合检索 + 重排实现 | 开发阶段 |
 | 申报材料字段映射逻辑编码 | 开发阶段 |
 | 前端界面开发 | 开发阶段 |
-| #66-#70 郑州特色政策 | Phase 2（答辩后） |
+| #66-#70 郑州特色政策 | Phase 2（演示后） |
 | 其他城市扩展（北京/上海/深圳） | Phase 2 |
 
 ---
