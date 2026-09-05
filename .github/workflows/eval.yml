@@ -1,0 +1,115 @@
+name: Evaluation Tests
+
+on:
+  schedule:
+    # 每天凌晨2点运行（避开高峰）
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  retrieval-eval:
+    name: RAG Retrieval Evaluation
+    runs-on: ubuntu-latest
+    if: github.repository == 'zsy04/finance-rag-agent'  # 仅在主仓库运行
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Start Qdrant
+      run: |
+        docker run -d -p 6333:6333 qdrant/qdrant:latest
+        sleep 10
+
+    - name: Load vector database
+      run: |
+        cd scripts
+        python embed_and_upsert.py --skip-if-exists
+      env:
+        HF_ENDPOINT: https://hf-mirror.com
+        QDRANT_URL: http://localhost:6333
+
+    - name: Run retrieval evaluation
+      run: |
+        cd backend
+        python eval/eval.py --output eval/retrieval_report.json
+      env:
+        QDRANT_URL: http://localhost:6333
+
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: retrieval-eval-results
+        path: backend/eval/retrieval_report.json
+        retention-days: 30
+
+    - name: Check regression
+      run: |
+        cd backend
+        python -c "
+        import json
+        with open('eval/retrieval_report.json') as f:
+            report = json.load(f)
+        recall = report.get('recall@5', 0)
+        if recall < 0.80:
+            print(f'❌ Recall@5 = {recall:.2%} < 80% (regression detected)')
+            exit(1)
+        print(f'✅ Recall@5 = {recall:.2%} >= 80%')
+        "
+
+  injection-eval:
+    name: Security Injection Evaluation
+    runs-on: ubuntu-latest
+    if: github.repository == 'zsy04/finance-rag-agent'
+    needs: retrieval-eval
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Run injection evaluation (no judge)
+      run: |
+        cd backend
+        python eval/injection_eval.py --skip-judge --output eval/injection_report.json
+      env:
+        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        HF_HUB_OFFLINE: '1'
+
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: injection-eval-results
+        path: backend/eval/injection_report.json
+        retention-days: 30
+
+    - name: Check pass rate
+      run: |
+        cd backend
+        python -c "
+        import json
+        with open('eval/injection_report.json') as f:
+            report = json.load(f)
+        rate = report.get('rate', 0)
+        if rate < 0.70:
+            print(f'❌ Pass rate = {rate:.0%} < 70% (critical failure)')
+            exit(1)
+        print(f'✅ Pass rate = {rate:.0%} >= 70%')
+        "

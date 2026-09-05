@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend compile + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax check (backend + scripts)
+        run: |
+          python -m compileall -q backend scripts
+      - name: Import smoke (core modules)
+        run: |
+          python - <<'EOF'
+          import sys
+          sys.path.insert(0, 'backend')
+          from services import tax_engine, social_engine
+          from tools import user_context
+          from services.tax_engine import validate_special_deductions
+          assert validate_special_deductions(housing_rent=10000) is not None, "上限校验未生效"
+          assert validate_special_deductions(housing_rent=1500) is None, "合法值被误拦截"
+          from tools.user_context import _normalize_amount
+          assert _normalize_amount("1万2") == "12000.0", "万+零头解析错误"
+          assert _normalize_amount("1.5万") == "15000.0"
+          print("backend smoke OK")
+          EOF
+
+  backend-tests:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Run unit tests
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short
+        env:
+          HF_HUB_OFFLINE: '1'
+
+  frontend:
+    name: Frontend lint + typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check + build
+        run: npm run build
+
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -r "sk-[a-zA-Z0-9]\{32\}" backend --include="*.py" --exclude-dir=venv; then
+            echo "❌ Found hardcoded API keys!"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets"
+      - name: Verify .env not committed
+        run: |
+          if git ls-files | grep -E "\.env$" | grep -v "\.env\.example"; then
+            echo "❌ .env tracked in Git!"
+            exit 1
+          fi
+          echo "✅ No .env in Git"
