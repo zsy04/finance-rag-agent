@@ -1,0 +1,6 @@
+# 测试依赖（添加到 requirements.txt 末尾）
+
+# ── 测试框架 ──
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+# pytest-cov>=4.1.0  # 可选：覆盖率报告

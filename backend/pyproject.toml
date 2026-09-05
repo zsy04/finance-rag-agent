@@ -1,0 +1,15 @@
+# pytest 配置
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+
+# 覆盖率报告（可选）
+# addopts = ["-v", "--cov=services", "--cov-report=term-missing"]
