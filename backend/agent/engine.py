@@ -15,12 +15,12 @@ from contextvars import ContextVar
 from typing import Any
 
 from langchain.agents import create_agent
-from langchain.agents.middleware import ToolErrorMiddleware, ModelCallLimitMiddleware
+from langchain.agents.middleware import ToolRetryMiddleware, ModelCallLimitMiddleware
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
 from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL, AGENT_MODE
-from agent.prompts import SYSTEM_PROMPT_MULTI, SYSTEM_PROMPT_TOOLS
+from agent.prompts import SYSTEM_PROMPT_MULTI, SYSTEM_PROMPT_TOOLS, SAFETY_HEADER
 from context.history_summarizer import build_history_summarizer
 from services.provider_registry import provider_key, resolve_context_window
 from tools import (
@@ -96,11 +96,18 @@ def get_llm(provider: dict[str, Any] | None = None) -> ChatOpenAI:
                     )
                 else:
                     # BYOK：用户自带 key/base_url/模型名（OpenAI 兼容端点）
+                    # 安全（2026-08-13）：自定义 base_url 时必须同时提供 api_key，
+                    # 禁止把服务端 DEEPSEEK_API_KEY 回退发给第三方端点（防 key 外泄 + SSRF）
+                    base_url = provider.get("base_url")
+                    api_key = provider.get("api_key")
+                    if base_url and not api_key:
+                        raise ValueError(
+                            "自定义 base_url 时必须同时提供 api_key（服务端密钥不回退给第三方端点）"
+                        )
                     llm = ChatOpenAI(
                         model=provider["model"],
-                        api_key=provider.get("api_key") or DEEPSEEK_API_KEY,
-                        base_url=provider.get("base_url")
-                        or "https://api.deepseek.com/v1",
+                        api_key=api_key or DEEPSEEK_API_KEY,
+                        base_url=base_url or "https://api.deepseek.com/v1",
                         temperature=0,
                     )
                 _llm_cache[key] = llm
@@ -150,13 +157,14 @@ def build_agent(llm: ChatOpenAI | None = None, context_window: int | None = None
     agent = create_agent(
         model=llm,
         tools=ALL_TOOLS,
-        system_prompt=SYSTEM_PROMPT,
+        # 安全声明拼最前（层0，prefix caching 友好）：固定前缀 + 越早声明越难被绕过
+        system_prompt=SAFETY_HEADER + "\n\n" + SYSTEM_PROMPT,
         # InMemorySaver 仅作"单轮会话缓冲"（持久化 §5.1）：
         # 路由层每请求传入独立内部 thread_id（{业务tid}#{uuid}），checkpoint 永不跨轮累积，
         # 历史上下文由 chat.py 从 SQLite 注入，流结束后写回——真正持久化在 SQLite。
         checkpointer=InMemorySaver(),
         middleware=[
-            ToolErrorMiddleware(on_error=_on_tool_error),    # 工具异常不崩溃
+            ToolRetryMiddleware(max_retries=0, on_failure='continue'),    # 工具异常不崩溃（不重试，记录后继续）
             ModelCallLimitMiddleware(run_limit=AGENT_MODEL_CALL_LIMIT),    # 控制成本
             build_history_summarizer(llm, context_window=context_window),  # 窗口动态 trigger
         ],

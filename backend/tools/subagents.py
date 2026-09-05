@@ -28,14 +28,14 @@ import threading
 from typing import Any
 
 from langchain.agents import create_agent
-from langchain.agents.middleware import ToolErrorMiddleware, ModelCallLimitMiddleware
+from langchain.agents.middleware import ToolRetryMiddleware, ModelCallLimitMiddleware
 from langchain_core.tools import tool
 
 from agent.prompts import TAX_SUBAGENT_PROMPT, SOCIAL_SUBAGENT_PROMPT
 from tools import get_user_context, update_user_context
 from tools.calculate_income_tax import calculate_income_tax, calculate_business_income_tax
 from tools.query_social_insurance import query_social_insurance
-from tools.base import AI_DISCLAIMER
+from tools.base import AI_DISCLAIMER, tag_tool_result
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def _build_subagent(llm, system_prompt, tools):
         tools=tools,
         system_prompt=system_prompt,
         middleware=[
-            ToolErrorMiddleware(on_error=_on_tool_error),
+            ToolRetryMiddleware(max_retries=0, on_failure='continue'),
             ModelCallLimitMiddleware(run_limit=8),   # 子 Agent 防死循环
         ],
         # 不传 checkpointer → 无状态，每次独立；全局单例共享安全
@@ -203,7 +203,7 @@ async def _run_tax_subagent(query: str) -> str:
             answer, result_card, sources = _forced_recalc(query, messages)
 
     return json.dumps({
-        "answer": answer,
+        "answer": tag_tool_result(answer),
         "result_card": result_card,
         "sources": sources,
         "disclaimer": AI_DISCLAIMER,
@@ -219,7 +219,7 @@ async def _run_social_subagent(query: str) -> str:
     messages = result["messages"]
     answer, result_card, sources = _extract_fields(messages)
     return json.dumps({
-        "answer": answer,
+        "answer": tag_tool_result(answer),
         "result_card": result_card,
         "sources": sources,
         "disclaimer": AI_DISCLAIMER,
