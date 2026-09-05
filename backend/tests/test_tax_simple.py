@@ -64,24 +64,18 @@ class TestBusinessIncomeTax:
 
     def test_below_threshold(self):
         """测试低于起征点"""
-        result = calculate_business_tax(
-            annual_revenue=50000,
-            annual_costs=10000,
-            special_deductions=0,
-        )
-        # 50000 - 10000 - 60000 = -20000（亏损）
-        assert result["tax_amount"] == 0
+        # 净所得30000，不扣除60000基本减除费用
+        # 30000 * 5% = 1500
+        result = calculate_business_tax(annual_net_income=30000)
+        assert result["tax_amount"] == 1500
 
     def test_first_bracket(self):
         """测试第一档税率（5%）"""
-        result = calculate_business_tax(
-            annual_revenue=100000,
-            annual_costs=10000,
-            special_deductions=0,
-        )
-        # 100000 - 10000 - 60000 = 30000
-        # 30000 * 5% = 1500
-        assert result["tax_amount"] == 1500
+        # 净所得90000
+        # 90000 * 10% - 1500 = 7500
+        result = calculate_business_tax(annual_net_income=90000)
+        assert result["tax_amount"] == 7500
+        assert result["level"] == 2  # 第二档
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ PoC: 验证 LangGraph @tool 两大关键假设
 假设①：contextvar 在 LangGraph 调度 sync @tool 时能传播
 假设②：on_tool_end 的 output 是工具返回的 JSON 字符串，可 json.loads 解包
 
-运行：cd F:/lest && C:/Users/22808/.workbuddy/binaries/python/envs/default/bin/python backend/agent/poc_test.py
+运行：cd <repo-root> && python backend/agent/poc_test.py
 """
 
 import json
