@@ -10,6 +10,8 @@ from pathlib import Path
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
+from tools.base import tag_tool_result
+
 # 按需加载 scripts/fill_tax_form.py，避免污染全局 sys.path
 _scripts_path = Path(__file__).resolve().parent.parent.parent / "scripts" / "fill_tax_form.py"
 _spec = importlib.util.spec_from_file_location("_scripts_fill_tax_form", _scripts_path)
@@ -78,7 +80,7 @@ def fill_tax_form(form_type: str, user_data: dict) -> str:
 
     return json.dumps(
         {
-            "answer": "\n".join(answer_parts),
+            "answer": tag_tool_result("\n".join(answer_parts)),
             "result_card": result_card,
         },
         ensure_ascii=False,

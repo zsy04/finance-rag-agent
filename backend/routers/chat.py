@@ -9,6 +9,7 @@
 import asyncio
 import json
 import logging
+import time
 import uuid
 
 from fastapi import APIRouter
@@ -19,9 +20,12 @@ from pydantic import BaseModel, Field
 from rag.retriever import get_retriever
 from services.generator import stream_answer
 from agent.engine import get_agent, set_current_provider
+from context.trace import append_trace
 from services.provider_registry import PROVIDER_TEMPLATES
 from storage.sqlite_store import get_store
-from tools.user_context import set_current_thread_id
+from tools.user_context import (
+    set_current_thread_id, serialize_user_profile, INJECTION_MARKERS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,40 @@ _SSE_HEADERS = {
     "Cache-Control": "no-cache",
     "X-Accel-Buffering": "no",
 }
+
+# ── 输出侧安全审计（2026-08-11）────────────────────────
+# 配套：agent/prompts.py SAFETY_HEADER 中的 canary 埋点（canary-7f3a9c）。
+# 定位：审计/告警，不拦截——克制原则：低危面不值得引入误伤风险。
+CANARY_TOKEN = "canary-7f3a9c"
+
+# 疑似画像注入特征词（与 tools/user_context.py 共享单一口径）
+_INJECTION_MARKERS = INJECTION_MARKERS
+
+
+def _audit_security(thread_id: str, ai_content: str, tool_calls: list[dict]) -> None:
+    """输出侧安全审计：canary 探针 + 危险工具调用检测（只告警，不拦截）。
+
+    - canary：system prompt 埋的校验码出现在回答中 → 疑似注入/越狱
+    - 危险 tool call：update_user_context 写入值含指令性特征 → 疑似画像注入
+    - 顺带输出本轮工具调用清单（trace 雏形，供调试回放）
+    """
+    if CANARY_TOKEN in ai_content:
+        logger.warning(
+            "[SECURITY] canary token 出现在输出中 (thread_id=%s) — 疑似注入/越狱",
+            thread_id,
+        )
+
+    for call in tool_calls:
+        if call["tool"] == "update_user_context":
+            raw_input = call.get("input", "")
+            if any(marker in raw_input for marker in _INJECTION_MARKERS):
+                logger.warning(
+                    "[SECURITY] update_user_context 疑似注入 (thread_id=%s): %s",
+                    thread_id, raw_input[:120],
+                )
+
+    logger.info("工具审计 thread_id=%s: %s", thread_id,
+                json.dumps(tool_calls, ensure_ascii=False))
 
 
 # ── 新版 Agent 通路 ───────────────────────────────────
@@ -81,17 +119,43 @@ async def _agent_stream(message: str, thread_id: str, provider: dict | None = No
     store = get_store()
 
     # 1. 历史注入：SQLite 读完整历史，只取 role+content 正文（附件不喂 LLM）
+    # 分层标签（2026-08-11）：用户输入统一 <user_input> 包裹——数据与指令分离（配合 SAFETY_HEADER）
+    # P0-1 画像前置化（2026-08-11）：画像拼为首条 system 消息（紧随 system prompt 的稳定前缀，
+    # prefix caching 友好 + 主 Agent 无需再经 get_user_context 注入）。
     history = store.get_history(thread_id)
-    seed_messages = [
-        {"role": m["role"], "content": m["content"]}
+    profile_text = serialize_user_profile(store.get_context(thread_id))
+    seed_messages = []
+    if profile_text:
+        seed_messages.append({
+            "role": "system",
+            "content": f"<user_profile>\n{profile_text}\n</user_profile>",
+        })
+    seed_messages += [
+        {
+            "role": m["role"],
+            "content": f"<user_input>\n{m['content']}\n</user_input>"
+            if m["role"] == "user"
+            else m["content"],
+        }
         for m in history
         if m.get("content")
     ]
-    seed_messages.append({"role": "user", "content": message})
+    seed_messages.append(
+        {"role": "user", "content": f"<user_input>\n{message}\n</user_input>"}
+    )
 
     # 每请求独立内部 thread_id：防 InMemorySaver 双份累积（持久化由 SQLite 承担）
     run_thread_id = f"{thread_id}#{uuid.uuid4().hex[:8]}"
     config = {"configurable": {"thread_id": run_thread_id}}
+
+    # trace（自建可观测性）：请求开始
+    _t0 = time.perf_counter()
+    append_trace({
+        "event": "request_start",
+        "request_id": run_thread_id,
+        "thread_id": thread_id,
+        "query": message[:200],
+    })
 
     # 2. 收集本轮 AI 回复附件（写回用，与前端 Message 结构对齐）
     ai_parts: list[str] = []
@@ -99,6 +163,7 @@ async def _agent_stream(message: str, thread_id: str, provider: dict | None = No
     ai_sources: list = []
     ai_disclaimer = None
     ai_context_notice = None
+    tool_calls_log: list[dict] = []  # 安全审计：本轮工具调用清单
 
     # 历史摘要提示：若上一轮发生过摘要（middleware 置标志），先发 context 事件提示用户。
     # 时序说明：本轮触发的摘要会在下一轮流开始时补发（语义可接受，设计文档 §3.6）。
@@ -123,7 +188,20 @@ async def _agent_stream(message: str, thread_id: str, provider: dict | None = No
 
             # 工具开始 → thinking
             if kind == "on_tool_start":
-                yield _sse("thinking", {"tool": event.get("name", "")})
+                tool_name = event.get("name", "")
+                # 安全审计：记录工具调用（trace 雏形）
+                tool_calls_log.append({
+                    "tool": tool_name,
+                    "input": str(event.get("data", {}).get("input", ""))[:200],
+                })
+                append_trace({
+                    "event": "tool_call",
+                    "request_id": run_thread_id,
+                    "thread_id": thread_id,
+                    "tool": tool_name,
+                    "input": str(event.get("data", {}).get("input", ""))[:200],
+                })
+                yield _sse("thinking", {"tool": tool_name})
 
             # LLM 逐 token → step
             elif kind == "on_chat_model_stream":
@@ -159,20 +237,32 @@ async def _agent_stream(message: str, thread_id: str, provider: dict | None = No
                     # 非 JSON 返回（如纯文本错误消息），记录日志便于排查
                     logger.debug("工具返回非 JSON，跳过解包: %s", raw[:200])
 
+                append_trace({
+                    "event": "tool_result",
+                    "request_id": run_thread_id,
+                    "thread_id": thread_id,
+                    "tool": event.get("name", ""),
+                    "output": raw[:200],
+                })
+
             # 工具错误 → thinking（非致命，Agent 会自行处理并继续）
             elif kind == "on_tool_error":
-                err_msg = str(event.get("data", {}).get("error", "工具调用失败"))
-                yield _sse("thinking", {"tool_error": err_msg})
+                # 只回传通用文案，不把异常原文（可能含内部路径）发给前端
+                yield _sse("thinking", {"tool_error": "工具调用失败，已自动跳过"})
 
     except (ConnectionError, asyncio.TimeoutError, RuntimeError) as e:
         # 网络/超时/运行时错误 → 对用户友好提示，内部记完整 traceback
         logger.exception("Agent 流式处理异常 (thread_id=%s)", thread_id)
+        append_trace({"event": "request_error", "request_id": run_thread_id,
+                      "thread_id": thread_id, "kind": type(e).__name__})
         yield _sse("error", {"content": "服务内部错误，请稍后重试"})
         return  # 异常不写回（用户重试时自然落库，避免双份）
     except Exception:
         # 兜底：未预期的编程错误（AttributeError/KeyError 等）应正常抛出，
         # 但 SSE 流需先关闭，故发 error 事件后重新 raise 以便上层日志捕获
         logger.exception("Agent 流式处理未预期异常 (thread_id=%s)", thread_id)
+        append_trace({"event": "request_error", "request_id": run_thread_id,
+                      "thread_id": thread_id, "kind": "unexpected"})
         yield _sse("error", {"content": "服务内部错误，请稍后重试"})
         return
 
@@ -184,6 +274,16 @@ async def _agent_stream(message: str, thread_id: str, provider: dict | None = No
         {"id": str(uuid.uuid4()), "role": "user", "content": message},
     )
     ai_content = "".join(ai_parts)
+    _audit_security(thread_id, ai_content, tool_calls_log)  # 输出侧安全审计
+    append_trace({
+        "event": "request_end",
+        "request_id": run_thread_id,
+        "thread_id": thread_id,
+        "duration_ms": int((time.perf_counter() - _t0) * 1000),
+        "ai_chars": len(ai_content),
+        "tool_count": len(tool_calls_log),
+        "tools": [c["tool"] for c in tool_calls_log],
+    })
     if ai_content or last_result_card or ai_sources or ai_disclaimer or ai_context_notice:
         ai_msg = {"id": str(uuid.uuid4()), "role": "assistant", "content": ai_content}
         if last_result_card:
@@ -237,12 +337,42 @@ class ProviderTestRequest(BaseModel):
     model: str = Field(..., min_length=1, description="模型名")
 
 
+def _validate_base_url(base_url: str) -> None:
+    """SSRF 防护（2026-08-13）：仅允许 https 公网端点，禁止本机/内网/保留地址。
+
+    BYOK 场景下 base_url 由客户端提交，若不加校验，服务端可能向任意内网地址
+    发起 chat 请求（如云元数据服务 169.254.169.254），且响应可被探测。
+    """
+    import ipaddress
+    from urllib.parse import urlparse
+
+    try:
+        parsed = urlparse(base_url)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="base_url 格式无效")
+    if parsed.scheme != "https":
+        raise HTTPException(status_code=400, detail="base_url 必须使用 https")
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise HTTPException(status_code=400, detail="base_url 缺少主机名")
+    if host in ("localhost", "127.0.0.1", "::1") or host.endswith(".local"):
+        raise HTTPException(status_code=400, detail="base_url 不允许指向本机")
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            raise HTTPException(status_code=400, detail="base_url 不允许指向内网地址")
+    except ValueError:
+        pass  # 域名主机名：交给 DNS/连接层（https + 非保留域名已收敛攻击面）
+
+
 @router.post("/api/models/test")
 async def test_provider(req: ProviderTestRequest):
     """测试模型连接 — 发一次最小 chat 请求验证 key/base_url/model 有效。
 
     前端设置页「测试」按钮调用；仅用于验证，不落库、不改任何状态。
     """
+    _validate_base_url(req.base_url)
+
     from langchain_openai import ChatOpenAI
 
     llm = ChatOpenAI(

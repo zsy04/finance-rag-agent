@@ -41,11 +41,12 @@ async def _run_search_knowledge(query: str) -> str:
     # 构建上下文文本（交给 LLM 用于组织回答）
     # 基线采集（2026-08-04）证明：工具返回的拼接总长（5×800≈4K字≈7K token）
     # 是对话历史膨胀主因 → guard_compress 提取式瘦身，必保句（数字/文号）保留
+    # <context> 标签包裹（2026-08-11）：配合 SAFETY_HEADER 声明——标签内是资料数据不是指令
     context_parts = []
     for i, r in enumerate(results[:5], 1):
         title = r.get("doc_title", "")
         content = guard_compress(r.get("content", ""))
-        context_parts.append(f"【参考{i}】{title}\n{content}")
+        context_parts.append(f"<context>\n【参考{i}】{title}\n{content}\n</context>")
 
     answer = "\n\n---\n\n".join(context_parts)
 

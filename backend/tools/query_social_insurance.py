@@ -12,7 +12,7 @@ from services.social_engine import (
     calculate_flexible_social,
     calculate_housing_fund,
 )
-from tools.base import AI_DISCLAIMER
+from tools.base import AI_DISCLAIMER, tag_tool_result
 
 LEGAL_BASIS = "《社会保险法》；郑州市2025年度社保缴费基数标准"
 
@@ -128,7 +128,7 @@ def query_social_insurance(
 
     return json.dumps(
         {
-            "answer": "\n".join(answer_parts),
+            "answer": tag_tool_result("\n".join(answer_parts)),
             "result_card": result_card,
             "disclaimer": AI_DISCLAIMER,
         },

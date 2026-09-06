@@ -20,6 +20,26 @@ except KeyError:
 
 ANNUAL_DEDUCTION = _TAX["annual_deduction"]  # 60000
 
+# 专项附加扣除月上限（2023 年标准，元/月；超限视为输入异常，防税额系统性偏低）
+# 数据与 rag-data/.../tax_rate_tables.json special_deductions.items 对齐
+SPECIAL_DEDUCTION_LIMITS_MONTHLY: dict[str, float] = {
+    "housing_rent": 1500,     # 最高档：直辖市/省会/计划单列市
+    "children_edu": 2000,     # 每个子女
+    "elderly_support": 3000,  # 独生子女
+}
+
+
+def validate_special_deductions(**kwargs: float) -> str | None:
+    """校验专项附加扣除月额不超法律上限；返回错误消息（None = 通过）。
+
+    超限输入（如 housing_rent=10000）会系统性压低税额，必须在计算前拦截。
+    """
+    for field, limit in SPECIAL_DEDUCTION_LIMITS_MONTHLY.items():
+        value = kwargs.get(field, 0) or 0
+        if value > limit:
+            return f"专项附加扣除「{field}」月额 {value} 元超过法定上限 {limit} 元/月"
+    return None
+
 # 收入类型 → 计入综合所得的比例（劳务/稿酬/特许权使用费按税法规定打折）
 # 统一定义，routers/tax.py 和 tools/calculate_income_tax.py 共享，避免不一致
 INCOME_RATIO: dict[str, float] = {

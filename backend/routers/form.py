@@ -15,6 +15,9 @@ _spec.loader.exec_module(_fill_module)
 fill_form_fn = _fill_module.fill_form
 TEMPLATES_DIR = _fill_module.TEMPLATES_DIR
 
+# 已生成表单的唯一合法下载根（防任意文件读取：download 只允许 outputs/ 内文件）
+OUTPUTS_DIR = (Path(__file__).resolve().parent.parent.parent / "outputs").resolve()
+
 router = APIRouter(prefix="/api/form", tags=["申报表"])
 
 
@@ -23,8 +26,8 @@ async def generate_form(request: Request):
     """直接生成申报表 xlsx，不走 Agent。返回文件路径供前端下载。"""
     try:
         body = await request.json()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"JSON 解析失败: {e}")
+    except Exception:
+        raise HTTPException(status_code=400, detail="请求体不是合法 JSON")
 
     form_type = body.get("form_type", "")
     user_data = body.get("user_data", {})
@@ -49,7 +52,11 @@ async def generate_form(request: Request):
 
 @router.get("/download")
 async def download_form(path: str = Query(default="", description="xlsx 文件路径"), blank: str = Query(default="", description='blank_A表 或 blank_B表 获取空白模板')):
-    """下载已填好的 xlsx 或空白模板。"""
+    """下载已填好的 xlsx 或空白模板。
+
+    安全约束（2026-08-13）：path 仅允许解析后位于 outputs/ 目录内的文件，
+    防任意文件读取；空白模板走内置白名单映射。
+    """
     if blank:
         form_type = blank.replace("blank_", "")
         form_config = {
@@ -60,10 +67,20 @@ async def download_form(path: str = Query(default="", description="xlsx 文件�
             raise HTTPException(status_code=404, detail="未知表单类型")
         file_path = TEMPLATES_DIR / form_config[form_type]
     else:
-        file_path = Path(path)
+        # 路径白名单：解析真实路径后必须仍在 outputs/ 内（resolve 处理 .. 穿越）
+        candidate = Path(path)
+        if not candidate.is_absolute():
+            candidate = OUTPUTS_DIR / candidate
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            raise HTTPException(status_code=404, detail="文件不存在")
+        if not resolved.is_relative_to(OUTPUTS_DIR):
+            raise HTTPException(status_code=400, detail="非法的下载路径")
+        file_path = resolved
 
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"文件不存在: {file_path}")
+        raise HTTPException(status_code=404, detail="文件不存在")
 
     filename = file_path.name
     return FileResponse(

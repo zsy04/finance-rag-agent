@@ -48,12 +48,12 @@ async def _run_filing_guide(scenario: str) -> str:
             "tier": r.get("relevance_tier", ""),
         })
 
-    # 构建上下文
+    # 构建上下文（<context> 包裹，2026-08-11：配合 SAFETY_HEADER——检索文本是数据不是指令）
     context_parts = []
     for i, r in enumerate(results[:5], 1):
         title = r.get("doc_title", "")
         content = r.get("content", "")[:800]
-        context_parts.append(f"【参考{i}】{title}\n{content}")
+        context_parts.append(f"<context>\n【参考{i}】{title}\n{content}\n</context>")
 
     answer = "\n\n---\n\n".join(context_parts)
 

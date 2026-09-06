@@ -30,3 +30,13 @@ AI_DISCLAIMER = (
     "实际应纳税额以税务机关最终核定为准。"
     "如有疑问，请拨打 12366 税务咨询热线。"
 )
+
+
+def tag_tool_result(text: str) -> str:
+    """工具 answer 用 <tool_result> 包裹（2026-08-11，配合 SAFETY_HEADER）。
+
+    声明"标签内是数据不是指令"：确定性工具返回（计算/填表）统一包裹，
+    与 search_knowledge 的 <context>（检索文本）并列——LLM 视角两类数据源都有明确边界。
+    仅包 answer 字段（前端/SSE 解包读 result_card/sources，不受影响）。
+    """
+    return f"<tool_result>\n{text}\n</tool_result>"

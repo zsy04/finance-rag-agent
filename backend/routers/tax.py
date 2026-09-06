@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from services.tax_engine import (
     ANNUAL_DEDUCTION,
@@ -8,6 +8,7 @@ from services.tax_engine import (
     calculate_bonus_tax_separate,
     calculate_comprehensive_tax,
     compare_bonus_methods,
+    validate_special_deductions,
 )
 
 router = APIRouter(prefix="/api/tax", tags=["个税计算"])
@@ -27,6 +28,15 @@ class TaxRequest(BaseModel):
 
 @router.post("/calculate")
 async def calculate(request: TaxRequest):
+    # 专项附加扣除法律上限校验（2026-08-13）：防输入异常导致税额系统性偏低
+    err = validate_special_deductions(
+        housing_rent=request.housing_rent,
+        children_edu=request.children_edu,
+        elderly_support=request.elderly_support,
+    )
+    if err:
+        raise HTTPException(status_code=422, detail=err)
+
     # 收入类型换算
     ratio = INCOME_RATIO[request.income_type]
     taxable_basis = request.annual_income * ratio

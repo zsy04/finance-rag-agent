@@ -15,8 +15,9 @@ from services.tax_engine import (
     calculate_bonus_tax_separate,
     compare_bonus_methods,
     calculate_business_tax,
+    validate_special_deductions,
 )
-from tools.base import AI_DISCLAIMER
+from tools.base import AI_DISCLAIMER, tag_tool_result
 
 LEGAL_BASIS = "《个人所得税法》附表一；国发〔2023〕13号"
 
@@ -78,6 +79,14 @@ def calculate_income_tax(
     housing_rent = deductions.get("housing_rent", 0)
     children_edu = deductions.get("children_edu", 0)
     elderly_support = deductions.get("elderly_support", 0)
+    # 法律上限校验（2026-08-13）：防超限输入系统性压低税额
+    err = validate_special_deductions(
+        housing_rent=housing_rent,
+        children_edu=children_edu,
+        elderly_support=elderly_support,
+    )
+    if err:
+        return json.dumps({"answer": err}, ensure_ascii=False)
     special_deductions = (housing_rent + children_edu + elderly_support) * 12
 
     # 计算个税
@@ -136,7 +145,7 @@ def calculate_income_tax(
 
     return json.dumps(
         {
-            "answer": "\n".join(answer_parts),
+            "answer": tag_tool_result("\n".join(answer_parts)),
             "result_card": result_card,
             "disclaimer": AI_DISCLAIMER,
         },
@@ -272,7 +281,7 @@ def calculate_business_income_tax(
 
     return json.dumps(
         {
-            "answer": "\n".join(answer_parts),
+            "answer": tag_tool_result("\n".join(answer_parts)),
             "result_card": result_card,
             "disclaimer": AI_DISCLAIMER,
         },
