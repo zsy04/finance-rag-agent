@@ -110,7 +110,13 @@ export function Sidebar({
               </button>
               <button
                 type="button"
-                onClick={() => onDeleteThread(t.thread_id)}
+                onClick={() => {
+                  // 误删不可恢复（后端 SQLite 历史 + 用户画像一并删除），必须确认
+                  const title = t.title || '新会话';
+                  if (window.confirm(`确定删除会话「${title}」吗？\n删除后该会话的对话历史与已填信息将无法恢复。`)) {
+                    onDeleteThread(t.thread_id);
+                  }
+                }}
                 disabled={disabled}
                 className="mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] disabled:cursor-not-allowed disabled:opacity-50"
                 title="删除会话"

@@ -171,11 +171,41 @@ function isForeigner(nationality: string): boolean {
 
 type FormType = 'A' | 'B';
 
+// ── 草稿持久化（2026-08-13 修复：此前只写不读，刷新即丢）──
+const DRAFT_KEY = 'filing_form_draft';
+
+interface FilingDraft {
+  type: FormType;
+  data: FormAState | FormBState;
+}
+
+function loadDraft(): FilingDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as FilingDraft;
+    if (parsed && (parsed.type === 'A' || parsed.type === 'B') && parsed.data) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function FilingForm() {
   const { userContext } = useApp();
-  const [formType, setFormType] = useState<FormType>('A');
-  const [formA, setFormA] = useState<FormAState>(defaultFormA(userContext.salary));
-  const [formB, setFormB] = useState<FormBState>(defaultFormB());
+  const [formType, setFormType] = useState<FormType>(() => loadDraft()?.type ?? 'A');
+  const [formA, setFormA] = useState<FormAState>(() => {
+    const draft = loadDraft();
+    return draft?.type === 'A'
+      ? { ...defaultFormA(userContext.salary), ...(draft.data as FormAState) }
+      : defaultFormA(userContext.salary);
+  });
+  const [formB, setFormB] = useState<FormBState>(() => {
+    const draft = loadDraft();
+    return draft?.type === 'B'
+      ? { ...defaultFormB(), ...(draft.data as FormBState) }
+      : defaultFormB();
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idValidation, setIdValidation] = useState<{ valid: boolean; message: string }>({ valid: true, message: '' });
@@ -205,11 +235,18 @@ export function FilingForm() {
     setFormB((prev) => ({ ...prev, [key]: value }));
 
   // ── 保存草稿 ──
+  const [draftNotice, setDraftNotice] = useState('');
   const handleSaveDraft = () => {
-    localStorage.setItem(
-      'filing_form_draft',
-      JSON.stringify(formType === 'A' ? { type: 'A', data: formA } : { type: 'B', data: formB }),
-    );
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify(formType === 'A' ? { type: 'A', data: formA } : { type: 'B', data: formB }),
+      );
+      setDraftNotice('草稿已保存到本机浏览器');
+      window.setTimeout(() => setDraftNotice(''), 3000);
+    } catch {
+      setDraftNotice('保存失败（浏览器存储不可用）');
+    }
   };
 
   // ── 生成申报表 ──
@@ -660,7 +697,10 @@ export function FilingForm() {
       )}
 
       {/* 按钮 */}
-      <div className="flex justify-end gap-3">
+      <div className="flex items-center justify-end gap-3">
+        <span className="mr-auto text-xs text-[var(--color-text-secondary)]" role="status">
+          {draftNotice}
+        </span>
         <Button variant="secondary" onClick={handleSaveDraft}>
           <SaveSvg className="h-4 w-4" />保存草稿
         </Button>

@@ -8,9 +8,10 @@ interface ChatViewProps {
   messages: Message[];
   isLoading: boolean;
   onSend: (message: string) => void;
+  onStop: () => void;
 }
 
-export function ChatView({ messages, isLoading, onSend }: ChatViewProps) {
+export function ChatView({ messages, isLoading, onSend, onStop }: ChatViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 新消息自动滚动到底部
@@ -81,7 +82,7 @@ export function ChatView({ messages, isLoading, onSend }: ChatViewProps) {
         )}
 
         {/* 底部输入 */}
-        <ChatInput onSend={onSend} isLoading={isLoading} />
+        <ChatInput onSend={onSend} isLoading={isLoading} onStop={onStop} />
       </div>
     </div>
   );

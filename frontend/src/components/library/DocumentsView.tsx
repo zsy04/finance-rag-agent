@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { ErrorBanner } from '@/components/shared/ErrorBanner';
 import { fetchDocuments, fetchDocumentDetail } from '@/lib/library';
@@ -24,6 +25,13 @@ export function DocumentsView() {
 
   // 详情态
   const [detail, setDetail] = useState<LibraryDocDetail | null>(null);
+
+  // 正文消毒（2026-08-13）：html_content 经 DOMPurify 白名单过滤后注入，
+  // 防 <img onerror>/<svg onload> 等事件处理器 XSS（纵深防御，后端转换同样应清洗）
+  const sanitizedHtml = useMemo(
+    () => (detail ? DOMPurify.sanitize(detail.html_content) : ''),
+    [detail],
+  );
 
   const load = useCallback(async (cat: string, kw: string, p: number) => {
     setLoading(true);
@@ -75,9 +83,9 @@ export function DocumentsView() {
             {detail.category}
           </span>
         </div>
-        {/* 正文 HTML（后端已转 HTML，直接注入 + 容器排版样式） */}
+        {/* 正文 HTML（后端已转 HTML；前端经 DOMPurify 消毒后注入） */}
         <div className="doc-prose mt-4 flex-1 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-white p-8">
-          <div dangerouslySetInnerHTML={{ __html: detail.html_content }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
         </div>
       </div>
     );

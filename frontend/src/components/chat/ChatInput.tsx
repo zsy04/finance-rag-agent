@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
-import { SendSvg, LoadingSvg } from '@/components/icons';
+import { SendSvg } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
+  onStop: () => void;
 }
 
-export function ChatInput({ onSend, isLoading }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading, onStop }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -53,20 +54,26 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
         style={{ maxHeight: '96px' }}
       />
       <button
-        onClick={handleSend}
-        disabled={isLoading || !value.trim()}
+        onClick={isLoading ? onStop : handleSend}
+        disabled={!isLoading && !value.trim()}
         className={cn(
           'flex h-9 w-[88px] shrink-0 items-center justify-center rounded-lg text-[13px] font-medium text-white transition-opacity',
           'bg-gradient-to-r from-[#014DB2] to-[#002A6B]',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]',
-          isLoading || !value.trim()
+          !isLoading && !value.trim()
             ? 'cursor-not-allowed opacity-50'
             : 'hover:opacity-90',
         )}
-        aria-label={isLoading ? '正在发送' : '发送消息'}
+        aria-label={isLoading ? '停止生成' : '发送消息'}
       >
         {isLoading ? (
-          <LoadingSvg className="icon-spinning h-5 w-5" />
+          <>
+            {/* 停止图标（方块），2026-08-13：生成中可随时中止 */}
+            <svg className="mr-1 h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="1.5" />
+            </svg>
+            停止
+          </>
         ) : (
           <>
             <SendSvg className="mr-1 h-4 w-4" />

@@ -43,6 +43,13 @@ export function useChat() {
   const currentThreadRef = useRef(threadId);
   currentThreadRef.current = threadId;
 
+  // 当前请求的 AbortController（「停止生成」/ 主动取消，2026-08-13）
+  const abortRef = useRef<AbortController | null>(null);
+
+  const stopGeneration = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
   // 挂载：拉会话列表 + 当前会话历史（本地 SQLite，毫秒级；失败不影响新会话）
   useEffect(() => {
     let cancelled = false;
@@ -175,10 +182,14 @@ export function useChat() {
       setMessages((prev) => [...prev, userMsg, aiMsg]);
       setIsLoading(true);
 
+      const controller = new AbortController();
+      abortRef.current = controller;
+      let receivedDone = false;
+
       try {
         // 模型切换器：当前生效的自定义 provider（null = 默认 DeepSeek，请求不携带）
         const provider = getActiveProviderConfig();
-        for await (const event of streamChat(content, tid, provider ?? undefined)) {
+        for await (const event of streamChat(content, tid, provider ?? undefined, controller.signal)) {
           setMessages((prev) =>
             prev.map((m) => {
               if (m.id !== aiMsg.id) return m;
@@ -186,7 +197,7 @@ export function useChat() {
                 case 'step':
                   return {
                     ...m,
-                    content: m.content + (event.data.content as string),
+                    content: m.content + ((event.data.content as string) ?? ''),
                   };
                 case 'result':
                   return {
@@ -225,6 +236,7 @@ export function useChat() {
                     isStreaming: false,
                   };
                 case 'done':
+                  receivedDone = true;
                   return { ...m, isStreaming: false };
                 default:
                   return m;
@@ -232,15 +244,37 @@ export function useChat() {
             }),
           );
         }
+
+        // 流正常结束但未收到 done 事件 → 连接被中断（代理超时/后端挂起后关闭）
+        // 2026-08-13：此前这种情况 isStreaming 永远为 true，用户看到"卡死"无提示
+        if (!receivedDone) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMsg.id
+                ? {
+                    ...m,
+                    isStreaming: false,
+                    isError: m.content.length === 0,
+                    content: m.content.length === 0 ? '回复被中断，请重试' : m.content,
+                  }
+                : m,
+            ),
+          );
+        }
       } catch {
+        // abort = 用户主动点击「停止生成」，不算错误
+        const aborted = controller.signal.aborted;
         setMessages((prev) =>
           prev.map((m) =>
             m.id === aiMsg.id
-              ? { ...m, content: '网络请求失败，请重试', isError: true, isStreaming: false }
+              ? aborted
+                ? { ...m, isStreaming: false }
+                : { ...m, content: '网络请求失败，请重试', isError: true, isStreaming: false }
               : m,
           ),
         );
       } finally {
+        abortRef.current = null;
         setIsLoading(false);
         // 回复完成后刷新会话列表（标题/更新时间变化）
         try {
@@ -261,6 +295,7 @@ export function useChat() {
     threadId,
     threads,
     sendMessage,
+    stopGeneration,
     selectThread,
     createThread,
     deleteThread,

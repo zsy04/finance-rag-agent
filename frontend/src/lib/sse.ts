@@ -11,11 +11,13 @@ import type {
 /**
  * 使用 fetch + ReadableStream 消费 SSE 流
  * EventSource 不支持 POST 和自定义 headers，因此用本函数替代
+ * @param signal AbortSignal — 支持「停止生成」（2026-08-13）
  */
 export async function* streamChat(
   message: string,
   threadId: string,
   provider?: ProviderConfig,
+  signal?: AbortSignal,
 ): AsyncGenerator<SSEEvent> {
   const body: Record<string, unknown> = { message, thread_id: threadId };
   // 模型切换器：用户配置了自定义 provider → 后端转发调用（缺省=默认 DeepSeek）
@@ -25,6 +27,7 @@ export async function* streamChat(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   });
 
   if (!response.ok) {

@@ -18,6 +18,7 @@ function AppContent() {
     threadId,
     threads,
     sendMessage,
+    stopGeneration,
     selectThread,
     createThread,
     deleteThread,
@@ -47,6 +48,7 @@ function AppContent() {
                 messages={messages}
                 isLoading={isLoading}
                 onSend={sendMessage}
+                onStop={stopGeneration}
               />
             ))}
           {activeView === 'calculator' && <TaxCalculator />}
