@@ -59,7 +59,7 @@ jobs:
         import json
         with open('eval/retrieval_report.json') as f:
             report = json.load(f)
-        recall = report.get('recall@5', 0)
+        recall = report.get('summary', {}).get('recall@5', 0)
         if recall < 0.80:
             print(f'❌ Recall@5 = {recall:.2%} < 80% (regression detected)')
             exit(1)
