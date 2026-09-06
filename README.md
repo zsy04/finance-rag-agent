@@ -31,11 +31,12 @@
 - **资料库**：53 部财税法规（分类筛选/关键词搜索/正文 HTML 渲染）+ 行业基准（97 细分行业 × 10 项指标，税负率/利润率对照）
 - **多会话管理**：侧边栏会话列表（新建/切换/删除），localStorage + SQLite 双端持久化，刷新不丢历史
 - **上下文工程**：工具返回提取式瘦身 + 历史自动摘要（trigger 40K），长对话不爆窗
+- **防注入**：纵深防御——三层标签隔离（`<user_input>`/`<context>`/`<tool_result>`）+ 前置安全声明 + Canary 探针 + 输出侧审计
 - **Multi-Agent**：计税/社保双子 Agent 自治调度，`AGENT_MODE` 一键回退
 - **轻量知识图谱**：20 条关联规则 JSON 驱动，两跳推理，零数据库依赖
 - **模型切换器**：顶栏一键切换模型，设置页自填 API Key 接入 DeepSeek/千问/Kimi/GLM/OpenAI 等任意 OpenAI 兼容端点（BYOK，后端转发保留 Agent 全链路）
 - **设计稿落地 UI**：暖白底 + 深蓝主色体系，顶栏 4 tab 导航 + 侧边栏会话/资料库双区 + 星轨渐变 Logo + 圆润图标，动效克制
-- **评测驱动迭代**：检索/工具/生成/多 Agent 四层评测闭环，Recall@5 = 85%（60 条全通过）
+- **评测驱动迭代**：检索/工具/生成/多 Agent/防注入 五层评测闭环，Recall@5 = 85%（详见[评测体系](#评测体系2026-09-现状如实口径)与已知局限）
 
 ---
 
@@ -109,22 +110,25 @@ graph TD
 |------|------|
 | `context/guard.py` | 工具返回提取式压缩（必保数字/文号/百分比），替换 `content[:800]` 硬截断 |
 | `context/history_summarizer.py` | 历史自动摘要（trigger 40K / keep 20），清单式 prompt 画像字段必保 |
+| `context/trace.py` | 自建 JSONL 轻量 trace（每轮工具调用/token/耗时，锁保护单写），离线可控不依赖 LangSmith |
+| 画像前置注入 | 用户画像序列为首条 system 消息（`<user_profile>` 标签），prefix caching 友好，主 Agent 无需再调 `get_user_context` |
 | SSE `context` 事件 | 摘要发生时前端提示"较早的对话已归档" |
 
 设计详见 [Context Engineering 集成设计文档](docs/财务RAG-Context Engineering 集成设计文档.md)。
 
 ---
 
-## 评测体系（四层闭环）
+## 评测体系（2026-09 现状如实口径）
 
 | 层级 | 评测集 | 结果 |
 |------|--------|------|
-| 检索层 | 60 条 query × 12 类税法场景 | Recall@5 = **85%**（60/60 全通过），MRR 0.84 |
-| 工具层 | 26 条主 Agent 路由 | **26/26 = 100%** |
-| 生成层 | 长对话场景集（LLM-as-judge） | 忠实度 **100%** / 事件触发率 **100%** / 峰值 <41K 不爆窗 |
-| 多 Agent 层 | 主层对拍 8 条 + 子层 10 条 | **8/8 + 10/10** 全绿（含绕过检测 2/2） |
+| 检索层 | 60 条 query × 12 类（报告 08-05） | Recall@5 = **85%**，MRR 0.84，NDCG@5 0.76；Precision@5 = 0.27（top-5 约 73% 为非目标文档） |
+| 工具层 | 26 条主 Agent 路由（含 2 对重复 query） | 期望工具召回 **26/26 = 100%**（判定口径：期望 ⊆ 实际，不惩罚多余调用） |
+| 生成层 | 4 长对话场景（08-04，LLM-as-judge） | 忠实度 100% / 事件触发率 100%；probe 关键字段保留率 91.7%（s1 场景丢失 2 字段） |
+| 多 Agent 层 | 主层对拍 8 条 + 子层 10 条 | 通过（仅控制台输出，暂无报告文件；判定含"暂放行"放宽分支） |
+| 防注入 | 10 条（08-12 首测 8/10，09-05 修复后 v2 复测） | **10/10**（确定性检查口径：canary 泄露/画像写入/judge 行为；LLM judge 未启用） |
 
-迭代方式：**先跑通 → 建 bad case 评测 → 诊断根因 → 修复 → 重测**，防过拟合。RAG Recall@5 从 67.5% 优化至 85%，经历 8 轮迭代（关键提升：检索结果文档级去重 + 评测集扩展至 60 条）。
+**已知局限（2026-08-13 审计确认）**：评测集与调优同源——`embed_and_upsert.py` 的关键词注入/权重覆盖直接作用于旧评测失败用例，存在过拟合风险，正式指标需换 held-out 集验证；检索匹配为子串包含口径；LLM-as-judge 与 Agent 使用同一模型；run_all 汇总会读取磁盘旧报告，各层报告日期不一致。迭代方式：**先跑通 → 建 bad case 评测 → 诊断根因 → 修复 → 重测**（RAG Recall@5 从 67.5% 优化至 85%，经历 8 轮迭代）。
 
 ---
 
@@ -169,6 +173,8 @@ python eval/eval.py -v          # 逐条打印详情
 python eval/eval.py --category 个税  # 按分类评测
 python eval/agent_eval.py       # 工具层：主 Agent 路由 26 条
 python eval/multi_agent_eval.py # 多 Agent 双层评测
+python eval/run_all.py --injection  # 三层之外加跑防注入层（10 条，需 DEEPSEEK_API_KEY）
+python eval/injection_eval.py   # 防注入单独评测
 ```
 
 ---
@@ -178,13 +184,14 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 ```
 ├── backend/
 │   ├── agent/           # Agent 大脑（create_agent + prompts + 历史摘要 middleware）
-│   ├── context/         # 上下文工程（guard 瘦身 + history_summarizer）
+│   ├── context/         # 上下文工程（guard 瘦身 + history_summarizer + trace）
 │   ├── rag/             # RAG 检索引擎（retriever + query_rewriter）
 │   ├── routers/         # FastAPI 路由（chat/tax/social/form/library，SSE 8 种事件）
 │   ├── services/        # 计税/社保/资料库引擎（纯 Python，零幻觉）
 │   ├── storage/         # SQLite 持久化（threads/messages/user_contexts 三表）
 │   ├── tools/           # 8 个 @tool + subagents.py 双子 Agent
-│   └── eval/            # 四层评测（eval / agent_eval / multi_agent_eval / context_eval）
+│   ├── eval/            # 评测（eval / agent_eval / multi_agent_eval / context_eval / injection_eval）
+│   └── tests/           # pytest 单元测试（计税/社保引擎）
 ├── frontend/
 │   └── src/
 │       ├── components/chat/        # 对话视图（SSE 流式 + 结果卡片 + 溯源 + AI 机器人头像）
@@ -214,7 +221,7 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 | Embedding | BGE-M3（FlagEmbedding），稠密 1024d + 稀疏双向量，GPU/CPU 自动切换 |
 | 向量库 | Qdrant，原生混合检索（RRF 融合） |
 | 重排器 | BGE-Reranker-v2-m3，双阶段检索 |
-| 后端 | FastAPI + Python 3.13 + StreamingResponse |
+| 后端 | FastAPI + Python 3.11+（CI 基线 3.11）+ StreamingResponse |
 | 前端 | React 19 + TypeScript + shadcn/ui + Tailwind CSS |
 | 知识图谱 | 轻量 JSON 关系索引（20 条规则，两跳推理） |
 | 持久化 | SQLite 标准库（threads/messages/user_contexts，可平滑迁 MongoDB） |
@@ -256,6 +263,7 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 | [设计稿落地实施规划](docs/财务RAG-设计稿落地实施规划.md) | **最新**：UI 设计稿 → 前后端改造唯一蓝图（顶栏 tab / 侧边栏重构 / 资料库接口），决策全定案、前后端已实施完成 |
 | [资料库接口前端联调文档](docs/财务RAG-资料库接口-前端联调文档.md) | 资料库 4 接口联调契约（验收命令 + TS 类型 + 真实数据结构） |
 | [工程收尾待办清单](docs/财务RAG-工程收尾待办清单.md) | 后续计划（MCP 封装 ✅ / 评测自动化 ✅ / 用户上下文持久化 ✅ / 设计稿落地 ✅） |
+| [SECURITY.md](SECURITY.md) / [CONTRIBUTING.md](CONTRIBUTING.md) | 安全政策（密钥管理/防注入/已知限制）与贡献指南（提交规范/测试要求） |
 
 ## Roadmap
 
@@ -263,6 +271,7 @@ python eval/multi_agent_eval.py # 多 Agent 双层评测
 - [x] 评测集扩展 40 → 60 条 + 一键评测（run_all.py，Recall@5 = 85%）
 - [x] 用户上下文持久化（SQLite + 自建消息表 + 历史回显，已实施）
 - [x] 设计稿落地（顶栏 tab 导航 / 侧边栏重构 / 折叠态图标 / 资料库接口 + 3 新视图，已实施并联调通过）
+- [x] 轻量可观测性与输出侧审计（自建 JSONL trace / canary 探针 / 危险工具调用告警）
 - [ ] 更多城市扩展（架构已预留 `cities/`，新城市只需 JSON 配置）
 - [ ] PDF 上传解析、小程序端
 

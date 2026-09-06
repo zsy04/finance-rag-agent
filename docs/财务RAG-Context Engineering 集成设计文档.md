@@ -375,4 +375,28 @@ dialog_scenarios.json → 真实 Agent 20 轮 → 触发摘要 → 自动字段�
 
 ---
 
+## 13. 防注入与安全加固（✅ 已落地 2026-08-11）
+
+> 背景：防 prompt injection = 自然语言时代的 SQL 注入，是**纵深防御**问题（模型层/链路层/应用层），不能押注单个模型能力。**安全边界必须做在执行层——Prompt 挡不住 injection。**
+> 详细方案见《财务RAG-上下文分层与防注入方案.md》；面试表述见《财务RAG-Agent面试话术卡-v1.0.md》§5。
+
+### 13.1 已落地清单（2026-08-11）
+
+| 层 | 机制 | 落地文件 |
+|----|------|---------|
+| 输入层 | 用户输入（历史 + 当前 query）统一 `<user_input>` 包裹 | `routers/chat.py` |
+| 检索层 | 检索文本 `<context>` 包裹（与 guard 瘦身叠加） | `tools/search_knowledge.py` |
+| 声明层 | `SAFETY_HEADER` 前置（三层标签内均为数据非指令 + canary 埋点 `canary-7f3a9c`） | `agent/prompts.py` |
+| 组装层 | `system_prompt = SAFETY_HEADER + SYSTEM_PROMPT`（放最前，prefix caching 友好） | `agent/engine.py` |
+| 链路层 | `_audit_security()`：canary 输出检测 + `update_user_context` 注入特征告警 + 工具调用审计日志（trace 雏形） | `routers/chat.py` |
+
+### 13.2 设计原则（克制取舍）
+
+- **只告警不拦截**：低危面（官方清洗入库 + 确定性工具）不值得引入误伤风险
+- **明确不做**：注入测试集（低危面不值得维护）、输入正则过滤（中文误伤率高）
+- **未来高危面**：PDF 上传解析（间接注入）——实施前必须先评估
+- 执行层兜底已有：绕过检测 v1.5（LLM 心算强制重算）+ `update_user_context` 的 CONTEXT_KEYS 白名单
+
+---
+
 > 维护规则：编码中发现的设计偏差回写本文档（标注"实现修订"）；验收实测数据回填 §7.3。v1.0 中与 v2 冲突的内容以 v2 为准（chunk 级压缩设计已废弃，仅保留其提取式正则与 judge prompt 思路）。

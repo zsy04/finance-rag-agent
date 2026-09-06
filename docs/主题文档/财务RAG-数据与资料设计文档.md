@@ -521,7 +521,7 @@ Phase 3 — 专业化
 ### 3.2 staging 原始层（119 个文件）
 
 ```
-F:\lest\rag-data\
+rag-data\
 ├── staging/                              # 119 个原始 MHTML/.doc 文件
 │   ├── metadata.json                     # 文件名→元数据映射
 │   └── 全行业财务指标基准表.xlsx

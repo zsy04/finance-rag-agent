@@ -45,7 +45,7 @@
 ### 3.1 目录结构（实际产出）
 
 ```
-F:\lest\rag-data\
+rag-data\
 ├── staging/                              # 119 个原始 MHTML/.doc 文件
 │   ├── metadata.json                     # 文件名→元数据映射
 │   └── 全行业财务指标基准表.xlsx

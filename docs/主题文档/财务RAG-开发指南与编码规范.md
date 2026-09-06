@@ -52,12 +52,12 @@ backend/
 
 > 来源：`前端开发-完整代码生成包.md` §1.1。
 
-在 `F:\lest\` 目录下执行：
+在项目根目录下执行：
 
 ```bash
-cd F:\lest
+cd <repo-root>
 npm create vite@latest frontend -- --template react-ts
-cd F:\lest\frontend
+cd <repo-root>\frontend
 npx shadcn@latest init -d
 npx shadcn@latest add button input select card textarea tooltip dialog
 npm install lucide-react react-markdown remark-gfm @radix-ui/react-tooltip
@@ -106,7 +106,7 @@ RERANKER_MODEL_PATH = "BAAI/bge-reranker-v2-m3"
   Qdrant Dashboard     :6333
 ```
 
-- 前端代码中所有 API 请求使用相对路径 `/api/*`，由 Vite 代理（配置在 `F:\lest\frontend\vite.config.ts`）转发到 `localhost:8000`，无需 CORS 配置。
+- 前端代码中所有 API 请求使用相对路径 `/api/*`，由 Vite 代理（配置在 `frontend\vite.config.ts`）转发到 `localhost:8000`，无需 CORS 配置。
 - 后端 `main.py` 运行：`uvicorn main:app --host 0.0.0.0 --port 8000`。
 - 模型资源占用（开发注意事项"环境与资源"）：
   - BGE-M3 首次加载从 HuggingFace 下载约 **2.2GB** 模型文件到 `~/.cache/huggingface/`，需联网；之后秒加载。
@@ -777,7 +777,7 @@ export interface SSEEvent {
 
 **用法**：将文档内容（或带 ★ 的章节）复制粘贴到 AI 对话开头，AI 将遵循全部规范生成前端代码。所有文件路径均为绝对路径，AI 可直接定位。
 
-**项目根目录约定**：`F:\lest\frontend\`；图标根目录 `F:\lest\frontend\public\icons\`；源码根目录 `F:\lest\frontend\src\`。
+**项目根目录约定**：`frontend\`；图标根目录 `frontend\public\icons\`；源码根目录 `frontend\src\`。
 
 **关联文档**：`财务RAG-AI提示词工程文档-v1.0.md`（早期版，分章节更详细）、`前端开发-AI编程Prompt.md`（精简版，无图标规范）、`财务RAG-UI设计方案.md`（视觉与交互参考）、`财务RAG-开发注意事项.md`（CSS 样式代码片段）、`财务RAG-前后端对照表.md`（接口契约）、`frontend/public/icons/README.md`（图标接入清单，最权威）。
 
@@ -814,9 +814,9 @@ export interface SSEEvent {
 你是一个 React + TypeScript 前端开发专家。
 
 项目背景：财税助手 Web 应用
-项目根目录：F:\lest\frontend\
-图标目录：F:\lest\frontend\public\icons\（17 个 SVG + 3 Favicon PNG + favicon.svg，共 21 个文件）
-权威图标清单：F:\lest\frontend\public\icons\README.md
+项目根目录：frontend\
+图标目录：frontend\public\icons\（17 个 SVG + 3 Favicon PNG + favicon.svg，共 21 个文件）
+权威图标清单：frontend\public\icons\README.md
 
 请严格按照以下规范生成代码：
 - 框架：Vite + React 18 + TypeScript
@@ -824,7 +824,7 @@ export interface SSEEvent {
 - SVG 处理：vite-plugin-svgr（必需），用 ?react 导入
 - 图标：项目自有 17 枚 SVG + 3 PNG favicon + favicon.svg，不引入额外图标库（lucide-react 可选）
 - 状态管理：React Context + useReducer
-- 设计令牌：见 CSS Variables（§2），写入 F:\lest\frontend\src\index.css
+- 设计令牌：见 CSS Variables（§2），写入 frontend\src\index.css
 - 组件规范：见"关键组件规范"章节（§10）
 - SSE 通信：使用 fetch + ReadableStream（不用 EventSource）
 - 无障碍：WCAG AA 标准（§17）
@@ -838,7 +838,7 @@ export interface SSEEvent {
 6. 所有组件必须实现 loading / error / empty 三种状态
 7. AI 回复内容必须用 `<MarkdownRenderer />` 渲染（react-markdown + remark-gfm），不能纯文本
 
-项目图标文件清单（已存在于 F:\lest\frontend\public\icons\）：
+项目图标文件清单（已存在于 frontend\public\icons\）：
 SVG（17）：logo.svg, icon-chat.svg, icon-calculator.svg, icon-document.svg, icon-help.svg,
         icon-warning.svg, icon-location.svg, icon-loading.svg, icon-send.svg, icon-confirm.svg,
         icon-edit.svg, icon-retry.svg, icon-save.svg, icon-generate.svg, icon-download.svg,

@@ -1266,6 +1266,19 @@ dialog_scenarios.json → 真实 Agent 20 轮 → 触发摘要 → 自动字段�
 
 > **集成测试实测（scripts/test_summarizer.py，s1 场景 20 轮）**：trigger=40K 生效（39.1K / 41.3K 触发），摘要后消息 43→23、token 27.4K/25.5K，20 轮触发 2 次间隔 6 轮，context 事件链路完整（摘要后下一轮 pop 到标志），全程未爆窗。
 
+### 6.13 防注入与安全加固（✅ 已落地 2026-08-11）
+
+> 防 prompt injection = 纵深防御（模型层/链路层/应用层），安全边界做在执行层。详见《财务RAG-上下文分层与防注入方案.md》与《财务RAG-Context Engineering 集成设计文档.md》§13。
+
+| 层 | 机制 | 落地 |
+|----|------|------|
+| 输入层 | 用户输入（历史 + 当前）`<user_input>` 包裹 | `routers/chat.py` |
+| 检索层 | 检索文本 `<context>` 包裹（与 guard 叠加） | `tools/search_knowledge.py` |
+| 声明层 | `SAFETY_HEADER` 前置（标签内数据非指令 + canary `canary-7f3a9c` 埋点） | `agent/prompts.py` + `engine.py` |
+| 链路层 | `_audit_security()`：canary 检测 + 画像注入告警 + 工具审计日志（trace 雏形） | `routers/chat.py` |
+
+**设计原则**：只告警不拦截；不做注入测试集/输入正则（低危面 + 误伤风险，规模决策）；PDF 上传（未来）为间接注入高危面需先评估；执行层兜底 = 绕过检测 v1.5 + CONTEXT_KEYS 白名单。
+
 ---
 
 ## 7. 持久化架构

@@ -48,7 +48,7 @@ source_docs:
 构建: Vite
 UI库: shadcn/ui（最新版）
 样式: Tailwind CSS v4
-图标: SVG（17 枚项目 SVG，存放于 F:\lest\frontend\public\icons\）+ lucide-react（可选补充）
+图标: SVG（17 枚项目 SVG，存放于 frontend\public\icons\）+ lucide-react（可选补充）
 状态: React Context + useReducer，不引入 Redux/Zustand
 SSE: fetch + ReadableStream（不用 EventSource，因为要 POST）
 SVG 处理: vite-plugin-svgr（必需），用 ?react 导入
@@ -57,7 +57,7 @@ Markdown: react-markdown + remark-gfm（GFM 表格/删除线/任务列表）
 
 > 项目一句话定位（来源：`前端开发-完整代码生成包.md` §0）：**财税助手** — 面向零财务基础大众的 AI 财税问答 Web 应用。MVP 三个视图：智能对话 / 税率计算 / 申报材料生成。**仅桌面端**（≥768px）。2026-08-06 设计稿落地后扩展为六视图（新增 guide / documents / benchmark）。
 >
-> 图标格式：20 枚 SVG 图标（17 功能 SVG + 3 Favicon PNG） + 1 枚 favicon.svg，存放于 `F:\lest\frontend\public\icons\`。
+> 图标格式：20 枚 SVG 图标（17 功能 SVG + 3 Favicon PNG） + 1 枚 favicon.svg，存放于 `frontend\public\icons\`。
 
 ### 1.2 实际落地依赖与版本
 
@@ -84,12 +84,12 @@ Markdown: react-markdown + remark-gfm（GFM 表格/删除线/任务列表）
 
 > 来源：`前端开发-完整代码生成包.md` §1.1（整合 `前端开发-AI编程Prompt.md` §0.1、`财务RAG-AI提示词工程文档-v1.0.md` §1 的初始化命令）
 
-在 `F:\lest\` 目录下执行：
+在项目根目录下执行：
 
 ```bash
-cd F:\lest
+cd <repo-root>
 npm create vite@latest frontend -- --template react-ts
-cd F:\lest\frontend
+cd <repo-root>\frontend
 npx shadcn@latest init -d
 npx shadcn@latest add button input select card textarea tooltip dialog
 npm install lucide-react react-markdown remark-gfm @radix-ui/react-tooltip
@@ -104,7 +104,7 @@ npm install -D vite-plugin-svgr
 
 > 来源：`前端开发-完整代码生成包.md` §1.2
 
-文件 `F:\lest\frontend\vite.config.ts`：
+文件 `frontend\vite.config.ts`：
 
 ```ts
 import { defineConfig } from 'vite';
@@ -167,7 +167,7 @@ export default defineConfig({
   Qdrant Dashboard     :6333
 ```
 
-前端代码中所有 API 请求使用相对路径 `/api/*`，由 Vite 代理（配置在 `F:\lest\frontend\vite.config.ts`）转发到 `localhost:8000`，无需 CORS 配置。
+前端代码中所有 API 请求使用相对路径 `/api/*`，由 Vite 代理（配置在 `frontend\vite.config.ts`）转发到 `localhost:8000`，无需 CORS 配置。
 
 ### 1.6 MVP 桌面端约束与移动端预留
 
@@ -192,9 +192,9 @@ export default defineConfig({
 你是一个 React + TypeScript 前端开发专家。
 
 项目背景：财税助手 Web 应用
-项目根目录：F:\lest\frontend\
-图标目录：F:\lest\frontend\public\icons\（17 个 SVG + 3 Favicon PNG + favicon.svg，共 21 个文件）
-权威图标清单：F:\lest\frontend\public\icons\README.md
+项目根目录：frontend\
+图标目录：frontend\public\icons\（17 个 SVG + 3 Favicon PNG + favicon.svg，共 21 个文件）
+权威图标清单：frontend\public\icons\README.md
 
 请严格按照以下规范生成代码：
 - 框架：Vite + React 18 + TypeScript
@@ -202,7 +202,7 @@ export default defineConfig({
 - SVG 处理：vite-plugin-svgr（必需），用 ?react 导入
 - 图标：项目自有 17 枚 SVG + 3 PNG favicon + favicon.svg，不引入额外图标库（lucide-react 可选）
 - 状态管理：React Context + useReducer
-- 设计令牌：见 CSS Variables（§3），写入 F:\lest\frontend\src\index.css
+- 设计令牌：见 CSS Variables（§3），写入 frontend\src\index.css
 - 组件规范：见"关键组件规范"章节（§6）
 - SSE 通信：使用 fetch + ReadableStream（不用 EventSource）
 - 无障碍：WCAG AA 标准（§10）
@@ -216,7 +216,7 @@ export default defineConfig({
 6. 所有组件必须实现 loading / error / empty 三种状态
 7. AI 回复内容必须用 `<MarkdownRenderer />` 渲染（react-markdown + remark-gfm），不能纯文本
 
-项目图标文件清单（已存在于 F:\lest\frontend\public\icons\）：
+项目图标文件清单（已存在于 frontend\public\icons\）：
 SVG（17）：logo.svg, icon-chat.svg, icon-calculator.svg, icon-document.svg, icon-help.svg,
         icon-warning.svg, icon-location.svg, icon-loading.svg, icon-send.svg, icon-confirm.svg,
         icon-edit.svg, icon-retry.svg, icon-save.svg, icon-generate.svg, icon-download.svg,
@@ -268,7 +268,7 @@ PNG Favicon（3）：favicon-16.png, favicon-32.png, favicon-180.png
 > 来源：`前端开发-完整代码生成包.md` §5（最完整版，含 2026-08-06 设计稿落地的 guide/library 目录）
 
 ```
-F:\lest\frontend\src\
+frontend\src\
 ├── App.tsx                                      # 根组件
 ├── main.tsx                                     # 入口
 ├── index.css                                    # CSS 令牌 + Tailwind
@@ -320,27 +320,27 @@ F:\lest\frontend\src\
 
 | # | 文件绝对路径 | 说明 |
 |---|-------------|------|
-| 1 | `F:\lest\frontend\index.html` | HTML 入口（添加 favicon link，见 §9.4 图标规范） |
-| 2 | `F:\lest\frontend\vite.config.ts` | vite-plugin-svgr + @/ 别名 + /api 代理 |
-| 3 | `F:\lest\frontend\src\index.css` | 复制第 3 章的全部 CSS |
-| 4 | `F:\lest\frontend\src\lib\types.ts` | 复制第 8 章的全部类型定义 |
-| 5 | `F:\lest\frontend\src\lib\sse.ts` | 复制第 7 章的流式消费函数 |
-| 6 | `F:\lest\frontend\src\hooks\useChat.ts` | 复制第 7 章的对话 Hook |
-| 7 | `F:\lest\frontend\src\context\AppContext.tsx` | 复制第 7 章的全局上下文 |
-| 8 | `F:\lest\frontend\src\App.tsx` | 复制第 7 章的根组件 |
-| 9 | `F:\lest\frontend\src\main.tsx` | ReactDOM.createRoot 入口 |
-| 10 | `F:\lest\frontend\src\components\icons\index.ts` | （可选）SVG 图标统一导出 |
-| 11 | `F:\lest\frontend\src\components\layout\Sidebar.tsx` | 按第 4 章规范实现 |
-| 12 | `F:\lest\frontend\src\components\layout\TopBar.tsx` | 按第 4 章规范实现 |
-| 13 | `F:\lest\frontend\src\components\chat\ChatView.tsx` | 按第 5 章规范实现 |
-| 14 | `F:\lest\frontend\src\components\chat\ChatMessage.tsx` | 按第 6 章规范实现 |
-| 15 | `F:\lest\frontend\src\components\chat\ChatInput.tsx` | 按第 6 章规范实现 |
-| 16 | `F:\lest\frontend\src\components\chat\WelcomeScreen.tsx` | 按第 5 章规范实现 |
-| 17 | `F:\lest\frontend\src\components\chat\ResultCard.tsx` | 按第 6 章规范实现 |
-| 18 | `F:\lest\frontend\src\components\calculator\TaxCalculator.tsx` | 按第 5 章规范实现 |
-| 19 | `F:\lest\frontend\src\components\form\FilingForm.tsx` | 按第 5 章规范实现 |
-| 20 | `F:\lest\frontend\src\components\shared\Skeleton.tsx` | 按第 6 章规范实现 |
-| 21 | `F:\lest\frontend\src\components\shared\ErrorBanner.tsx` | 按第 6 章规范实现 |
+| 1 | `frontend\index.html` | HTML 入口（添加 favicon link，见 §9.4 图标规范） |
+| 2 | `frontend\vite.config.ts` | vite-plugin-svgr + @/ 别名 + /api 代理 |
+| 3 | `frontend\src\index.css` | 复制第 3 章的全部 CSS |
+| 4 | `frontend\src\lib\types.ts` | 复制第 8 章的全部类型定义 |
+| 5 | `frontend\src\lib\sse.ts` | 复制第 7 章的流式消费函数 |
+| 6 | `frontend\src\hooks\useChat.ts` | 复制第 7 章的对话 Hook |
+| 7 | `frontend\src\context\AppContext.tsx` | 复制第 7 章的全局上下文 |
+| 8 | `frontend\src\App.tsx` | 复制第 7 章的根组件 |
+| 9 | `frontend\src\main.tsx` | ReactDOM.createRoot 入口 |
+| 10 | `frontend\src\components\icons\index.ts` | （可选）SVG 图标统一导出 |
+| 11 | `frontend\src\components\layout\Sidebar.tsx` | 按第 4 章规范实现 |
+| 12 | `frontend\src\components\layout\TopBar.tsx` | 按第 4 章规范实现 |
+| 13 | `frontend\src\components\chat\ChatView.tsx` | 按第 5 章规范实现 |
+| 14 | `frontend\src\components\chat\ChatMessage.tsx` | 按第 6 章规范实现 |
+| 15 | `frontend\src\components\chat\ChatInput.tsx` | 按第 6 章规范实现 |
+| 16 | `frontend\src\components\chat\WelcomeScreen.tsx` | 按第 5 章规范实现 |
+| 17 | `frontend\src\components\chat\ResultCard.tsx` | 按第 6 章规范实现 |
+| 18 | `frontend\src\components\calculator\TaxCalculator.tsx` | 按第 5 章规范实现 |
+| 19 | `frontend\src\components\form\FilingForm.tsx` | 按第 5 章规范实现 |
+| 20 | `frontend\src\components\shared\Skeleton.tsx` | 按第 6 章规范实现 |
+| 21 | `frontend\src\components\shared\ErrorBanner.tsx` | 按第 6 章规范实现 |
 
 ### 2.3 早期版本组件文件树（历史对照）
 
@@ -906,7 +906,7 @@ export default function App() {
 {activeView === 'benchmark' && <BenchmarkView />}
 ```
 
-**入口文件**（来源：`前端开发-完整代码生成包.md` §9，文件 `F:\lest\frontend\src\main.tsx`）：
+**入口文件**（来源：`前端开发-完整代码生成包.md` §9，文件 `frontend\src\main.tsx`）：
 
 ```tsx
 import React from 'react';
@@ -1446,7 +1446,7 @@ bg-[var(--color-bg-page)] border border-[#E2E8F0] rounded-[8px] p-3 text-sm curs
 
 > 来源：`前端开发-完整代码生成包.md` §8（最完整版，整合 `前端开发-AI编程Prompt.md` §5 / `财务RAG-AI提示词工程文档-v1.0.md` §7，三份内容一致）
 
-文件绝对路径：`F:\lest\frontend\src\context\AppContext.tsx`
+文件绝对路径：`frontend\src\context\AppContext.tsx`
 
 ```tsx
 import { createContext, useContext, useState, type ReactNode } from 'react';
@@ -1490,7 +1490,7 @@ export function useApp() {
 
 > 来源：`前端开发-完整代码生成包.md` §6（规范基线版）。`前端开发-AI编程Prompt.md` §3 与其基本一致（`thread_id` 参数、无 `SSEEvent` 类型标注差异）；`财务RAG-AI提示词工程文档-v1.0.md` §5 为早期版（传 `context` 而非 `thread_id`，无行缓冲续接），此处收录最完整版。
 
-文件绝对路径：`F:\lest\frontend\src\lib\sse.ts`
+文件绝对路径：`frontend\src\lib\sse.ts`
 
 ```ts
 import type { SSEEvent } from '@/lib/types';
@@ -1705,7 +1705,7 @@ export async function calculateSocial(payload: {
 
 > 来源：`前端开发-完整代码生成包.md` §7（规范基线版；`前端开发-AI编程Prompt.md` §4 与其一致，`财务RAG-AI提示词工程文档-v1.0.md` §6 为早期版含 `confirm`/`retry`/`context` 参数版，此处收录最完整规范版）
 
-文件绝对路径：`F:\lest\frontend\src\hooks\useChat.ts`
+文件绝对路径：`frontend\src\hooks\useChat.ts`
 
 ```ts
 import { useState, useCallback } from 'react';
@@ -2236,7 +2236,7 @@ eventSource.addEventListener('done',       (e) => { /* 恢复输入框 */ });
 
 ### 8.1 全量类型定义（types.ts）
 
-> 来源：`前端开发-完整代码生成包.md` §4（最完整版，含六视图与资料库类型）。文件绝对路径：`F:\lest\frontend\src\lib\types.ts`
+> 来源：`前端开发-完整代码生成包.md` §4（最完整版，含六视图与资料库类型）。文件绝对路径：`frontend\src\lib\types.ts`
 
 ```ts
 // ====== 视图导航（2026-08-06 设计稿落地扩展） ======
@@ -2617,30 +2617,30 @@ interface Message {
 
 > 来源：`前端开发-完整代码生成包.md` §3.1（最完整版，含绝对路径与 viewBox/用途）。`财务RAG-前端代码审查报告.md` §3.1 确认 public/icons/ 含 16 个自定义 SVG + logo + favicon。
 
-> **重要**：项目图标已从 PNG 迁移到 SVG。所有图标文件位于 `F:\lest\frontend\public\icons\`。权威清单见 `F:\lest\frontend\public\icons\README.md`。
+> **重要**：项目图标已从 PNG 迁移到 SVG。所有图标文件位于 `frontend\public\icons\`。权威清单见 `frontend\public\icons\README.md`。
 
 | # | 文件绝对路径 | 名称 | viewBox | 用途 |
 |---|------------|------|---------|------|
-| 1 | `F:\lest\frontend\public\icons\logo.svg` | Logo | 64×64 | TopBar (48px) / WelcomeScreen (64px) |
-| 2 | `F:\lest\frontend\public\icons\favicon.svg` | SVG Favicon | 64×64 | 浏览器标签页（高 DPI） |
-| 3 | `F:\lest\frontend\public\icons\favicon-16.png` | Favicon 小 | 16×16 | 浏览器标签 |
-| 4 | `F:\lest\frontend\public\icons\favicon-32.png` | Favicon 标准 | 32×32 | 浏览器标签 |
-| 5 | `F:\lest\frontend\public\icons\favicon-180.png` | Apple Touch | 180×180 | iOS 主屏幕 |
-| 6 | `F:\lest\frontend\public\icons\icon-chat.svg` | 对话 | 24×24 | 左导航 |
-| 7 | `F:\lest\frontend\public\icons\icon-calculator.svg` | 税率计算 | 24×24 | 左导航 / 结果卡片标题 |
-| 8 | `F:\lest\frontend\public\icons\icon-document.svg` | 申报材料 | 24×24 | 左导航 |
-| 9 | `F:\lest\frontend\public\icons\icon-help.svg` | 帮助 | 24×24 | 表单字段 tooltip（缩 16px） |
-| 10 | `F:\lest\frontend\public\icons\icon-warning.svg` | 警告/免责 | 24×24 | 免责声明 / 错误横幅 |
-| 11 | `F:\lest\frontend\public\icons\icon-location.svg` | 城市位置 | 24×24 | TopBar 城市标识（缩 16px） |
-| 12 | `F:\lest\frontend\public\icons\icon-loading.svg` | 加载中 | 24×24 | 发送按钮（缩 20px，需 CSS spin） |
-| 13 | `F:\lest\frontend\public\icons\icon-send.svg` | 发送 | 24×24 | 聊天输入框按钮（缩 20px） |
-| 14 | `F:\lest\frontend\public\icons\icon-confirm.svg` | 确认 | 24×24 | Agent 确认按钮（缩 16px） |
-| 15 | `F:\lest\frontend\public\icons\icon-edit.svg` | 编辑 | 24×24 | "自己填"按钮（缩 16px） |
-| 16 | `F:\lest\frontend\public\icons\icon-retry.svg` | 重试 | 24×24 | 错误气泡按钮（缩 16px） |
-| 17 | `F:\lest\frontend\public\icons\icon-save.svg` | 保存 | 24×24 | 保存草稿（缩 16px） |
-| 18 | `F:\lest\frontend\public\icons\icon-generate.svg` | 生成 | 24×24 | "生成申报表"按钮（缩 16px） |
-| 19 | `F:\lest\frontend\public\icons\icon-download.svg` | 下载 | 24×24 | "下载已填表"按钮（缩 16px） |
-| 20 | `F:\lest\frontend\public\icons\icon-blank-doc.svg` | 空白文档 | 24×24 | "下载空白原表"按钮（缩 16px） |
+| 1 | `frontend\public\icons\logo.svg` | Logo | 64×64 | TopBar (48px) / WelcomeScreen (64px) |
+| 2 | `frontend\public\icons\favicon.svg` | SVG Favicon | 64×64 | 浏览器标签页（高 DPI） |
+| 3 | `frontend\public\icons\favicon-16.png` | Favicon 小 | 16×16 | 浏览器标签 |
+| 4 | `frontend\public\icons\favicon-32.png` | Favicon 标准 | 32×32 | 浏览器标签 |
+| 5 | `frontend\public\icons\favicon-180.png` | Apple Touch | 180×180 | iOS 主屏幕 |
+| 6 | `frontend\public\icons\icon-chat.svg` | 对话 | 24×24 | 左导航 |
+| 7 | `frontend\public\icons\icon-calculator.svg` | 税率计算 | 24×24 | 左导航 / 结果卡片标题 |
+| 8 | `frontend\public\icons\icon-document.svg` | 申报材料 | 24×24 | 左导航 |
+| 9 | `frontend\public\icons\icon-help.svg` | 帮助 | 24×24 | 表单字段 tooltip（缩 16px） |
+| 10 | `frontend\public\icons\icon-warning.svg` | 警告/免责 | 24×24 | 免责声明 / 错误横幅 |
+| 11 | `frontend\public\icons\icon-location.svg` | 城市位置 | 24×24 | TopBar 城市标识（缩 16px） |
+| 12 | `frontend\public\icons\icon-loading.svg` | 加载中 | 24×24 | 发送按钮（缩 20px，需 CSS spin） |
+| 13 | `frontend\public\icons\icon-send.svg` | 发送 | 24×24 | 聊天输入框按钮（缩 20px） |
+| 14 | `frontend\public\icons\icon-confirm.svg` | 确认 | 24×24 | Agent 确认按钮（缩 16px） |
+| 15 | `frontend\public\icons\icon-edit.svg` | 编辑 | 24×24 | "自己填"按钮（缩 16px） |
+| 16 | `frontend\public\icons\icon-retry.svg` | 重试 | 24×24 | 错误气泡按钮（缩 16px） |
+| 17 | `frontend\public\icons\icon-save.svg` | 保存 | 24×24 | 保存草稿（缩 16px） |
+| 18 | `frontend\public\icons\icon-generate.svg` | 生成 | 24×24 | "生成申报表"按钮（缩 16px） |
+| 19 | `frontend\public\icons\icon-download.svg` | 下载 | 24×24 | "下载已填表"按钮（缩 16px） |
+| 20 | `frontend\public\icons\icon-blank-doc.svg` | 空白文档 | 24×24 | "下载空白原表"按钮（缩 16px） |
 
 **SVG 内 stroke 颜色统一为 `#014DB2`**（设计稿主色，2026-08-06 更新）。所有 SVG 都是线条样式，2px stroke，圆角端点，透明背景。
 
@@ -2929,7 +2929,7 @@ frontend/public/icons/
 
 **方式 A：React 组件导入（推荐 ✅，依赖 vite-plugin-svgr）**
 
-在 `F:\lest\frontend\src\components\icons\index.ts` 统一导出：
+在 `frontend\src\components\icons\index.ts` 统一导出：
 
 ```tsx
 import ChatIconRaw from '@icons/icon-chat.svg?react';
@@ -2995,7 +2995,7 @@ import ChatIcon from '@icons/icon-chat.svg?react';
 
 > 来源：`前端开发-完整代码生成包.md` §3.4 + `图标生成清单.md`「Favicon 生成」
 
-文件：`F:\lest\frontend\index.html` 的 `<head>`：
+文件：`frontend\index.html` 的 `<head>`：
 
 ```html
 <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
@@ -4085,7 +4085,7 @@ SVG 导入路径必须用 `@icons/xxx.svg?react`（Vite 别名），**不能用*
 > 来源：`前端开发-完整代码生成包.md` 附录 A
 
 **Q：项目用 SVG 还是 PNG 图标？**
-A：功能图标全部 SVG（17 枚），Favicon 4 个（1 SVG + 3 PNG）。所有图标文件位于 `F:\lest\frontend\public\icons\`。
+A：功能图标全部 SVG（17 枚），Favicon 4 个（1 SVG + 3 PNG）。所有图标文件位于 `frontend\public\icons\`。
 
 **Q：必须装 vite-plugin-svgr 吗？**
 A：推荐装，这样可以用 `import XxxSvg from '/icons/xxx.svg?react'` 作为 React 组件使用。否则只能用 `<img src="/icons/xxx.svg" />` 方式。
@@ -4097,7 +4097,7 @@ A：至少 `button input select card textarea tooltip dialog`，其余按需。
 A：能，前端可以独立启动。SSE 失败时 `useChat` 会捕获异常并显示"网络请求失败，请重试"。
 
 **Q：Favicon 配置需要更新什么文件？**
-A：更新 `F:\lest\frontend\index.html` 的 `<head>`，复制第 9.6 节的 4 行 `<link>` 标签即可。
+A：更新 `frontend\index.html` 的 `<head>`，复制第 9.6 节的 4 行 `<link>` 标签即可。
 
 **Q：SVG 内颜色是 `#014DB2` 硬编码，能否跟随主题？**
 A：当前 SVG 是硬编码颜色。如需通过 CSS 控制颜色，可将 SVG 中 `stroke="#014DB2"` 替换为 `stroke="currentColor"`，然后用父元素的 CSS color 控制。
