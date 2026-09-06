@@ -186,7 +186,7 @@ b38d697 fix: 修复langchain中间件API变更与编码问题 (P0)
 1. **轮换API密钥**
    ```bash
    # 访问 https://platform.deepseek.com/api_keys
-   # 删除旧密钥：[REDACTED]
+   # 删除旧密钥（sk-2333...，已脱敏）
    # 生成新密钥并更新 backend/.env
    ```
 

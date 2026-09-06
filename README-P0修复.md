@@ -146,7 +146,7 @@ git commit -m "test: 添加核心计算引擎单元测试框架
 ### ⚠️ 高优先级（阻断开源）
 1. **轮换API密钥**（必须）
    - 访问 https://platform.deepseek.com/api_keys
-   - 删除 `[REDACTED]`
+   - 删除旧密钥（`sk-2333...`，已脱敏）
    - 生成新密钥并更新 `backend/.env`
 
 2. **审查暴露范围**（建议）
