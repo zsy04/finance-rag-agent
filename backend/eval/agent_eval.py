@@ -4,7 +4,7 @@ Agent 工具选择评测（v1.5 多 Agent 适配）
 构造 24 条 query，每条标注期望调用的工具，运行 Agent 统计准确率。
 目标：≥ 90%
 
-运行：cd F:/lest && F:/lest/backend/venv/Scripts/python.exe backend/eval/agent_eval.py
+运行：cd <repo-root> && python backend/eval/agent_eval.py
 
 工具名按 AGENT_MODE 自动适配：
   - multi 形态：计税/社保 → tax_subagent / social_subagent

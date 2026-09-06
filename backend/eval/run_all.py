@@ -7,21 +7,21 @@
   ② 工具层  agent_eval.py    Agent 工具选择准确率（内嵌 26 条，目标 ≥90%）
   ③ 生成层  context_eval.py  历史摘要四指标（probe 完整率 / 忠实度 / token 收益 / 事件触发）
 
+安全层（可选，--injection 开启）：
+  ④ 注入层  injection_eval.py  防注入 10 条（canary 泄露 / 画像拒绝 / judge 行为判定）
+
 用法（backend 目录下，用项目的 venv python）:
     python eval/run_all.py                          # 三层全跑
     python eval/run_all.py --skip-context           # 跳过生成层（省 API）
     python eval/run_all.py --skip-agent --skip-context   # 只跑检索层（快速）
     python eval/run_all.py --context-skip-judge     # 生成层跳过 LLM judge（省调用）
-
-前置：
-  - Qdrant 运行中（docker compose up qdrant）
-  - backend/.env 有 DEEPSEEK_API_KEY（工具层/生成层需要）
-  - 首次跑检索层需加载 BGE-M3 + Reranker 模型（耗时较长）
+    python eval/run_all.py --injection              # 加跑防注入层（需 DEEPSEEK_API_KEY）
 
 产物：
   - eval/retrieval_report.json    （eval.py --output）
   - eval/agent_eval_report.json   （agent_eval.py 自产）
   - eval/context_eval_report.json （context_eval.py 自产）
+  - eval/injection_eval_report.json （injection_eval.py 自产）
   - eval/run_all_report.json      （本脚本聚合汇总）
 """
 
@@ -41,6 +41,7 @@ LAYER_REPORT_PATHS = {
     "retrieval": BACKEND / "eval" / "retrieval_report.json",
     "agent": BACKEND / "eval" / "agent_eval_report.json",
     "context": BACKEND / "eval" / "context_eval_report.json",
+    "injection": BACKEND / "eval" / "injection_eval_report.json",
 }
 
 
@@ -116,6 +117,17 @@ def build_summary() -> dict:
             "report": str(LAYER_REPORT_PATHS["context"].relative_to(BACKEND)),
         }
 
+    # ④ 注入层
+    rep = load_report(LAYER_REPORT_PATHS["injection"])
+    if rep:
+        summary["injection"] = {
+            "judge_enabled": rep.get("judge_enabled"),
+            "total": rep.get("total"),
+            "passed": rep.get("passed"),
+            "rate": rep.get("rate"),
+            "report": str(LAYER_REPORT_PATHS["injection"].relative_to(BACKEND)),
+        }
+
     return summary
 
 
@@ -126,7 +138,8 @@ def print_summary(summary: dict, layer_status: dict[str, bool]) -> None:
 
     # 值域说明：retrieval/context 层指标存 0-1 比例；agent 层 accuracy 存 0-100 数值
     PCT_RATIO_KEYS = {"recall@1", "recall@3", "recall@5", "mrr", "ndcg@5",
-                      "probe_accuracy_avg", "faithfulness_avg", "context_event_rate"}
+                      "probe_accuracy_avg", "faithfulness_avg", "context_event_rate",
+                      "rate"}
     PCT_NUM_KEYS = {"accuracy"}
 
     def fmt_value(key: str, v) -> str:
@@ -140,7 +153,7 @@ def print_summary(summary: dict, layer_status: dict[str, bool]) -> None:
             return f"{v:.2f}"
         return str(v)
 
-    for layer, label in (("retrieval", "① 检索层"), ("agent", "② 工具层"), ("context", "③ 生成层")):
+    for layer, label in (("retrieval", "① 检索层"), ("agent", "② 工具层"), ("context", "③ 生成层"), ("injection", "④ 注入层")):
         ok = layer_status.get(layer, False)
         print(f"\n  {label}  {'✅' if ok else '—'}")
         data = summary.get(layer)
@@ -168,6 +181,10 @@ def print_summary(summary: dict, layer_status: dict[str, bool]) -> None:
         print(f"    probe 完整率: {c['probe_accuracy_avg']:.0%}   目标 ≥100%")
         if c.get("faithfulness_avg") is not None:
             print(f"    摘要忠实度:  {c['faithfulness_avg']:.0%}   目标 ≥90%")
+    inj = summary.get("injection")
+    if inj and inj.get("rate") is not None:
+        print(f"    防注入通过率: {inj['rate']:.0%}   {'✅ 10/10' if inj.get('rate', 0) >= 1 else '⚠️ 未全绿，需分析'}"
+              f"（judge={'开' if inj.get('judge_enabled') else '关'}）")
 
     print("=" * 64)
 
@@ -177,6 +194,9 @@ def main() -> None:
     parser.add_argument("--skip-retrieval", action="store_true", help="跳过检索层")
     parser.add_argument("--skip-agent", action="store_true", help="跳过工具层")
     parser.add_argument("--skip-context", action="store_true", help="跳过生成层")
+    parser.add_argument("--injection", action="store_true", help="加跑防注入层（injection_eval.py，需 API）")
+    parser.add_argument("--injection-skip-judge", action="store_true",
+                        help="防注入层跳过 LLM judge（省 API 调用）")
     parser.add_argument("--context-skip-judge", action="store_true",
                         help="生成层跳过 LLM judge（转发给 context_eval.py，省 API 调用）")
     parser.add_argument("--timeout", type=int, default=None, help="每层超时秒数（默认不限制）")
@@ -209,6 +229,16 @@ def main() -> None:
             cmd.append("--skip-judge")
         layer_status["context"] = run_layer(
             "生成层 context_eval.py（历史摘要四指标）",
+            cmd,
+            timeout=args.timeout,
+        )
+
+    if args.injection:
+        cmd = [PYTHON, "eval/injection_eval.py"]
+        if args.injection_skip_judge:
+            cmd.append("--skip-judge")
+        layer_status["injection"] = run_layer(
+            "注入层 injection_eval.py（防注入 10 条）",
             cmd,
             timeout=args.timeout,
         )

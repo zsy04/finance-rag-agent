@@ -4,7 +4,7 @@ v1.5 设计：
   主层·对拍 8 条（计税 5 + 社保 3）：子 Agent vs 原工具直调，比较 result_card 数值
   子层·内部选工具 6 条（计税 4 + 社保 2）：直接对子 Agent 注入 query，验证内部工具选择与拒答
 
-运行：cd F:/lest && F:/lest/backend/venv/Scripts/python.exe backend/eval/multi_agent_eval.py
+运行：cd <repo-root> && python backend/eval/multi_agent_eval.py
 """
 
 import sys
