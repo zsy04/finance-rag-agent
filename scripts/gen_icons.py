@@ -4,8 +4,9 @@
 """
 
 import os
+from pathlib import Path
 
-OUT = r"F:\lest\frontend\public\icons"
+OUT = str(Path(__file__).resolve().parent.parent / "frontend" / "public" / "icons")
 C = "#1E3A8A"  # fallback color
 SW = "stroke-width=\"2\""
 LC = 'stroke-linecap="round"'

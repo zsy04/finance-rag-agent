@@ -159,7 +159,7 @@ def clean_file(filepath):
     return False, None
 
 def main():
-    base_dir = Path("F:/lest/rag-data/processed/national")
+    base_dir = Path(__file__).resolve().parent.parent / "rag-data" / "processed" / "national"
     
     tax_law_dir = base_dir / "tax_law"
     cleaned_count = 0

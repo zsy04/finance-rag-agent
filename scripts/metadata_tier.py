@@ -181,7 +181,7 @@ def process_file(filepath):
 
 
 def main():
-    base_dir = Path("F:/lest/rag-data/processed/national")
+    base_dir = Path(__file__).resolve().parent.parent / "rag-data" / "processed" / "national"
     
     stats = {"tax_law": 0, "tax_regulation": 0, "qa_corpus": 0, "general_law": 0}
     updated = 0

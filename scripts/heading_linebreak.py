@@ -317,7 +317,7 @@ def clean_file(filepath):
 
 
 def main():
-    tax_law_dir = Path("F:/lest/rag-data/processed/national/tax_law")
+    tax_law_dir = Path(__file__).resolve().parent.parent / "rag-data" / "processed" / "national" / "tax_law"
     
     updated = 0
     skipped = 0

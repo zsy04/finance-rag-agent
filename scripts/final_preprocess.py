@@ -18,8 +18,8 @@ from pathlib import Path
 # 配置
 # ═══════════════════════════════════════════════════════════
 
-TAX_LAW_DIR = Path("F:/lest/rag-data/processed/national/tax_law")
-QA_DIR = Path("F:/lest/rag-data/processed/national/qa_corpus")
+TAX_LAW_DIR = Path(__file__).resolve().parent.parent / "rag-data" / "processed" / "national" / "tax_law"
+QA_DIR = Path(__file__).resolve().parent.parent / "rag-data" / "processed" / "national" / "qa_corpus"
 
 # 文件分类规则
 TAX_LAW_NAMES = {

@@ -20,6 +20,7 @@
 """
 
 import json
+import re
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -34,6 +35,13 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = PROJECT_ROOT / "rag-data" / "processed" / "national" / "templates"
 FIELD_MAP_FILE = TEMPLATES_DIR / "form_field_map.json"
+
+
+def _safe_filename_component(name: str, max_len: int = 30) -> str:
+    """文件名安全化：去掉路径分隔符/控制字符，仅保留展示字符（防路径穿越逃逸 outputs/）。"""
+    cleaned = re.sub(r'[\\/:*?"<>|\x00-\x1f]', "", name).strip()
+    cleaned = re.sub(r"\s+", "", cleaned)
+    return cleaned[:max_len] or "未命名"
 
 
 def _load_field_map():
@@ -106,17 +114,39 @@ def fill_form(form_type: str, user_data: dict, output_path: str = None) -> str:
         }, ensure_ascii=False)
 
     # 创建输出目录
-    name = user_data.get("纳税人姓名", "未命名")
+    # 安全（2026-08-13）：姓名仅作文件名展示，必须安全化，防 ..\ 路径穿越逃逸 outputs/
+    name = _safe_filename_component(user_data.get("纳税人姓名", "未命名"))
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if not output_path:
         out_dir = PROJECT_ROOT / "outputs"
         out_dir.mkdir(exist_ok=True)
         output_path = out_dir / f"申报表_{name}_{timestamp}.xlsx"
     else:
-        output_path = Path(output_path)
+        # 防御性约束：外部传入的输出路径也必须解析到 outputs/ 内
+        out_dir = PROJECT_ROOT / "outputs"
+        out_dir.mkdir(exist_ok=True)
+        candidate = Path(output_path)
+        if not candidate.is_absolute():
+            candidate = out_dir / candidate
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            resolved = candidate
+        if not resolved.is_relative_to(out_dir.resolve()):
+            return json.dumps({
+                "success": False,
+                "message": "非法的输出路径"
+            }, ensure_ascii=False)
+        output_path = resolved
 
     # 复制模板
-    shutil.copy(template_file, output_path)
+    try:
+        shutil.copy(template_file, output_path)
+    except OSError as e:
+        return json.dumps({
+            "success": False,
+            "message": f"模板复制失败: {e}"
+        }, ensure_ascii=False)
 
     # 填写表单
     try:

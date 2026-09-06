@@ -97,7 +97,7 @@ rag-data/
 ### 第三步：批量转换
 
 ```bash
-cd F:\lest
+cd <repo-root>
 
 # 预览（不实际写入）
 python scripts/clean_to_md.py --dry-run

@@ -1,36 +1,36 @@
 @echo off
-title 清除 lest 数据库
+title Clear lest local database
 echo ============================================
-echo   清除财税助手本地数据库
+echo   Clear Finance Assistant local database
 echo ============================================
 echo.
-echo 将删除: F:\lest\backend\data\chat.db
-echo 删除后所有对话历史与用户画像将清空。
+echo Will delete: %~dp0..\backend\data\chat.db
+echo All chat history and user profiles will be cleared.
 echo.
-echo 警告：请先关闭后端窗口（Finance-Backend），
-echo       否则文件被占用无法删除！
+echo WARNING: close the backend window (Finance-Backend) first,
+echo          otherwise the file is locked and cannot be deleted!
 echo.
 pause
 echo.
-echo 检查后端是否仍在运行（端口 8000）...
+echo Checking whether the backend is still running (port 8000)...
 netstat -ano | findstr ":8000" | findstr LISTENING >nul
 if %errorlevel% equ 0 (
     echo.
-    echo [WARN] 检测到后端仍在运行（端口 8000）。
-    echo        请先关闭 Finance-Backend 窗口，再重新运行本脚本。
+    echo [WARN] Backend still running on port 8000.
+    echo        Close the Finance-Backend window first, then rerun.
     echo.
     pause
     exit /b 1
 )
-echo 后端未运行，开始删除...
-del /q "F:\lest\backend\data\chat.db"
-if exist "F:\lest\backend\data\chat.db" (
+echo Backend not running, deleting database...
+del /q "%~dp0..\backend\data\chat.db"
+if exist "%~dp0..\backend\data\chat.db" (
     echo.
-    echo [FAIL] 删除失败：文件仍被占用。请关闭所有相关窗口后重试。
+    echo [FAIL] Delete failed: file still locked. Close all windows and retry.
 ) else (
     echo.
-    echo [ OK ] 数据库已删除！
-    echo        重启 start.bat 后后端会自动重建空数据库。
+    echo [ OK ] Database deleted!
+    echo        Restart start.bat to recreate an empty database.
 )
 echo.
 pause

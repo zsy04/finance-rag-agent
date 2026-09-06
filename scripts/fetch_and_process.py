@@ -50,7 +50,7 @@ from urllib.parse import urlparse
 # ============================================================
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent  # F:\lest
+PROJECT_ROOT = SCRIPT_DIR.parent  # 仓库根目录
 RAG_DATA_DIR = PROJECT_ROOT / "rag-data"
 MANIFEST_PATH = RAG_DATA_DIR / "manifest.json"
 RAW_DIR = RAG_DATA_DIR / "raw"

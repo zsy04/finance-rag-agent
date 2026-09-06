@@ -460,9 +460,9 @@
     "category": "rates",
     "priority": "⭐⭐⭐",
     "city": "national",
-    "status": "pending",
-    "local_path": null,
-    "notes": "手动整理为 JSON"
+    "status": "completed",
+    "local_path": "rag-data/processed/national/rates/social_insurance_bases.json",
+    "notes": "由 社保基数.xlsx 推导（rate_model 段）：养老16/8、医疗6/2、失业0.7/0.3、工伤0.2%起、生育1%"
   },
   {
     "id": 32,
@@ -835,9 +835,9 @@
     "category": "rates",
     "priority": "⭐⭐⭐",
     "city": "zhengzhou",
-    "status": "pending",
-    "local_path": null,
-    "notes": "手动整理为 JSON"
+    "status": "completed",
+    "local_path": "rag-data/processed/cities/zhengzhou/social_insurance.json",
+    "notes": "已与全国表河南行交叉校验一致（6385/3831/19155）"
   },
   {
     "id": 57,
@@ -1048,5 +1048,20 @@
     "status": "pending",
     "local_path": null,
     "notes": "Phase 2"
+  },
+  {
+    "id": 71,
+    "name": "全国社保缴费基数（2025年度）JSON",
+    "round": 2,
+    "format": "json",
+    "source_url": null,
+    "doc_number": null,
+    "module": "二",
+    "category": "rates",
+    "priority": "⭐⭐⭐",
+    "city": "national",
+    "status": "completed",
+    "local_path": "rag-data/processed/national/rates/social_insurance_bases.json",
+    "notes": "来源：社保基数.xlsx（31省+湖北三档=33行，含平均/下限/上限三档承担金额）；已生成 RAG 速查表 rag-data/processed/national/operations/社保缴费基数速查表.md"
   }
 ]
